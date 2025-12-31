@@ -94,6 +94,7 @@ flutter:
     - assets/svg/nav/
     - assets/svg/client/
     - assets/svg/client/home/
+    - assets/svg/client/restaurant_details/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

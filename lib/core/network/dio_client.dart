@@ -1,45 +1,35 @@
 import 'package:dio/dio.dart';
-import '../constants/api_constants.dart';
 import '../constants/app_constants.dart';
-import 'dio_interceptors.dart';
-import 'api_exception.dart';
+import 'interceptors/auth_interceptor.dart';
+import 'interceptors/logging_interceptor.dart';
 
 class DioClient {
   late Dio _dio;
 
-  DioClient({
-    String? baseUrl,
-    String? Function()? getToken,
-    List<Interceptor>? additionalInterceptors,
-  }) {
+  DioClient() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl ?? ApiConstants.baseApiUrl,
-        connectTimeout: const Duration(milliseconds: AppConstants.connectTimeout),
-        receiveTimeout: const Duration(milliseconds: AppConstants.receiveTimeout),
-        sendTimeout: const Duration(milliseconds: AppConstants.sendTimeout),
+        baseUrl: AppConstants.baseUrl,
+        connectTimeout: AppConstants.connectTimeout,
+        receiveTimeout: AppConstants.receiveTimeout,
+        sendTimeout: AppConstants.sendTimeout,
         headers: {
-          'Content-Type': ApiConstants.contentType,
-          'Accept': ApiConstants.accept,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
       ),
     );
 
     // Add interceptors
-    _dio.interceptors.add(LoggingInterceptor());
-    
-    if (getToken != null) {
-      _dio.interceptors.add(AuthInterceptor(getToken: getToken));
-    }
-
-    if (additionalInterceptors != null) {
-      _dio.interceptors.addAll(additionalInterceptors);
-    }
+    _dio.interceptors.addAll([
+      AuthInterceptor(),
+      LoggingInterceptor(),
+    ]);
   }
 
   Dio get dio => _dio;
 
-  // GET Request
+  // GET request
   Future<Response> get(
     String path, {
     Map<String, dynamic>? queryParameters,
@@ -56,12 +46,12 @@ class DioClient {
         onReceiveProgress: onReceiveProgress,
       );
       return response;
-    } on DioException catch (e) {
-      throw ApiException.handleDioException(e);
+    } on DioException {
+      rethrow;
     }
   }
 
-  // POST Request
+  // POST request
   Future<Response> post(
     String path, {
     dynamic data,
@@ -82,12 +72,12 @@ class DioClient {
         onReceiveProgress: onReceiveProgress,
       );
       return response;
-    } on DioException catch (e) {
-      throw ApiException.handleDioException(e);
+    } on DioException {
+      rethrow;
     }
   }
 
-  // PUT Request
+  // PUT request
   Future<Response> put(
     String path, {
     dynamic data,
@@ -108,12 +98,34 @@ class DioClient {
         onReceiveProgress: onReceiveProgress,
       );
       return response;
-    } on DioException catch (e) {
-      throw ApiException.handleDioException(e);
+    } on DioException {
+      rethrow;
     }
   }
 
-  // PATCH Request
+  // DELETE request
+  Future<Response> delete(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      final response = await _dio.delete(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
+      return response;
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  // PATCH request
   Future<Response> patch(
     String path, {
     dynamic data,
@@ -134,30 +146,8 @@ class DioClient {
         onReceiveProgress: onReceiveProgress,
       );
       return response;
-    } on DioException catch (e) {
-      throw ApiException.handleDioException(e);
-    }
-  }
-
-  // DELETE Request
-  Future<Response> delete(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-  }) async {
-    try {
-      final response = await _dio.delete(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-      );
-      return response;
-    } on DioException catch (e) {
-      throw ApiException.handleDioException(e);
+    } on DioException {
+      rethrow;
     }
   }
 }

@@ -1,143 +1,226 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'app_colors.dart';
-import 'app_text_styles.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../constants/app_colors.dart';
 
 class AppTheme {
-  AppTheme._();
-
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      
-      // Color Scheme
-      colorScheme: const ColorScheme.dark(
+      brightness: Brightness.light,
+      primaryColor: AppColors.primary,
+      scaffoldBackgroundColor: Colors.white,
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.primaryLight,
-        background: AppColors.background,
-        surface: AppColors.surface,
+        surface: Colors.white,
+        background: Colors.white,
         error: AppColors.error,
-        onPrimary: AppColors.textPrimary,
-        onSecondary: AppColors.textPrimary,
-        onBackground: AppColors.textPrimary,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
         onSurface: AppColors.textPrimary,
-        onError: AppColors.textPrimary,
+        onBackground: AppColors.textPrimary,
+        onError: Colors.white,
       ),
-      
-      // Scaffold
-      scaffoldBackgroundColor: AppColors.background,
-      
-      // AppBar Theme
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.surface,
+        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        titleTextStyle: AppTextStyles.h6,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
+        titleTextStyle: TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 20.sp,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
-      
-      // Card Theme
       cardTheme: CardThemeData(
-        color: AppColors.surface,
+        color: Colors.white,
         elevation: 2,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
         ),
       ),
-      
-      // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: const Color(0xFFF9FAFB),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: const BorderSide(color: Color(0xFFF3F4F6)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: const BorderSide(color: Color(0xFFF3F4F6)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: AppColors.primary, width: 2.w),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12.r),
           borderSide: const BorderSide(color: AppColors.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.error, width: 2),
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: AppColors.error, width: 2.w),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+        labelStyle: TextStyle(
+          color: const Color(0xFF6A7282),
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        hintStyle: TextStyle(
+          color: const Color(0xFF99A1AF),
+          fontFamily: 'IBMPlexSansArabic',
+        ),
       ),
-      
-      // Elevated Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.textPrimary,
+          foregroundColor: Colors.white,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12.r),
           ),
-          textStyle: AppTextStyles.buttonMedium,
+          textStyle: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'IBMPlexSansArabic',
+          ),
         ),
       ),
-      
-      // Outlined Button Theme
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.textPrimary,
-          side: const BorderSide(color: AppColors.border),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: AppTextStyles.buttonMedium,
-        ),
-      ),
-      
-      // Text Button Theme
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          textStyle: AppTextStyles.buttonMedium,
+          textStyle: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'IBMPlexSansArabic',
+          ),
         ),
       ),
-      
-      // Dialog Theme
-      dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          side: const BorderSide(color: AppColors.primary),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          textStyle: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'IBMPlexSansArabic',
+          ),
         ),
-        titleTextStyle: AppTextStyles.h6,
-        contentTextStyle: AppTextStyles.bodyMedium,
       ),
-      
-      // Snackbar Theme
-      snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.surfaceLight,
-        contentTextStyle: AppTextStyles.bodyMedium,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+      textTheme: TextTheme(
+        displayLarge: TextStyle(
+          color: const Color(0xFF101828),
+          fontSize: 32.sp,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'IBMPlexSansArabic',
         ),
-        behavior: SnackBarBehavior.floating,
+        displayMedium: TextStyle(
+          color: const Color(0xFF101828),
+          fontSize: 28.sp,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        displaySmall: TextStyle(
+          color: const Color(0xFF101828),
+          fontSize: 24.sp,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        headlineLarge: TextStyle(
+          color: const Color(0xFF101828),
+          fontSize: 22.sp,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        headlineMedium: TextStyle(
+          color: const Color(0xFF101828),
+          fontSize: 20.sp,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        headlineSmall: TextStyle(
+          color: const Color(0xFF101828),
+          fontSize: 18.sp,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        titleLarge: TextStyle(
+          color: const Color(0xFF101828),
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        titleMedium: TextStyle(
+          color: const Color(0xFF101828),
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        titleSmall: TextStyle(
+          color: const Color(0xFF101828),
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        bodyLarge: TextStyle(
+          color: const Color(0xFF101828),
+          fontSize: 16.sp,
+          fontWeight: FontWeight.normal,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        bodyMedium: TextStyle(
+          color: const Color(0xFF101828),
+          fontSize: 14.sp,
+          fontWeight: FontWeight.normal,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        bodySmall: TextStyle(
+          color: const Color(0xFF6A7282),
+          fontSize: 12.sp,
+          fontWeight: FontWeight.normal,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        labelLarge: TextStyle(
+          color: const Color(0xFF101828),
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        labelMedium: TextStyle(
+          color: const Color(0xFF6A7282),
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        labelSmall: TextStyle(
+          color: const Color(0xFF6A7282),
+          fontSize: 10.sp,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
       ),
-      
-      // Divider Theme
       dividerTheme: const DividerThemeData(
         color: AppColors.border,
         thickness: 1,
         space: 1,
       ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF1A1A1A),
+        contentTextStyle: const TextStyle(
+          color: Colors.white,
+          fontFamily: 'IBMPlexSansArabic',
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 }
-

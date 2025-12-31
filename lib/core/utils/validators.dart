@@ -1,6 +1,4 @@
 class Validators {
-  Validators._();
-
   static String? email(String? value) {
     if (value == null || value.isEmpty) {
       return 'البريد الإلكتروني مطلوب';
@@ -14,43 +12,39 @@ class Validators {
     return null;
   }
 
-  static String? required(String? value, [String? fieldName]) {
-    if (value == null || value.isEmpty) {
-      return fieldName != null ? '$fieldName مطلوب' : 'هذا الحقل مطلوب';
-    }
-    return null;
-  }
-
-  static String? minLength(String? value, int minLength, [String? fieldName]) {
-    if (value == null || value.isEmpty) {
-      return fieldName != null ? '$fieldName مطلوب' : 'هذا الحقل مطلوب';
-    }
-    if (value.length < minLength) {
-      return fieldName != null
-          ? '$fieldName يجب أن يكون على الأقل $minLength أحرف'
-          : 'يجب أن يكون على الأقل $minLength أحرف';
-    }
-    return null;
-  }
-
-  static String? maxLength(String? value, int maxLength, [String? fieldName]) {
-    if (value == null || value.isEmpty) {
-      return null;
-    }
-    if (value.length > maxLength) {
-      return fieldName != null
-          ? '$fieldName يجب أن يكون أقل من $maxLength أحرف'
-          : 'يجب أن يكون أقل من $maxLength أحرف';
-    }
-    return null;
-  }
-
   static String? password(String? value) {
     if (value == null || value.isEmpty) {
       return 'كلمة المرور مطلوبة';
     }
-    if (value.length < 8) {
-      return 'كلمة المرور يجب أن تكون على الأقل 8 أحرف';
+    if (value.length < 5) {
+      return 'كلمة المرور يجب أن تكون 5 أحرف على الأقل';
+    }
+    return null;
+  }
+
+  static String? required(String? value, {String? fieldName}) {
+    if (value == null || value.isEmpty) {
+      return '${fieldName ?? 'هذا الحقل'} مطلوب';
+    }
+    return null;
+  }
+
+  static String? minLength(String? value, int min, {String? fieldName}) {
+    if (value == null || value.isEmpty) {
+      return '${fieldName ?? 'هذا الحقل'} مطلوب';
+    }
+    if (value.length < min) {
+      return '${fieldName ?? 'هذا الحقل'} يجب أن يكون $min أحرف على الأقل';
+    }
+    return null;
+  }
+
+  static String? maxLength(String? value, int max, {String? fieldName}) {
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    if (value.length > max) {
+      return '${fieldName ?? 'هذا الحقل'} يجب أن يكون $max أحرف على الأكثر';
     }
     return null;
   }
@@ -60,15 +54,19 @@ class Validators {
       return 'رقم الهاتف مطلوب';
     }
     final phoneRegex = RegExp(r'^[0-9]{10,15}$');
-    if (!phoneRegex.hasMatch(value)) {
+    if (!phoneRegex.hasMatch(value.replaceAll(RegExp(r'[\s\-\(\)]'), ''))) {
       return 'رقم الهاتف غير صحيح';
     }
     return null;
   }
 
-  static String? match(String? value, String? matchValue, String errorMessage) {
-    if (value != matchValue) {
-      return errorMessage;
+  static String? username(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'اسم المستخدم مطلوب';
+    }
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
+    if (!usernameRegex.hasMatch(value)) {
+      return 'اسم المستخدم غير صحيح (3-20 حرف، أرقام أو _ فقط)';
     }
     return null;
   }

@@ -1,34 +1,65 @@
-import 'exceptions.dart';
+import 'package:dio/dio.dart';
+import 'package:get/get.dart';
+import '../utils/show_snackbar.dart';
+import 'api_exception.dart';
 import 'failures.dart';
+import '../utils/logger.dart';
 
 class ErrorHandler {
-  ErrorHandler._();
+  static void handleError(Failure failure) {
+    AppLogger.error('Error occurred', failure, null, 'ErrorHandler');
 
-  static Failure handleException(Exception exception) {
-    if (exception is ServerException) {
-      return ServerFailure(exception.message);
-    } else if (exception is CacheException) {
-      return CacheFailure(exception.message);
-    } else if (exception is NetworkException) {
-      return NetworkFailure(exception.message);
-    } else if (exception is UnauthorizedException) {
-      return UnauthorizedFailure(exception.message);
-    } else if (exception is NotFoundException) {
-      return NotFoundFailure(exception.message);
-    } else if (exception is ValidationException) {
-      return ValidationFailure(exception.message);
-    } else {
-      return UnknownFailure('حدث خطأ غير متوقع');
+    String userMessage = failure.message;
+
+    // Customize user-friendly messages based on failure type
+    if (failure is NetworkFailure) {
+      userMessage = 'تحقق من اتصالك بالإنترنت';
+    } else if (failure is TimeoutFailure) {
+      userMessage = 'انتهت مهلة الاتصال، يرجى المحاولة مرة أخرى';
+    } else if (failure is ServerFailure) {
+      userMessage = 'حدث خطأ في الخادم، يرجى المحاولة لاحقاً';
+    } else if (failure is UnauthorizedFailure) {
+      // Use the actual message from the API if available, otherwise use default
+      userMessage = failure.message.isNotEmpty 
+          ? failure.message 
+          : 'غير مصرح لك بالوصول';
+      // Optionally handle logout here
+      // Get.find<AuthController>().logout();
+    } else if (failure is ValidationFailure) {
+      // Use the actual validation message
+      userMessage = failure.message;
     }
+
+    // Show error message to user
+    showSnackBar(
+      title: 'خطأ', message:  userMessage,
+      // 
+      // duration: const Duration(seconds: 3),
+    );
   }
 
-  static String getFailureMessage(Failure failure) {
+  static Failure handleDioError(DioException error) {
+    return ApiException.handleException(error);
+  }
+
+  static String getErrorMessage(Failure failure) {
+    if (failure is NetworkFailure) {
+      return 'تحقق من اتصالك بالإنترنت';
+    } else if (failure is TimeoutFailure) {
+      return 'انتهت مهلة الاتصال، يرجى المحاولة مرة أخرى';
+    } else if (failure is ServerFailure) {
+      return 'حدث خطأ في الخادم، يرجى المحاولة لاحقاً';
+    } else if (failure is UnauthorizedFailure) {
+      // Use the actual message from the API if available
+      return failure.message.isNotEmpty 
+          ? failure.message 
+          : 'غير مصرح لك بالوصول';
+    } else if (failure is NotFoundFailure) {
+      return 'المورد المطلوب غير موجود';
+    } else if (failure is ValidationFailure) {
+      return failure.message;
+    }
     return failure.message;
-  }
-
-  static String getErrorMessage(Exception exception) {
-    final failure = handleException(exception);
-    return getFailureMessage(failure);
   }
 }
 

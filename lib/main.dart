@@ -1,21 +1,17 @@
+import 'package:avvento/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'core/di/injection_container.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'core/routes/app_pages.dart';
 import 'core/theme/app_theme.dart';
-import 'features/auth/logic/cubit/auth_cubit.dart';
-import 'features/auth/logic/states/auth_state.dart';
-import 'features/auth/screens/login_screen.dart';
-import 'features/client/screens/client_home_screen.dart';
-import 'core/utils/user_type.dart';
-import 'features/driver/screens/driver_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Dependency Injection
-  await setupDependencyInjection();
-  
+
+  // Initialize GetStorage
+  await GetStorage.init();
+
   runApp(const MyApp());
 }
 
@@ -25,49 +21,25 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(375, 812),
+      designSize: const Size(393, 852),
       minTextAdapt: true,
-      splitScreenMode: true,
       builder: (context, child) {
-        return BlocProvider(
-          create: (context) => getIt<AuthCubit>(),
-          child: MaterialApp(
-            title: 'Avvento',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            home: const ClientHomeScreen(),
-            routes: {
-              '/login': (context) => const LoginScreen(),
-            },
-          ),
-        );
-      },
-    );
-  }
-}
-
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      builder: (context, state) {
-        return state.when(
-          initial: () => const LoginScreen(),
-          loading: () => const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          ),
-          authenticated: (user) {
-            // Navigate based on user type
-            if (user.userType == UserType.driver) {
-              return const DriverHomeScreen();
-            } else {
-              return const ClientHomeScreen();
-            }
+        return GetMaterialApp(
+          title: 'We Pay',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          initialRoute: AppPages.getInitialRoute(),
+          getPages: AppPages.routes,
+          defaultTransition: Transition.fade,
+          transitionDuration: const Duration(milliseconds: 300),
+          locale: const Locale('ar'),
+          fallbackLocale: const Locale('ar'),
+          builder: (context, widget) {
+            return Directionality(
+              textDirection: TextDirection.rtl,
+              child: widget!,
+            );
           },
-          unauthenticated: () => const LoginScreen(),
-          error: (message) => const LoginScreen(),
         );
       },
     );

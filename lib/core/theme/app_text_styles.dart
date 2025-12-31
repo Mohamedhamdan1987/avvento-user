@@ -1,109 +1,90 @@
+// import 'package:flutter/material.dart';
+// import 'package:flutter_screenutil/flutter_screenutil.dart';
+// import '../constants/app_colors.dart';
+//
+// class AppTextStyles {
+//   static TextStyle get h4 => TextStyle(
+//         fontSize: 20.sp,
+//         fontWeight: FontWeight.bold,
+//         color: AppColors.textDark,
+//         fontFamily: 'IBMPlexSansArabic',
+//       );
+//
+//   static TextStyle get h5 => TextStyle(
+//         fontSize: 15.sp,
+//         fontWeight: FontWeight.bold,
+//         color: AppColors.textDark,
+//         fontFamily: 'IBMPlexSansArabic',
+//       );
+//
+//   static TextStyle get bodyLarge => TextStyle(
+//         fontSize: 16.sp,
+//         fontWeight: FontWeight.normal,
+//         color: AppColors.textDark,
+//         fontFamily: 'IBMPlexSansArabic',
+//       );
+//
+//   static TextStyle get bodyMedium => TextStyle(
+//         fontSize: 14.sp,
+//         fontWeight: FontWeight.normal,
+//         color: AppColors.textDark,
+//         fontFamily: 'IBMPlexSansArabic',
+//       );
+//
+//   static TextStyle get bodySmall => TextStyle(
+//         fontSize: 12.sp,
+//         fontWeight: FontWeight.normal,
+//         color: AppColors.textLight,
+//         fontFamily: 'IBMPlexSansArabic',
+//       );
+// }
+
+
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'app_colors.dart';
 
-class AppTextStyles {
-  AppTextStyles._();
+extension TextStyleExtension on TextStyle {
+  TextStyle textColorLight({Color? color, double? fontSize, double? height}) => copyWith(
+    color: color,
+    height: height,
+    fontFamily: 'IBMPlexSansArabic',
+    fontSize: fontSize,
+    fontWeight: FontWeight.w300,
+  );
 
-  // Headings
-  static TextStyle get h1 => TextStyle(
-        fontSize: 32.sp,
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
-        height: 1.2,
-      );
+  TextStyle textColorNormal({Color? color, double? fontSize, double? height}) => copyWith(
+      color: color,
+      height: height,
+      fontFamily: 'IBMPlexSansArabic',
+      fontWeight: FontWeight.w400,
+      fontSize: fontSize);
 
-  static TextStyle get h2 => TextStyle(
-        fontSize: 28.sp,
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
-        height: 1.3,
-      );
+  TextStyle textColorMedium({Color? color, double? fontSize, double? height}) => copyWith(
+    color: color,
+    height: height,
+    fontFamily: 'IBMPlexSansArabic',
+    fontSize: fontSize ?? 13,
+    fontWeight: FontWeight.w500,
+  );
+  TextStyle textColorSemiBold({Color? color, double? fontSize, double? height}) => copyWith(
+    color: color,
+    height: height,
+    fontFamily: 'IBMPlexSansArabic',
+    fontSize: fontSize ?? 13,
+    fontWeight: FontWeight.w600,
+  );
 
-  static TextStyle get h3 => TextStyle(
-        fontSize: 24.sp,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-        height: 1.3,
-      );
+  TextStyle textColorBold({Color? color, double? fontSize, double? height}) => copyWith(
+      color: color,
+      height: height,
+      fontFamily: 'IBMPlexSansArabic',
+      // fontFamily: 'Allan',
+      fontWeight: FontWeight.w700,
+      fontSize: fontSize);
 
-  static TextStyle get h4 => TextStyle(
-        fontSize: 20.sp,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-        height: 1.4,
-      );
-
-  static TextStyle get h5 => TextStyle(
-        fontSize: 18.sp,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-        height: 1.4,
-      );
-
-  static TextStyle get h6 => TextStyle(
-        fontSize: 16.sp,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-        height: 1.5,
-      );
-
-  // Body Text
-  static TextStyle get bodyLarge => TextStyle(
-        fontSize: 16.sp,
-        fontWeight: FontWeight.normal,
-        color: AppColors.textPrimary,
-        height: 1.5,
-      );
-
-  static TextStyle get bodyMedium => TextStyle(
-        fontSize: 14.sp,
-        fontWeight: FontWeight.normal,
-        color: AppColors.textPrimary,
-        height: 1.5,
-      );
-
-  static TextStyle get bodySmall => TextStyle(
-        fontSize: 12.sp,
-        fontWeight: FontWeight.normal,
-        color: AppColors.textSecondary,
-        height: 1.5,
-      );
-
-  // Button Text
-  static TextStyle get buttonLarge => TextStyle(
-        fontSize: 16.sp,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-      );
-
-  static TextStyle get buttonMedium => TextStyle(
-        fontSize: 14.sp,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-      );
-
-  static TextStyle get buttonSmall => TextStyle(
-        fontSize: 12.sp,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-      );
-
-  // Caption
-  static TextStyle get caption => TextStyle(
-        fontSize: 12.sp,
-        fontWeight: FontWeight.normal,
-        color: AppColors.textSecondary,
-        height: 1.4,
-      );
-
-  // Overline
-  static TextStyle get overline => TextStyle(
-        fontSize: 10.sp,
-        fontWeight: FontWeight.w500,
-        color: AppColors.textSecondary,
-        letterSpacing: 1.5,
-        height: 1.4,
-      );
+  TextStyle textColorBlack({Color? color, double? fontSize, double? height}) => copyWith(
+      color: color,
+      height: height,
+      fontFamily: 'IBMPlexSansArabic',
+      fontWeight: FontWeight.w900,
+      fontSize: fontSize);
 }
-

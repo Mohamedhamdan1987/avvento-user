@@ -153,5 +153,16 @@ class RestaurantsController extends GetxController {
       fetchStories(),
     ]);
   }
+
+  /// Love a story
+  Future<void> loveStory(String storyId) async {
+    try {
+      await _restaurantsService.loveStory(storyId);
+      // Optionally update the local story model if we want immediate feedback without refresh
+      // For now, we rely on the API response or refresh if needed.
+    } catch (e) {
+      print('Failed to love story: $e');
+    }
+  }
 }
 

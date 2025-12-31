@@ -6,6 +6,7 @@ import 'package:intl/intl.dart' as intl;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:video_player/video_player.dart';
 import '../models/story_model.dart';
+import '../controllers/restaurants_controller.dart';
 
 class StoryViewPage extends StatefulWidget {
   final List<Story> stories;
@@ -26,6 +27,7 @@ class _StoryViewPageState extends State<StoryViewPage> {
   List<StoryItem> _storyItems = [];
   int _currentIndex = 0;
   bool _isLoading = true;
+  final Map<String, int> _lovesDelta = {};
 
   @override
   void initState() {
@@ -169,72 +171,107 @@ class _StoryViewPageState extends State<StoryViewPage> {
               top: 50.h,
               left: 16.w,
               right: 16.w,
-              child: Row(
-                children: [
-                  Container(
-                    width: 40.w,
-                    height: 40.w,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
+            child: Row(
+              children: [
+                Container(
+                  width: 40.w,
+                  height: 40.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: widget.stories[_currentIndex].restaurant.logo, // Safely access using index
+                      fit: BoxFit.cover,
+                      errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.white),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.stories[_currentIndex].restaurant.name,
+                      style: const TextStyle(
                         color: Colors.white,
-                        width: 1.5,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'IBM Plex Sans Arabic',
+                        shadows: [
+                          Shadow(
+                            blurRadius: 4,
+                            color: Colors.black,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
                       ),
                     ),
-                    child: ClipOval(
-                      child: CachedNetworkImage(
-                        imageUrl: widget.stories[_currentIndex].restaurant.logo, // Safely access using index
-                        fit: BoxFit.cover,
-                        errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.white),
+                    Text(
+                      _formatDate(widget.stories[_currentIndex].createdAt),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                        fontFamily: 'IBM Plex Sans Arabic',
+                        shadows: [
+                          Shadow(
+                            blurRadius: 4,
+                            color: Colors.black,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.stories[_currentIndex].restaurant.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'IBM Plex Sans Arabic',
-                          shadows: [
-                            Shadow(
-                              blurRadius: 4,
-                              color: Colors.black,
-                              offset: Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        _formatDate(widget.stories[_currentIndex].createdAt),
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 10,
-                          fontFamily: 'IBM Plex Sans Arabic',
-                          shadows: [
-                            Shadow(
-                              blurRadius: 4,
-                              color: Colors.black,
-                              offset: Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Get.back(),
-                    icon: const Icon(Icons.close, color: Colors.white),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => Get.back(),
+                  icon: const Icon(Icons.close, color: Colors.white),
+                ),
+              ],
             ),
-          ],
+          ),
+
+          // Love Button
+          if(widget.stories.isNotEmpty && _currentIndex >= 0 && _currentIndex < widget.stories.length)
+          Positioned(
+            bottom: 30.h,
+            left: 16.w,
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () async {
+                    final story = widget.stories[_currentIndex];
+                    // Optimistic update
+                    setState(() {
+                      _lovesDelta[story.id] = (_lovesDelta[story.id] ?? 0) + 1;
+                    });
+                    
+                    // Call API
+                    await Get.find<RestaurantsController>().loveStory(story.id);
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(8.w),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.favorite,
+                      color: Colors.red,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         ),
       ),
     );

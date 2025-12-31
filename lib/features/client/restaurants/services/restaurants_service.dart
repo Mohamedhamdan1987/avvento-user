@@ -52,4 +52,14 @@ class RestaurantsService {
       rethrow;
     }
   }
+
+  /// Love a story
+  Future<Map<String, dynamic>> loveStory(String storyId) async {
+    try {
+      final response = await _dioClient.post('/stories/$storyId/love');
+      return response.data as Map<String, dynamic>;
+    } on DioException {
+      rethrow;
+    }
+  }
 }

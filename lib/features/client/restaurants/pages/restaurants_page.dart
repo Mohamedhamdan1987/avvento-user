@@ -10,6 +10,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../controllers/restaurants_controller.dart';
 import '../../../../core/utils/location_utils.dart';
 import 'story_view_page.dart';
+import 'all_stories_page.dart';
 
 class RestaurantsPage extends GetView<RestaurantsController> {
   const RestaurantsPage({super.key});
@@ -35,20 +36,36 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                 });
               },
               decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
                 hintText: 'ابحث عن مطعم...',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: Obx(() {
-                  if (controller.searchQuery.isEmpty) return const SizedBox();
-                  return IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: controller.clearSearch,
-                  );
-                }),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                suffixIcon: CustomIconButtonApp(
+                  childWidget: SvgIcon(iconName: "assets/svg/client/search.svg"),
+                  onTap: () {
+                  },
                 ),
-                filled: true,
-                fillColor: Colors.grey[100],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: const BorderSide(
+                    width: 0.76,
+                    color: Color(0xFFE4E4E4),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: const BorderSide(
+                    width: 0.76,
+                    color: Color(0xFFE4E4E4),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: const BorderSide(
+                    width: 0.76,
+                    color: Color(0xFFE4E4E4),
+                  ),
+                ),
               ),
             ),
           ),
@@ -149,17 +166,22 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                 ),
                               ],
                             ),
-                            Padding(
-                              padding: EdgeInsetsDirectional.only(end: 24.w),
-                              child: Text(
-                                'مشاهدة الكل',
-                                style: const TextStyle(
-                                  color: Color(0xFF7F22FE),
-                                  fontSize: 12,
-                                  fontFamily: 'IBM Plex Sans Arabic',
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.33,
-                                ).textColorBold(color: const Color(0xFF7F22FE)),
+                            GestureDetector(
+                              onTap: () {
+                                Get.to(() => AllStoriesPage(stories: controller.stories));
+                              },
+                              child: Padding(
+                                padding: EdgeInsetsDirectional.only(end: 24.w),
+                                child: Text(
+                                  'مشاهدة الكل',
+                                  style: const TextStyle(
+                                    color: Color(0xFF7F22FE),
+                                    fontSize: 12,
+                                    fontFamily: 'IBM Plex Sans Arabic',
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.33,
+                                  ).textColorBold(color: const Color(0xFF7F22FE)),
+                                ),
                               ),
                             ),
                           ],
@@ -173,7 +195,8 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                           child: ListView.builder(
                             padding: EdgeInsets.symmetric(horizontal: 24.w),
                             scrollDirection: Axis.horizontal,
-                            itemCount: controller.stories.length,
+                            // Limit to 10 stories maximum on the main page
+                            itemCount: controller.stories.length > 10 ? 10 : controller.stories.length,
                             itemBuilder: (context, index) {
                               final story = controller.stories[index];
                               return Padding(
@@ -252,7 +275,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                       
                       // Featured Restaurants (Horizontal)
                       SizedBox(
-                        height: 285.h,
+                        height: 215.h,
                         child: ListView.builder(
                           padding: EdgeInsets.symmetric(horizontal: 24.w),
                           scrollDirection: Axis.horizontal,
@@ -260,7 +283,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                           itemBuilder: (context, index) {
                             final restaurant = controller.restaurants[index];
                             return SizedBox(
-                              width: 300.w,
+                              width: MediaQuery.of(context).size.width * 0.88,
                               child: Padding(
                                 padding: EdgeInsetsDirectional.only(end: 12.w),
                                 child: RestaurantCard(restaurant: restaurant),
@@ -293,7 +316,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                           return false;
                         },
                         child: SizedBox(
-                          height: 285.h,
+                          height: 215.h,
                           child: ListView.builder(
                             padding: EdgeInsets.symmetric(horizontal: 24.w),
                             scrollDirection: Axis.horizontal,
@@ -369,12 +392,12 @@ class RestaurantCard extends StatelessWidget {
                     children: [
                       CachedNetworkImage(imageUrl:
                         restaurant.backgroundImage!,
-                        height: 180,
+                        height: 130,
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorWidget: (context, error, stackTrace) {
                           return Container(
-                            height: 180,
+                            height: 130,
                             color: Colors.grey[300],
                             child: const Icon(
                               Icons.restaurant,
@@ -437,12 +460,26 @@ class RestaurantCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if(!restaurant.user.isActive)
+                      Positioned.fill(child: Container(
+                        alignment: Alignment.center,
+                        color: Color(0xB27F22FE),
+                      child: Text(
+                        'مغلق الأن',
+                        textAlign: TextAlign.center,
+                        style: TextStyle().textColorBold(
+                          color: Colors.white,
+                          fontSize: 20.sp,
+                        ),
+                      ),
+                      ))
                     ],
                   ),
                 ),
 
+              Spacer(),
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -477,16 +514,16 @@ class RestaurantCard extends StatelessWidget {
                       ],
                     ),
 
-                     SizedBox(height: 8.h),
+                     SizedBox(height: 4.h),
 
                     Obx(() {
                       final controller = Get.find<RestaurantsController>();
                       final userLat = controller.userLat;
                       final userLong = controller.userLong;
-                      
+
                       String distanceText = '--';
                       String priceText = '--';
-                      
+
                       if (userLat != null && userLong != null) {
                         final distance = LocationUtils.calculateDistance(
                           userLat: userLat,
@@ -495,7 +532,7 @@ class RestaurantCard extends StatelessWidget {
                           restaurantLong: restaurant.long,
                         );
                         distanceText = LocationUtils.formatDistance(distance);
-                        
+
                         final price = LocationUtils.calculateDeliveryPrice(distanceInKm: distance);
                         priceText = LocationUtils.formatPrice(price);
                       }

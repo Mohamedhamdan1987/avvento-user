@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../../core/widgets/reusable/bottom_nav_bar.dart';
 import '../home/pages/home_page.dart';
+import '../orders/pages/orders_page.dart';
 
 class ClientNavBar extends StatefulWidget {
   const ClientNavBar({super.key});
@@ -15,7 +15,7 @@ class _ClientNavBarState extends State<ClientNavBar> {
 
   final List<Widget> _pages = [
     const HomePage(),
-    const Center(child: Text('طلباتي')),
+    const OrdersPage(),
     const Center(child: Text('المحفظة')),
     const Center(child: Text('حسابي')),
   ];
@@ -29,10 +29,7 @@ class _ClientNavBarState extends State<ClientNavBar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onTap,

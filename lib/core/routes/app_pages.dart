@@ -11,6 +11,8 @@ import '../../features/auth/pages/otp_verification_page.dart';
 import '../../features/auth/pages/reset_password_page.dart';
 import '../../features/client/restaurants/bindings/restaurants_binding.dart';
 import '../../features/client/restaurants/pages/restaurants_page.dart';
+import '../../features/client/orders/pages/order_tracking_map_page.dart';
+import '../../features/client/orders/widgets/order_tracking_dialog.dart';
 import '../constants/app_constants.dart';
 import '../middleware/auth_middleware.dart';
 import 'app_routes.dart';
@@ -95,6 +97,21 @@ class AppPages {
       name: AppRoutes.restaurants,
       page: () => const RestaurantsPage(),
       binding: RestaurantsBinding(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: AppRoutes.orderTrackingMap,
+      page: () {
+        final args = Get.arguments as Map<String, dynamic>;
+        return OrderTrackingMapPage(
+          userLat: args['userLat'] as double,
+          userLong: args['userLong'] as double,
+          restaurantLat: args['restaurantLat'] as double,
+          restaurantLong: args['restaurantLong'] as double,
+          orderId: args['orderId'] as String,
+          status: args['status'] as OrderStatus,
+        );
+      },
       middlewares: [AuthMiddleware()],
     ),
   ];

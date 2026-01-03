@@ -15,6 +15,7 @@ class AppRoutes {
   // Orders Routes
   static const String orders = '/orders';
   static const String orderDetails = '/order-details';
+  static const String orderTrackingMap = '/order-tracking-map';
 
   // Profile Routes
   static const String changePassword = '/change-password';

@@ -80,7 +80,7 @@ class StatCard extends StatelessWidget {
                           width: 20.w,
                           height: 20.h,
                           color: textColor,
-                          padding: 10.r,
+                          padding: EdgeInsets.all(10.r),
                         ),
                       ),
                       Text(

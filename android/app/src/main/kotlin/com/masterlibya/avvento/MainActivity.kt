@@ -1,5 +1,6 @@
-package com.example.avvento
+package com.masterlibya.avvento
 
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity : FlutterActivity()
+

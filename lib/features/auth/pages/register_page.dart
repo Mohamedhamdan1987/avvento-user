@@ -4,8 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routes/app_routes.dart';
-import '../../../core/utils/validators.dart';
-import '../../../core/widgets/reusable/svg_icon.dart';
+import '../../../core/widgets/reusable/custom_button_app/custom_button_app.dart';
+import '../../../core/widgets/reusable/custom_text_field.dart';
 import '../controllers/auth_controller.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -17,301 +17,379 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  late final AuthController controller = Get.find<AuthController>();
+  final nameController = TextEditingController();
+  final usernameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  final addressController = TextEditingController();
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    nameController.dispose();
+    usernameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    addressController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<AuthController>();
+
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.drawerPurple),
+        title: Text(
+          'إنشاء حساب جديد',
+          style: TextStyle(
+            fontSize: 20.sp,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textDark,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(24.w),
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(height: 40.h),
-                // Logo or Icon
-                Center(
-                  child: SvgIcon(
-                    iconName: 'assets/svg/logo.svg',
-                    width: 80.w,
-                    height: 80.h,
-                    color: AppColors.primary,
-                  ),
-                ),
-                SizedBox(height: 32.h),
-                // Title
+                SizedBox(height: 20.h),
                 Text(
                   'إنشاء حساب جديد',
                   style: TextStyle(
                     fontSize: 28.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1F2937),
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  'املأ البيانات التالية للبدء',
+                  'املأ البيانات التالية للتسجيل',
                   style: TextStyle(
                     fontSize: 16.sp,
-                    color: const Color(0xFF6B7280),
+                    color: AppColors.textMedium,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 32.h),
                 // Name Field
-                _buildTextField(
-                  controller: _nameController,
-                  label: 'الاسم',
-                  hint: 'أدخل اسمك الكامل',
-                  prefixIcon: 'auth/person',
-                  prefixIconWidget: Icon(Icons.person, color: Color(0xFF9CA3AF),),
-                  keyboardType: TextInputType.name,
-                  validator: Validators.username,
-                ),
-                SizedBox(height: 16.h),
-                // Phone Field
-                _buildTextField(
-                  controller: _phoneController,
-                  label: 'رقم الهاتف',
-                  hint: 'أدخل رقم الهاتف',
-                  prefixIcon: 'auth/phone',
-                  prefixIconWidget: Icon(Icons.phone, color: Color(0xFF9CA3AF),),
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'رقم الهاتف مطلوب';
-                    }
-                    if (!RegExp(r'^09[1-5]\d{7}$').hasMatch(value)) {
-                      return 'رقم الهاتف غير صحيح';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 16.h),
-                // Password Field
-                Obx(
-                  () => _buildTextField(
-                    controller: _passwordController,
-                    label: 'كلمة المرور',
-                    hint: 'أدخل كلمة المرور',
-                    prefixIcon: 'auth/lock',
-                    prefixIconWidget: Icon(Icons.lock, color: Color(0xFF9CA3AF),),
-                    obscureText: controller.obscurePassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        controller.obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: const Color(0xFF9CA3AF),
-                      ),
-                      onPressed: controller.togglePasswordVisibility,
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: AppColors.drawerPurple.withOpacity(0.2),
+                      width: 1.5,
                     ),
-                    validator: Validators.password,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.drawerPurple.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ),
-                SizedBox(height: 16.h),
-                // Confirm Password Field
-                Obx(
-                  () => _buildTextField(
-                    controller: _confirmPasswordController,
-                    label: 'تأكيد كلمة المرور',
-                    hint: 'أعد إدخال كلمة المرور',
-                    prefixIcon: 'auth/lock',
-                    prefixIconWidget: Icon(Icons.lock, color: Color(0xFF9CA3AF),),
-                    obscureText: controller.obscurePassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        controller.obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: const Color(0xFF9CA3AF),
-                      ),
-                      onPressed: controller.togglePasswordVisibility,
-                    ),
+                  child: CustomTextField(
+                    controller: nameController,
+                    label: 'الاسم الكامل',
+                    hint: 'أدخل الاسم الكامل',
+                    prefixIcon: Icons.person,
+                    borderRadius: 16,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'تأكيد كلمة المرور مطلوب';
-                      }
-                      if (value != _passwordController.text) {
-                        return 'كلمة المرور غير متطابقة';
+                      if (value == null || value.trim().isEmpty) {
+                        return 'يرجى إدخال الاسم الكامل';
                       }
                       return null;
                     },
                   ),
                 ),
+                SizedBox(height: 16.h),
+                // Username Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: AppColors.drawerPurple.withOpacity(0.2),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.drawerPurple.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: CustomTextField(
+                    controller: usernameController,
+                    label: 'اسم المستخدم',
+                    hint: 'أدخل اسم المستخدم',
+                    prefixIcon: Icons.account_circle,
+                    borderRadius: 16,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'يرجى إدخال اسم المستخدم';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                // Email Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: AppColors.drawerPurple.withOpacity(0.2),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.drawerPurple.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: CustomTextField(
+                    controller: emailController,
+                    label: 'البريد الإلكتروني',
+                    hint: 'أدخل البريد الإلكتروني',
+                    prefixIcon: Icons.email,
+                    keyboardType: TextInputType.emailAddress,
+                    borderRadius: 16,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'يرجى إدخال البريد الإلكتروني';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                // Phone Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: AppColors.drawerPurple.withOpacity(0.2),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.drawerPurple.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: CustomTextField(
+                    controller: phoneController,
+                    label: 'رقم الهاتف',
+                    hint: 'أدخل رقم الهاتف',
+                    prefixIcon: Icons.phone,
+                    keyboardType: TextInputType.phone,
+                    borderRadius: 16,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'يرجى إدخال رقم الهاتف';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                // Password Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: AppColors.drawerPurple.withOpacity(0.2),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.drawerPurple.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: CustomTextField(
+                    controller: passwordController,
+                    label: 'كلمة المرور',
+                    hint: 'أدخل كلمة المرور',
+                    prefixIcon: Icons.lock,
+                    obscureText: true,
+                    borderRadius: 16,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'يرجى إدخال كلمة المرور';
+                      }
+                      if (value.length < 6) {
+                        return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                // Confirm Password Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: AppColors.drawerPurple.withOpacity(0.2),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.drawerPurple.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: CustomTextField(
+                    controller: confirmPasswordController,
+                    label: 'تأكيد كلمة المرور',
+                    hint: 'أعد إدخال كلمة المرور',
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: true,
+                    borderRadius: 16,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'يرجى تأكيد كلمة المرور';
+                      }
+                      if (value != passwordController.text) {
+                        return 'كلمات المرور غير متطابقة';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                // Address Field (Optional)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: AppColors.drawerPurple.withOpacity(0.2),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.drawerPurple.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: CustomTextField(
+                    controller: addressController,
+                    label: 'العنوان (اختياري)',
+                    hint: 'أدخل العنوان',
+                    prefixIcon: Icons.location_on,
+                    borderRadius: 16,
+                  ),
+                ),
                 SizedBox(height: 32.h),
                 // Register Button
                 Obx(
-                  () => ElevatedButton(
-                    onPressed: controller.isLoading
-                        ? null
-                        : () {
-                            if (_formKey.currentState!.validate()) {
-                              controller.register(
-                                _nameController.text,
-                                _phoneController.text,
-                                _passwordController.text,
-                              );
-                            }
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      elevation: 0,
+                  () => Container(
+                    height: 56.h,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.drawerPurple.withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                    child: controller.isLoading
-                        ? SizedBox(
-                            height: 20.h,
-                            width: 20.w,
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                        : Text(
-                            'إنشاء حساب',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                    child: CustomButtonApp(
+                      text: 'إنشاء حساب',
+                      color: AppColors.drawerPurple,
+                      onTap: controller.isRegisterLoading.value
+                          ? null
+                          : () {
+                              if (!_formKey.currentState!.validate()) {
+                                return;
+                              }
+
+                              controller.register(
+                                name: nameController.text.trim(),
+                                username: usernameController.text.trim(),
+                                email: emailController.text.trim(),
+                                phone: phoneController.text.trim(),
+                                password: passwordController.text,
+                                address: addressController.text.isNotEmpty
+                                    ? addressController.text.trim()
+                                    : null,
+                              );
+                            },
+                      isLoading: controller.isRegisterLoading.value,
+                      borderRadius: 16,
+                    ),
                   ),
                 ),
-                SizedBox(height: 24.h),
+                SizedBox(height: 16.h),
                 // Login Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'لديك حساب بالفعل؟',
+                      'لديك حساب بالفعل؟ ',
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: const Color(0xFF6B7280),
+                        color: AppColors.textMedium,
                       ),
                     ),
                     TextButton(
-                      onPressed: () => Get.toNamed(AppRoutes.login),
+                      onPressed: () {
+                        Get.back();
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      ),
                       child: Text(
-                        'تسجيل الدخول',
+                        'سجل الدخول',
                         style: TextStyle(
                           fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+                          color: AppColors.drawerPurple,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ],
                 ),
+                SizedBox(height: 40.h),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required String prefixIcon,
-    required Widget prefixIconWidget,
-    TextInputType? keyboardType,
-    bool obscureText = false,
-    Widget? suffixIcon,
-    String? Function(String?)? validator,
-    List<TextInputFormatter>? inputFormatters,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF1F2937),
-          ),
-        ),
-        SizedBox(height: 8.h),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          obscureText: obscureText,
-          validator: validator,
-          inputFormatters: inputFormatters,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(
-              fontSize: 14.sp,
-              color: const Color(0xFF9CA3AF),
-            ),
-            prefixIcon: Padding(
-              padding: EdgeInsets.all(12.w),
-              child: prefixIconWidget,
-              // child: SvgIcon(
-              //   iconName: prefixIcon,
-              //   width: 20.w,
-              //   height: 20.h,
-              //   color: const Color(0xFF9CA3AF),
-              // ),
-            ),
-            suffixIcon: suffixIcon,
-            filled: true,
-            fillColor: const Color(0xFFF9FAFB),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(
-                color: const Color(0xFFE5E7EB),
-                width: 1.w,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(
-                color: const Color(0xFFE5E7EB),
-                width: 1.w,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.primary, width: 2.w),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.error, width: 1.w),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 16.w,
-              vertical: 14.h,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

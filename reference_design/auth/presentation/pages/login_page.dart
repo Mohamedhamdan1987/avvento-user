@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import '../../../core/routes/app_routes.dart';
-import '../../../core/widgets/reusable/custom_button_app/custom_button_app.dart';
-import '../../../core/widgets/reusable/custom_text_field.dart';
-import '../../../core/constants/app_colors.dart';
+import '../../../../core/routes/app_routes.dart';
+import '../../../../core/widgets/reusable/custom_button_app/custom_button_app.dart';
+import '../../../../core/widgets/reusable/custom_text_field.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../controllers/auth_controller.dart';
 
 class LoginPage extends StatefulWidget {
@@ -25,9 +25,9 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
     usernameController = TextEditingController();
     passwordController = TextEditingController();
-    if (kDebugMode) {
+    if(kDebugMode){
       // Pre-fill for testing purposes
-      usernameController.text = 'mohamed';
+      usernameController.text = 're1';
       passwordController.text = '123456';
     }
   }
@@ -217,9 +217,8 @@ class _LoginPageState extends State<LoginPage> {
                       child: CustomButtonApp(
                         text: 'تسجيل الدخول',
                         color: AppColors.drawerPurple,
-                        onTap: _handleLogin,
+                        onPressed: _handleLogin,
                         isLoading: controller.isLoginLoading.value,
-                        borderRadius: 16,
                       ),
                     );
                   }),

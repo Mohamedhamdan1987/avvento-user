@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
+import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -185,8 +187,11 @@ class _HomePageContentState extends State<_HomePageContent> {
                               color: AppColors.white.withOpacity(0.2),
                               shape: BoxShape.circle,
                             ),
-                            child: Center(
-                              child: SvgPicture.asset(
+                            child: CustomIconButtonApp(
+                              onTap: () {
+                                Get.toNamed(AppRoutes.notifications);
+                              },
+                              childWidget: SvgPicture.asset(
                                 'assets/svg/client/home/notification.svg',
                                 width: 20.w,
                                 height: 20.h,

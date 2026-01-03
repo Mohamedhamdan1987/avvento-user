@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Primary Colors
-  static const Color primary = Color(0xFFF5871B);
-  static const Color primaryDark = Color(0xFFD67415);
-  static const Color primaryLight = Color(0xFFF9A04A);
+  static const Color primary = purple;
+  static const Color primaryDark = purpleDark;
+  static const Color primaryLight = purpleLight;
 
   // Purple Theme Colors (for client home)
   static const Color purple = Color(0xFF7F22FE);
@@ -15,6 +15,10 @@ class AppColors {
   static const Color background = Color(0xFF000000);
   static const Color surface = Color(0xFF1A1A1A);
   static const Color surfaceLight = Color(0xFF2A2A2A);
+
+  // Restaurant Drawer Colors
+  static const Color drawerPurple = Color(0xFF6A2C91);
+  static const Color drawerPurpleLight = Color(0xFFFAF5FF);
 
   // Light Background Colors (for client screens)
   static const Color lightBackground = Color(0xFFF9FAFB);

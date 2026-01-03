@@ -1,6 +1,10 @@
 import 'package:avvento/features/client/pages/client_nav_bar.dart';
 import 'package:avvento/features/driver/pages/driver_nav_bar.dart';
 import 'package:avvento/features/auth/models/user_model.dart';
+import 'package:avvento/features/notifications/presentation/bindings/notifications_binding.dart';
+import 'package:avvento/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:avvento/features/support/presentation/bindings/support_binding.dart';
+import 'package:avvento/features/support/presentation/pages/support_page.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../features/auth/bindings/auth_binding.dart';
@@ -91,6 +95,18 @@ class AppPages {
       name: AppRoutes.driverNavBar,
       page: () => const DriverNavBar(),
       // binding: DriverBinding(), // Define this later if needed
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: AppRoutes.notifications,
+      page: () => const NotificationsPage(),
+      binding: NotificationsBinding(), // Define this later if needed
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: AppRoutes.restaurantSupport,
+      page: () => const RestaurantSupportPage(),
+      binding: SupportBinding(),
       middlewares: [AuthMiddleware()],
     ),
     GetPage(

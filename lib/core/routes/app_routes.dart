@@ -12,6 +12,11 @@ class AppRoutes {
   static const String clientNavBar = '/client_nav_bar';
   static const String driverNavBar = '/driver_nav_bar';
 
+  // notifications Routes
+  static const String notifications = '/notifications';
+
+  static const String restaurantSupport = '/restaurantSupport';
+
   // Orders Routes
   static const String orders = '/orders';
   static const String orderDetails = '/order-details';

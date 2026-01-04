@@ -218,7 +218,7 @@ class _LoginPageState extends State<LoginPage> {
                         text: 'تسجيل الدخول',
                         color: AppColors.drawerPurple,
                         onTap: _handleLogin,
-                        isLoading: controller.isLoginLoading.value,
+                        isLoading: controller.isLoading,
                         borderRadius: 16,
                       ),
                     );

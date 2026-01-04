@@ -1,0 +1,78 @@
+import '../../restaurants/models/menu_item_model.dart';
+
+class CartItem {
+  final String id;
+  final MenuItem item;
+  final int quantity;
+  final List<String> selectedVariations;
+  final List<String> selectedAddOns;
+  final String notes;
+  final double totalPrice;
+
+  CartItem({
+    required this.id,
+    required this.item,
+    required this.quantity,
+    required this.selectedVariations,
+    required this.selectedAddOns,
+    required this.notes,
+    required this.totalPrice,
+  });
+
+  factory CartItem.fromJson(Map<String, dynamic> json) {
+    return CartItem(
+      id: json['_id'] as String,
+      item: MenuItem.fromJson(json['item'] as Map<String, dynamic>),
+      quantity: json['quantity'] as int,
+      selectedVariations: List<String>.from(json['selectedVariations'] ?? []),
+      selectedAddOns: List<String>.from(json['selectedAddOns'] ?? []),
+      notes: json['notes'] as String? ?? '',
+      totalPrice: (json['totalPrice'] as num).toDouble(),
+    );
+  }
+}
+
+class CartRestaurant {
+  final String id;
+  final String name;
+  final String? logo;
+
+  CartRestaurant({
+    required this.id,
+    required this.name,
+    this.logo,
+  });
+
+  factory CartRestaurant.fromJson(Map<String, dynamic> json) {
+    return CartRestaurant(
+      id: json['_id'] as String,
+      name: json['name'] as String,
+      logo: json['logo'] as String?,
+    );
+  }
+}
+
+class RestaurantCart {
+  final String id;
+  final CartRestaurant restaurant;
+  final List<CartItem> items;
+  final double totalPrice;
+
+  RestaurantCart({
+    required this.id,
+    required this.restaurant,
+    required this.items,
+    required this.totalPrice,
+  });
+
+  factory RestaurantCart.fromJson(Map<String, dynamic> json) {
+    return RestaurantCart(
+      id: json['_id'] as String,
+      restaurant: CartRestaurant.fromJson(json['restaurant'] as Map<String, dynamic>),
+      items: (json['items'] as List<dynamic>)
+          .map((i) => CartItem.fromJson(i as Map<String, dynamic>))
+          .toList(),
+      totalPrice: (json['totalPrice'] as num).toDouble(),
+    );
+  }
+}

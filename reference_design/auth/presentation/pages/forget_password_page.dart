@@ -1,8 +1,8 @@
+import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
+import 'package:avvento/core/widgets/reusable/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../core/routes/app_routes.dart';
-import '../../../../core/widgets/reusable/custom_button_app/custom_button_app.dart';
-import '../../../../core/widgets/reusable/custom_text_field.dart';
+
 import '../controllers/auth_controller.dart';
 
 class ForgetPasswordPage extends StatelessWidget {
@@ -51,7 +51,7 @@ class ForgetPasswordPage extends StatelessWidget {
             Obx(
               () => CustomButtonApp(
                 text: 'إرسال',
-                onPressed: controller.isLoading.value
+                onTap: controller.isLoading.value
                     ? null
                     : () {
                         if (usernameController.text.isEmpty) {

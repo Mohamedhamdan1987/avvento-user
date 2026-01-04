@@ -301,7 +301,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                         horizontal: 16.w,
                         vertical: 12.h,
                       ),
-                      prefixIcon: Padding(
+                      prefixIconWidget: Padding(
                         padding: EdgeInsets.all(12.w),
                         child: SvgPicture.asset(
                           'assets/svg/client/home/search.svg',

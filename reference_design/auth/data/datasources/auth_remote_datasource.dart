@@ -1,6 +1,6 @@
+import 'package:avvento/core/error/api_exception.dart';
+import 'package:avvento/core/network/dio_client.dart';
 import 'package:dio/dio.dart';
-import '../../../../core/network/dio_client.dart';
-import '../../../../core/error/api_exception.dart';
 import '../models/user_model.dart';
 
 class LoginResponse {

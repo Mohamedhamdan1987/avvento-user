@@ -1,14 +1,27 @@
 import 'package:avvento/core/theme/app_text_styles.dart';
-import 'package:avvento/core/widgets/reusable/svg_icon.dart';
+import 'package:avvento/features/client/restaurants/models/menu_item_model.dart';
+import 'package:avvento/features/client/restaurants/models/restaurant_model.dart';
+import 'package:avvento/features/client/restaurants/pages/category_menu_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
+import 'package:get/get.dart';
 import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
+import '../../../../core/widgets/reusable/svg_icon.dart';
+import '../controllers/restaurant_details_controller.dart';
+import '../../../../core/utils/location_utils.dart';
+import '../controllers/restaurants_controller.dart';
 import 'meal_details_dialog.dart';
 
 class RestaurantDetailsScreen extends StatelessWidget {
-  const RestaurantDetailsScreen({super.key});
+  final Restaurant restaurant;
+  
+  RestaurantDetailsScreen({super.key, required this.restaurant}) {
+    Get.delete<RestaurantDetailsController>(); // Ensure fresh controller
+    Get.put(RestaurantDetailsController(restaurant: restaurant));
+  }
+
+  RestaurantDetailsController get controller => Get.find<RestaurantDetailsController>();
 
   @override
   Widget build(BuildContext context) {
@@ -16,42 +29,50 @@ class RestaurantDetailsScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Directionality(
         textDirection: TextDirection.rtl,
-        child: Column(
-          children: [
-            // Top Header Section with Background Image
-            _buildHeaderSection(context),
-            SizedBox(height: 60.h),
+        child: Obx(() {
+          if (controller.isLoadingCategories && controller.categories.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          
+          return Column(
+            children: [
+              // Top Header Section with Background Image
+              _buildHeaderSection(context),
+              SizedBox(height: 60.h),
 
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Restaurant Stats Row
-                    _buildStatsRow(),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Restaurant Stats Row
+                      _buildStatsRow(),
 
-                    SizedBox(height: 14.h),
+                      SizedBox(height: 14.h),
 
-                    // Today's Offers Section
-                    _buildTodaysOffersSection(),
+                      // Today's Offers Section (Hidden if empty, or keep placeholder for now)
+                      // For now, let's keep it but maybe it should be dynamic too.
+                      // The request didn't specify offers, but categories and items.
+                      // _buildTodaysOffersSection(),
 
-                    SizedBox(height: 32.h),
+                      // SizedBox(height: 32.h),
 
-                    // Browse Menu Section
-                    _buildBrowseMenuSection(),
+                      // Browse Menu Section
+                      _buildBrowseMenuSection(),
 
-                    SizedBox(height: 32.h),
+                      SizedBox(height: 32.h),
 
-                    // All Items Section
-                    _buildAllItemsSection(context),
+                      // All Items Section
+                      _buildAllItemsSection(context),
 
-                    SizedBox(height: 32.h),
-                  ],
+                      SizedBox(height: 32.h),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -64,15 +85,16 @@ class RestaurantDetailsScreen extends StatelessWidget {
         Container(
           height: 280.h,
           width: double.infinity,
-          child: ClipRRect(
+            child: ClipRRect(
             borderRadius: BorderRadius.only(bottomRight: Radius.circular(40.r)),
-            child: CachedNetworkImage(
-              imageUrl:
-                  "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: 280.h,
-            ),
+            child: restaurant.backgroundImage != null
+                ? CachedNetworkImage(
+                    imageUrl: restaurant.backgroundImage!,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: 280.h,
+                  )
+                : Container(color: Colors.grey[300]),
           ),
         ),
 
@@ -159,16 +181,16 @@ class RestaurantDetailsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'مطعم الكوخ',
-                style: TextStyle().textColorBold(
+                restaurant.name,
+                style: const TextStyle().textColorBold(
                   fontSize: 25.sp,
                   color: Colors.white,
                 ),
               ),
               SizedBox(height: 4.h),
               Text(
-                'أفضل المأكولات الشامية',
-                style: TextStyle().textColorMedium(
+                restaurant.description,
+                style: const TextStyle().textColorMedium(
                   fontSize: 14.sp,
                   color: Colors.white.withOpacity(0.7),
                 ),
@@ -207,13 +229,17 @@ class RestaurantDetailsScreen extends StatelessWidget {
             ],
           ),
           child: ClipOval(
-            child: CachedNetworkImage(
-              imageUrl:
-                  "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=200",
-              width: 98.w,
-              height: 98.h,
-              fit: BoxFit.cover,
-            ),
+            child: restaurant.logo != null
+                ? CachedNetworkImage(
+                    imageUrl: restaurant.logo!,
+                    width: 98.w,
+                    height: 98.h,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    color: Colors.grey[200],
+                    child: Icon(Icons.restaurant, size: 40.r),
+                  ),
           ),
         ),
       ),
@@ -221,6 +247,21 @@ class RestaurantDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildStatsRow() {
+    String distanceText = '--';
+    String priceText = '--';
+    final restaurantsController = Get.find<RestaurantsController>();
+    if (restaurantsController.userLat != null && restaurantsController.userLong != null) {
+      final distance = LocationUtils.calculateDistance(
+        userLat: restaurantsController.userLat!,
+        userLong: restaurantsController.userLong!,
+        restaurantLat: restaurant.lat,
+        restaurantLong: restaurant.long,
+      );
+      distanceText = LocationUtils.formatDistance(distance);
+      final price = LocationUtils.calculateDeliveryPrice(distanceInKm: distance);
+      priceText = LocationUtils.formatPrice(price);
+    }
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 34.w),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
@@ -234,19 +275,19 @@ class RestaurantDetailsScreen extends StatelessWidget {
         children: [
           _buildStatItem(
             icon: 'assets/svg/client/restaurant_details/clock.svg',
-            value: '25 دقيقة',
+            value: '25 دقيقة', // This could be dynamic if restaurant has preparation time
             label: 'التحضير',
           ),
           Container(width: 1.w, height: 32.h, color: Color(0xFFF3F4F6)),
           _buildStatItem(
             icon: 'assets/svg/client/restaurant_details/location.svg',
-            value: '1.2 كم',
+            value: distanceText,
             label: 'المسافة',
           ),
           Container(width: 1.w, height: 32.h, color: Color(0xFFF3F4F6)),
           _buildStatItem(
             icon: 'assets/svg/client/restaurant_details/bike.svg',
-            value: '10',
+            value: priceText,
             label: 'التوصيل',
           ),
           Container(width: 1.w, height: 32.h, color: Color(0xFFF3F4F6)),
@@ -454,7 +495,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
           padding: EdgeInsetsDirectional.only(start: 24.w),
           child: Text(
             'تصفح المنيو',
-            style: TextStyle().textColorBold(
+            style: const TextStyle().textColorBold(
               fontSize: 18.sp,
               color: Color(0xFF101828),
             ),
@@ -465,40 +506,37 @@ class RestaurantDetailsScreen extends StatelessWidget {
 
         SizedBox(
           height: 140.h,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: [
-              SizedBox(width: 24.w),
-              _buildMenuCategoryCard(
-                imageUrl:
-                    "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200",
-                title: 'برجر',
-                count: '12 وجبة',
-              ),
-              SizedBox(width: 16.w),
-              _buildMenuCategoryCard(
-                imageUrl:
-                    "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=200",
-                title: 'ساندوتش',
-                count: '8 أنواع',
-              ),
-              SizedBox(width: 16.w),
-              _buildMenuCategoryCard(
-                imageUrl:
-                    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200",
-                title: 'وجبات',
-                count: '5 عروض',
-              ),
-              SizedBox(width: 16.w),
-              _buildMenuCategoryCard(
-                imageUrl:
-                    "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=200",
-                title: 'مشروبات',
-                count: '14 نوع',
-              ),
-              SizedBox(width: 24.w),
-            ],
-          ),
+          child: Obx(() {
+            if (controller.isLoadingCategories && controller.categories.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (controller.categories.isEmpty) {
+              return const Center(child: Text('لا توجد تصنيفات'));
+            }
+            return ListView.separated(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              scrollDirection: Axis.horizontal,
+              itemCount: controller.categories.length,
+              separatorBuilder: (context, index) => SizedBox(width: 16.w),
+              itemBuilder: (context, index) {
+                final category = controller.categories[index];
+                return GestureDetector(
+                  onTap: () {
+                    Get.to(() => CategoryMenuPage(
+                          restaurant: restaurant,
+                          category: category,
+                        ));
+                  },
+                  child: _buildMenuCategoryCard(
+                    imageUrl: category.image ?? "",
+                    title: category.name,
+                    count: "",
+                    isSelected: false, // No selection state on the main screen anymore
+                  ),
+                );
+              },
+            );
+          }),
         ),
       ],
     );
@@ -508,21 +546,27 @@ class RestaurantDetailsScreen extends StatelessWidget {
     required String imageUrl,
     required String title,
     required String count,
+    bool isSelected = false,
   }) {
     return Container(
       width: 120.w,
       height: 140.h,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(24.r)),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24.r),
+        border: isSelected ? Border.all(color: Color(0xFF7F22FE), width: 2.w) : null,
+      ),
       child: Stack(
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(24.r),
-            child: CachedNetworkImage(
-              imageUrl: imageUrl,
-              width: 120.w,
-              height: 140.h,
-              fit: BoxFit.cover,
-            ),
+            child: imageUrl.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    width: 120.w,
+                    height: 140.h,
+                    fit: BoxFit.cover,
+                  )
+                : Container(color: Colors.grey[300]),
           ),
           // Dark Overlay
           Container(
@@ -540,19 +584,21 @@ class RestaurantDetailsScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle().textColorBold(
+                  style: const TextStyle().textColorBold(
                     fontSize: 14.sp,
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: 2.h),
-                Text(
-                  count,
-                  style: TextStyle().textColorNormal(
-                    fontSize: 10.sp,
-                    color: Colors.white.withOpacity(0.8),
+                if (count.isNotEmpty) ...[
+                  SizedBox(height: 2.h),
+                  Text(
+                    count,
+                    style: const TextStyle().textColorNormal(
+                      fontSize: 10.sp,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -578,7 +624,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
               ),
               Text(
                 'جميع الأصناف',
-                style: TextStyle().textColorBold(
+                style: const TextStyle().textColorBold(
                   fontSize: 18.sp,
                   color: Color(0xFF101828),
                 ),
@@ -589,25 +635,37 @@ class RestaurantDetailsScreen extends StatelessWidget {
           SizedBox(height: 16.h),
 
           // Items List
-          ...List.generate(3, (index) => _buildItemCard(context)),
+          Obx(() {
+            if (controller.isLoadingItems && controller.items.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (controller.items.isEmpty) {
+              return const Center(child: Text('لا توجد أصناف'));
+            }
+            return Column(
+              children: controller.items.map((item) => _buildItemCard(context, item)).toList(),
+            );
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildItemCard(BuildContext context) {
-    return GestureDetector(
+  Widget _buildItemCard(BuildContext context, MenuItem item) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16.r),
       onTap: () {
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (context) => MealDetailsDialog(),
+          builder: (context) => MealDetailsDialog(menuItem: item),
         );
       },
       child: Container(
-        margin: EdgeInsets.only(bottom: 16.h),
+        margin: EdgeInsets.symmetric(vertical: 8.h),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Item Image
             Container(
@@ -625,52 +683,85 @@ class RestaurantDetailsScreen extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10.r),
-                child: CachedNetworkImage(
-                  imageUrl:
-                      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200",
-                  width: 88.w,
-                  height: 76.h,
-                  fit: BoxFit.cover,
-                ),
+                child: item.image != null && item.image!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: item.image!,
+                        width: 88.w,
+                        height: 76.h,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(color: Colors.grey[300]),
               ),
             ),
 
             SizedBox(width: 12.w),
 
-            // Item Details
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'وجبة فواكه البحر',
-                    style: TextStyle().textColorBold(
-                      fontSize: 14.sp,
-                      color: Color(0xFF0A191E),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(children: [
+                  // Item Details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              item.name,
+                              style: const TextStyle().textColorBold(
+                                fontSize: 14.sp,
+                                color: const Color(0xFF0A191E),
+                              ),
+                            ),
+                            // const Spacer(),
+                            // GestureDetector(
+                            //   onTap: () => controller.toggleFavorite(item.id),
+                            //   child: Padding(
+                            //     padding: EdgeInsets.symmetric(horizontal: 4.w),
+                            //     child: Icon(
+                            //       item.isFav ? Icons.favorite : Icons.favorite_border,
+                            //       size: 20.w,
+                            //       color: item.isFav ? Colors.red : Colors.grey[400],
+                            //     ),
+                            //   ),
+                            // ),
+                          ],
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          item.description,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle().textColorMedium(
+                            fontSize: 12.sp,
+                            color: const Color(0xFF0A191E).withOpacity(0.6),
+                          ),
+                        ),
+
+                      ],
                     ),
                   ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    'وجبات صحية',
-                    style: TextStyle().textColorMedium(
-                      fontSize: 12.sp,
-                      color: Color(0xFF0A191E),
-                    ),
+
+                  // Quantity Selector
+                  Column(
+                    children: [
+                      Text(
+                        '${item.price} د.ل',
+                        style: const TextStyle().textColorMedium(
+                          fontSize: 12.sp,
+                          color: const Color(0xFF0A191E),
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      _buildQuantitySelector(),
+                    ],
                   ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    '15 د.ل',
-                    style: TextStyle().textColorMedium(
-                      fontSize: 12.sp,
-                      color: Color(0xFF0A191E),
-                    ),
-                  ),
-                ],
+                ],),
               ),
             ),
 
-            // Quantity Selector
-            _buildQuantitySelector(),
           ],
         ),
       ),

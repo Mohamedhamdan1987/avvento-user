@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/reusable/bottom_nav_bar.dart';
 import '../home/pages/home_page.dart';
 import '../orders/pages/orders_page.dart';
+import '../cart/pages/cart_list_page.dart';
+import '../cart/controllers/cart_controller.dart';
+import 'package:get/get.dart';
 
 class ClientNavBar extends StatefulWidget {
   const ClientNavBar({super.key});
@@ -16,11 +19,16 @@ class _ClientNavBarState extends State<ClientNavBar> {
   final List<Widget> _pages = [
     const HomePage(),
     const OrdersPage(),
-    const Center(child: Text('المحفظة')),
+    const CartListPage(),
     const Center(child: Text('حسابي')),
   ];
 
   void _onTap(int index) {
+    if (index == 2) {
+      if (Get.isRegistered<CartController>()) {
+        Get.find<CartController>().fetchAllCarts();
+      }
+    }
     setState(() {
       _currentIndex = index;
     });

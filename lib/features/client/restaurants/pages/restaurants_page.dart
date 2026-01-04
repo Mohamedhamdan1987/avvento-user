@@ -387,7 +387,7 @@ class RestaurantCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           // Navigate to restaurant details
-          Get.to(() => const RestaurantDetailsScreen());
+          Get.to(() => RestaurantDetailsScreen(restaurant: restaurant));
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(

@@ -121,7 +121,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                     child: CustomButtonApp(
                       text: 'إرسال',
                       color: AppColors.drawerPurple,
-                      onTap: controller.isLoading.value
+                      onTap: controller.isLoading
                           ? null
                           : () {
                               if (!_formKey.currentState!.validate()) {
@@ -136,7 +136,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                                 colorText: AppColors.textDark,
                               );
                             },
-                      isLoading: controller.isLoading.value,
+                      isLoading: controller.isLoading,
                       borderRadius: 16,
                     ),
                   ),

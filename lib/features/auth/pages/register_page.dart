@@ -331,25 +331,25 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: CustomButtonApp(
                       text: 'إنشاء حساب',
                       color: AppColors.drawerPurple,
-                      onTap: controller.isRegisterLoading.value
+                      onTap: controller.isLoading
                           ? null
                           : () {
                               if (!_formKey.currentState!.validate()) {
                                 return;
                               }
 
-                              controller.register(
-                                name: nameController.text.trim(),
-                                username: usernameController.text.trim(),
-                                email: emailController.text.trim(),
-                                phone: phoneController.text.trim(),
-                                password: passwordController.text,
-                                address: addressController.text.isNotEmpty
-                                    ? addressController.text.trim()
-                                    : null,
-                              );
+                              // controller.register(
+                              //   name: nameController.text.trim(),
+                              //   username: usernameController.text.trim(),
+                              //   email: emailController.text.trim(),
+                              //   phone: phoneController.text.trim(),
+                              //   password: passwordController.text,
+                              //   address: addressController.text.isNotEmpty
+                              //       ? addressController.text.trim()
+                              //       : null,
+                              // );
                             },
-                      isLoading: controller.isRegisterLoading.value,
+                      isLoading: controller.isLoading,
                       borderRadius: 16,
                     ),
                   ),

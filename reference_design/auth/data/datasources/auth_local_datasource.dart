@@ -1,5 +1,5 @@
+import 'package:avvento/core/constants/app_constants.dart';
 import 'package:get_storage/get_storage.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../models/user_model.dart';
 
 abstract class AuthLocalDataSource {

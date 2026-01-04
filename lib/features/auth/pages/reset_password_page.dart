@@ -303,7 +303,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                     child: CustomButtonApp(
                       text: 'إعادة تعيين كلمة المرور',
                       color: AppColors.drawerPurple,
-                      onTap: controller.isLoading.value
+                      onTap:  controller.isLoading
                           ? null
                           : () {
                               if (_formKey.currentState!.validate()) {
@@ -325,7 +325,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                                 );
                               }
                             },
-                      isLoading: controller.isLoading.value,
+                      isLoading:  controller.isLoading,
                       borderRadius: 16,
                     ),
                   ),

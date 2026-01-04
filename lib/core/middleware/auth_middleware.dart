@@ -11,6 +11,7 @@ class AuthMiddleware extends GetMiddleware {
 
   @override
   RouteSettings? redirect(String? route) {
+
     final token = _storage.read<String>(AppConstants.tokenKey);
     final userData = _storage.read<Map<String, dynamic>>(AppConstants.userKey);
     final isAuthenticated =

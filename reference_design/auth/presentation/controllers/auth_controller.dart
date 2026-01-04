@@ -1,8 +1,18 @@
+import 'package:avvento/core/constants/app_constants.dart';
+import 'package:avvento/core/utils/show_snackbar.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/routes/app_routes.dart';
-import '../../../../core/utils/show_snackbar.dart';
+import 'package:avvento/core/routes/app_routes.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
+import 'package:avvento/core/widgets/reusable/custom_text_field.dart';
+
+import 'package:avvento/core/constants/app_colors.dart';
+
+import '../controllers/auth_controller.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
@@ -73,8 +83,8 @@ class AuthController extends GetxController {
       );
 
       // Navigate based on user role
-      if (user.role == 'restaurant') {
-        Get.offAllNamed(AppRoutes.restaurantHome);
+      if (user.role == 'client') {
+        Get.offAllNamed(AppRoutes.clientNavBar);
       } else if (user.role == 'delivery' || user.role == 'driver') {
         // TODO: Add driver route when implemented
         Get.offAllNamed(AppRoutes.login);

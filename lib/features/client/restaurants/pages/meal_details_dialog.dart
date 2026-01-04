@@ -5,9 +5,15 @@ import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_butt
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+
+import '../controllers/restaurant_details_controller.dart';
+import '../models/menu_item_model.dart';
 
 class MealDetailsDialog extends StatefulWidget {
-  const MealDetailsDialog({super.key});
+  final MenuItem menuItem;
+  const MealDetailsDialog({super.key, required this.menuItem});
 
   @override
   State<MealDetailsDialog> createState() => _MealDetailsDialogState();
@@ -17,9 +23,20 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
   int quantity = 1;
   String? selectedNote;
   final TextEditingController notesController = TextEditingController();
-  final Set<String> excludedIngredients = {};
-  final Set<String> selectedAdditions = {'جبنة إضافية', 'صوص خاص'};
-  double basePrice = 25.0;
+  
+  Variation? selectedVariation;
+  final Set<String> selectedAddOnIds = {};
+  
+  late double basePrice;
+
+  @override
+  void initState() {
+    super.initState();
+    basePrice = widget.menuItem.price;
+    if (widget.menuItem.variations.isNotEmpty) {
+      selectedVariation = widget.menuItem.variations.first;
+    }
+  }
 
   @override
   void dispose() {
@@ -28,11 +45,14 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
   }
 
   double get totalPrice {
-    double additionsPrice = 0.0;
-    if (selectedAdditions.contains('جبنة إضافية')) additionsPrice += 2.0;
-    if (selectedAdditions.contains('صوص خاص')) additionsPrice += 1.0;
-    if (selectedAdditions.contains('شريحة لحم')) additionsPrice += 5.0;
-    return (basePrice + additionsPrice) * quantity;
+    double variationPrice = selectedVariation?.price ?? basePrice;
+    double addOnsTotal = 0.0;
+    for (final addOn in widget.menuItem.addOns) {
+      if (selectedAddOnIds.contains(addOn.id)) {
+        addOnsTotal += addOn.price;
+      }
+    }
+    return (variationPrice + addOnsTotal) * quantity;
   }
 
   @override
@@ -69,13 +89,17 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                     
                     SizedBox(height: 16.h),
                     
-                    // Exclude Ingredients Section
-                    _buildExcludeIngredientsSection(),
-                    
-                    SizedBox(height: 16.h),
+                    // Variations Section
+                    if (widget.menuItem.variations.isNotEmpty) ...[
+                      _buildVariationsSection(),
+                      SizedBox(height: 16.h),
+                    ],
                     
                     // Additions Section
-                    _buildAdditionsSection(),
+                    if (widget.menuItem.addOns.isNotEmpty) ...[
+                      _buildAdditionsSection(),
+                      SizedBox(height: 16.h),
+                    ],
                     
                     SizedBox(height: 100.h), // Space for bottom bar
                   ],
@@ -104,12 +128,14 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
               topLeft: Radius.circular(40.r),
               topRight: Radius.circular(40.r),
             ),
-            child: CachedNetworkImage(
-              imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: 290.h,
-            ),
+            child: widget.menuItem.image != null && widget.menuItem.image!.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: widget.menuItem.image!,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: 290.h,
+                  )
+                : Container(color: Colors.grey[300]),
           ),
         ),
         
@@ -166,14 +192,19 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
             color: Colors.white.withOpacity(0.2),
             borderColor: Colors.white.withOpacity(0.2),
             onTap: () {
-              // Handle favorite
+              final controller = Get.find<RestaurantDetailsController>();
+              controller.toggleFavorite(widget.menuItem.id);
             },
-            childWidget: SvgIcon(
-              iconName: 'assets/svg/client/fav.svg',
-              width: 24.w,
-              height: 24.h,
-              color: Colors.white,
-            ),
+            childWidget: Obx(() {
+              final controller = Get.find<RestaurantDetailsController>();
+              final isFav = controller.isItemFavorite(widget.menuItem.id);
+              return SvgIcon(
+                iconName: 'assets/svg/client/fav.svg',
+                width: 24.w,
+                height: 24.h,
+                color: isFav ? Colors.red : Colors.white,
+              );
+            }),
           ),
         ),
       ],
@@ -198,7 +229,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '25',
+                        widget.menuItem.price.toStringAsFixed(0),
                         style: TextStyle().textColorBold(
                           fontSize: 24.sp,
                           color: Color(0xFF101828),
@@ -255,7 +286,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
               // Meal Name
               Expanded(
                 child: Text(
-                  'وجبة دسمة',
+                  widget.menuItem.name,
                   style: TextStyle().textColorBold(
                     fontSize: 25.sp,
                     color: Color(0xFF101828),
@@ -270,7 +301,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
           
           // Description
           Text(
-            'شريحة لحم بقري، جبنة شيدر، خس، طماطم، صوص خاص',
+            widget.menuItem.description,
             style: TextStyle().textColorMedium(
               fontSize: 14.sp,
               color: Color(0xFF6A7282),
@@ -327,7 +358,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                     ),
                     SizedBox(width: 4.w),
                     Text(
-                      '15-20 دقيقة',
+                      '${widget.menuItem.preparationTime} دقيقة',
                       style: TextStyle().textColorBold(
                         fontSize: 12.sp,
                         color: Color(0xFF99A1AF),
@@ -401,22 +432,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
     );
   }
 
-  Widget _buildExcludeIngredientsSection() {
-    final ingredients = [
-      {'emoji': '🥒', 'name': 'بدون مخلل'},
-      {'emoji': '🍅', 'name': 'بدون طماطم'},
-      {'emoji': '🍚', 'name': 'بدون أرز'},
-      {'emoji': '🍟', 'name': 'بدون بطاطا'},
-      {'emoji': '🥗', 'name': 'بدون سلطة'},
-      {'emoji': '🥬', 'name': 'بدون خس'},
-      {'emoji': '🧀', 'name': 'بدون جبن'},
-      {'emoji': '🏺', 'name': 'بدون صوص'},
-      {'emoji': '🍗', 'name': 'بدون دجاج'},
-      {'emoji': '🥩', 'name': 'بدون لحم'},
-      {'emoji': '🍳', 'name': 'بدون بيض'},
-      {'emoji': '🧅', 'name': 'بدون بصل'},
-    ];
-
+  Widget _buildVariationsSection() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
@@ -424,21 +440,6 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
         children: [
           Row(
             children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                child: Text(
-                  'اختياري',
-                  style: TextStyle().textColorNormal(
-                    fontSize: 12.sp,
-                    color: Color(0xFF99A1AF),
-                  ),
-                ),
-              ),
-              SizedBox(width: 8.w),
               SvgIcon(
                 iconName: 'assets/svg/client/restaurant_details/menu_icon.svg',
                 width: 20.w,
@@ -446,7 +447,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
               ),
               SizedBox(width: 8.w),
               Text(
-                'استثناء مكونات',
+                'اختر الحجم',
                 style: TextStyle().textColorBold(
                   fontSize: 18.sp,
                   color: Color(0xFF101828),
@@ -454,69 +455,51 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
               ),
             ],
           ),
-          
           SizedBox(height: 16.h),
-          
-          SizedBox(
-            height: 83.h,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                ...ingredients.map((ingredient) {
-                  final isSelected = excludedIngredients.contains(ingredient['name']);
-                  return Padding(
-                    padding: EdgeInsetsDirectional.only(end: 12.w),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          if (isSelected) {
-                            excludedIngredients.remove(ingredient['name']);
-                          } else {
-                            excludedIngredients.add(ingredient['name']!);
-                          }
-                        });
-                      },
-                      child: Container(
-                        width: 110.w,
-                        height: 83.h,
-                        decoration: BoxDecoration(
-                          color: isSelected && ingredient['name'] == 'بدون طماطم'
-                              ? Color(0xFFFEF2F2)
-                              : Colors.white,
-                          border: Border.all(
-                            color: isSelected && ingredient['name'] == 'بدون طماطم'
-                                ? Color(0xFFFB2C36)
-                                : Color(0xFFE5E7EB),
-                            width: 1.5.w,
-                          ),
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              ingredient['emoji']!,
-                              style: TextStyle(fontSize: 24.sp),
-                            ),
-                            SizedBox(height: 8.h),
-                            Text(
-                              ingredient['name']!,
-                              style: TextStyle().textColorBold(
-                                fontSize: 12.sp,
-                                color: isSelected && ingredient['name'] == 'بدون طماطم'
-                                    ? Color(0xFFE7000B)
-                                    : Color(0xFF6A7282),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+          Wrap(
+            spacing: 12.w,
+            runSpacing: 12.h,
+            children: widget.menuItem.variations.map((variation) {
+              final isSelected = selectedVariation?.id == variation.id;
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedVariation = variation;
+                  });
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Color(0xFFF5F3FF) : Colors.white,
+                    border: Border.all(
+                      color: isSelected ? Color(0xFF8E51FF) : Color(0xFFF3F4F6),
+                      width: isSelected ? 1.5.w : 0.76.w,
+                    ),
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        variation.name,
+                        style: TextStyle().textColorBold(
+                          fontSize: 14.sp,
+                          color: Color(0xFF101828),
                         ),
                       ),
-                    ),
-                  );
-                }),
-              ],
-            ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        '${variation.price.toStringAsFixed(0)} د.ل',
+                        style: TextStyle().textColorBold(
+                          fontSize: 12.sp,
+                          color: Color(0xFF7F22FE),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -524,27 +507,6 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
   }
 
   Widget _buildAdditionsSection() {
-    final additions = [
-      {
-        'name': 'جبنة إضافية',
-        'price': 2.0,
-        'emoji': '🧀',
-        'icon': 'assets/svg/client/restaurant_details/menu_icon.svg',
-      },
-      {
-        'name': 'صوص خاص',
-        'price': 1.0,
-        'emoji': '🏺',
-        'icon': 'assets/svg/client/restaurant_details/menu_icon.svg',
-      },
-      {
-        'name': 'شريحة لحم',
-        'price': 5.0,
-        'emoji': '🥩',
-        'icon': 'assets/svg/client/restaurant_details/menu_icon.svg',
-      },
-    ];
-
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
@@ -567,21 +529,18 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
               ),
             ],
           ),
-          
           SizedBox(height: 16.h),
-          
-          ...additions.map((addition) {
-            final name = addition['name'] as String;
-            final isSelected = selectedAdditions.contains(name);
+          ...widget.menuItem.addOns.map((addOn) {
+            final isSelected = selectedAddOnIds.contains(addOn.id);
             return Padding(
               padding: EdgeInsets.only(bottom: 12.h),
               child: GestureDetector(
                 onTap: () {
                   setState(() {
                     if (isSelected) {
-                      selectedAdditions.remove(name);
+                      selectedAddOnIds.remove(addOn.id);
                     } else {
-                      selectedAdditions.add(name);
+                      selectedAddOnIds.add(addOn.id);
                     }
                   });
                 },
@@ -594,20 +553,9 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                       width: isSelected ? 1.5.w : 0.76.w,
                     ),
                     borderRadius: BorderRadius.circular(16.r),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: Color(0xFF8E51FF).withOpacity(0.1),
-                              blurRadius: 0,
-                              offset: Offset(0, 0),
-                              spreadRadius: 1,
-                            ),
-                          ]
-                        : null,
                   ),
                   child: Row(
                     children: [
-                      // Checkbox
                       Container(
                         width: 24.w,
                         height: 24.h,
@@ -615,30 +563,21 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                           shape: BoxShape.circle,
                           color: isSelected ? Color(0xFF7F22FE) : Colors.transparent,
                           border: Border.all(
-                            color: isSelected
-                                ? Color(0xFF7F22FE)
-                                : Color(0xFFD1D5DC),
+                            color: isSelected ? Color(0xFF7F22FE) : Color(0xFFD1D5DC),
                             width: 1.5.w,
                           ),
                         ),
                         child: isSelected
-                            ? Icon(
-                                Icons.check,
-                                size: 14.w,
-                                color: Colors.white,
-                              )
+                            ? Icon(Icons.check, size: 14.w, color: Colors.white)
                             : null,
                       ),
-                      
                       SizedBox(width: 16.w),
-                      
-                      // Name and Price
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              addition['name'] as String,
+                              addOn.name,
                               style: TextStyle().textColorBold(
                                 fontSize: 14.sp,
                                 color: Color(0xFF101828),
@@ -646,7 +585,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                             ),
                             SizedBox(height: 4.h),
                             Text(
-                              '+${(addition['price'] as double).toStringAsFixed(0)} د.ل',
+                              '+${addOn.price.toStringAsFixed(0)} د.ل',
                               style: TextStyle().textColorBold(
                                 fontSize: 12.sp,
                                 color: Color(0xFF7F22FE),
@@ -654,12 +593,6 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                             ),
                           ],
                         ),
-                      ),
-                      
-                      // Emoji
-                      Text(
-                        addition['emoji'] as String,
-                        style: TextStyle(fontSize: 30.sp),
                       ),
                     ],
                   ),
@@ -757,41 +690,73 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
           
           // Add to Cart Button
           Expanded(
-            child: CustomButtonApp(
-              height: 40.h,
-              borderRadius: 20.r,
-              color: Color(0xFF101828),
-              onTap: () {
-                // Handle add to cart
-                Navigator.pop(context);
-              },
-              childWidget: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '${totalPrice.toStringAsFixed(0)} د.ل',
-                    style: TextStyle().textColorBold(
-                      fontSize: 14.sp,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    'إضافة للسلة',
-                    style: TextStyle().textColorBold(
-                      fontSize: 15.sp,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Icon(
-                    Icons.shopping_cart,
-                    size: 20.w,
-                    color: Colors.white,
-                  ),
-                ],
-              ),
-            ),
+            child: Obx(() {
+              final controller = Get.find<RestaurantDetailsController>();
+              final isLoading = controller.isAddingToCart;
+              
+              return CustomButtonApp(
+                height: 40.h,
+                borderRadius: 20.r,
+                color: const Color(0xFF101828),
+                onTap: isLoading ? null : () async {
+                  final selectedVariationNames = selectedVariation != null 
+                      ? [selectedVariation!.name] 
+                      : <String>[];
+                  
+                  final selectedAddOnNames = widget.menuItem.addOns
+                      .where((addOn) => selectedAddOnIds.contains(addOn.id))
+                      .map((addOn) => addOn.name)
+                      .toList();
+                  
+                  await controller.addToCart(
+                    itemId: widget.menuItem.id,
+                    quantity: quantity,
+                    selectedVariations: selectedVariationNames,
+                    selectedAddOns: selectedAddOnNames,
+                    notes: notesController.text,
+                  );
+                  
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
+                childWidget: isLoading
+                    ? SizedBox(
+                        width: 20.w,
+                        height: 20.h,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '${totalPrice.toStringAsFixed(0)} د.ل',
+                            style: TextStyle().textColorBold(
+                              fontSize: 14.sp,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'إضافة للسلة',
+                            style: TextStyle().textColorBold(
+                              fontSize: 15.sp,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Icon(
+                            Icons.shopping_cart,
+                            size: 20.w,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+              );
+            }),
           ),
         ],
       ),

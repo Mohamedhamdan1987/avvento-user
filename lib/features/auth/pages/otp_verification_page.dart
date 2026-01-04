@@ -173,7 +173,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                   child: CustomButtonApp(
                     text: 'تحقق',
                     color: AppColors.drawerPurple,
-                    onTap: controller.isLoading.value
+                    onTap: controller.isLoading
                         ? null
                         : () {
                             if (otpController.text.length != 6) {
@@ -195,7 +195,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                               colorText: AppColors.textDark,
                             );
                           },
-                    isLoading: controller.isLoading.value,
+                    isLoading: controller.isLoading,
                     borderRadius: 16,
                   ),
                 ),

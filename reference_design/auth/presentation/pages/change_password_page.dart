@@ -1,7 +1,7 @@
+import 'package:avvento/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../controllers/auth_controller.dart';
 
 class ChangePasswordPage extends StatefulWidget {

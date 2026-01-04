@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../core/widgets/reusable/custom_button_app/custom_button_app.dart';
-import '../../../../core/widgets/reusable/custom_text_field.dart';
+import 'package:avvento/core/routes/app_routes.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
+import 'package:avvento/core/widgets/reusable/custom_text_field.dart';
+
+import 'package:avvento/core/constants/app_colors.dart';
+
+import '../controllers/auth_controller.dart';
+
 import '../controllers/auth_controller.dart';
 
 class ResetPasswordPage extends StatelessWidget {
@@ -73,7 +83,7 @@ class ResetPasswordPage extends StatelessWidget {
             Obx(
               () => CustomButtonApp(
                 text: 'إعادة التعيين',
-                onPressed: controller.isLoading.value
+                onTap: controller.isLoading.value
                     ? null
                     : () {
                         if (newPasswordController.text.isEmpty ||

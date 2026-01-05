@@ -32,6 +32,42 @@
 - في الـ Row، العناصر تبدأ من اليمين (start = right في RTL)
 - استخدم `crossAxisAlignment: CrossAxisAlignment.end` للنصوص العربية
 
+### 3.1. قراءة ترتيب العناصر من Figma في سياق RTL:
+**مهم جداً:** عند قراءة التصميم من Figma، يجب عكس ترتيب العناصر في الـ Row لأن Figma يعرض التصميم بـ LTR (من اليسار لليمين) بينما التطبيق يعمل بـ RTL (من اليمين لليسار).
+
+**القاعدة الأساسية:**
+- في Figma: العنصر الأول على اليسار (left) = في Flutter RTL: العنصر الأول على اليمين
+- في Figma: العنصر الأخير على اليمين (right) = في Flutter RTL: العنصر الأخير على اليسار
+
+**مثال عملي من Figma:**
+إذا كان في Figma Row يحتوي على:
+1. **Left (يسار)**: Price Section
+2. **Middle (وسط)**: Restaurant Info
+3. **Right (يمين)**: Restaurant Logo
+
+**في Flutter RTL يجب أن يكون:**
+```dart
+Row(
+  children: [
+    // 1. العنصر الأول في Row = على اليمين في RTL
+    _buildRestaurantLogo(...),  // كان Right في Figma
+    SizedBox(width: 12.w),
+    // 2. العنصر الثاني = في الوسط
+    Expanded(child: _buildRestaurantInfo(...)),  // كان Middle في Figma
+    SizedBox(width: 12.w),
+    // 3. العنصر الأخير في Row = على اليسار في RTL
+    _buildPriceSection(...),  // كان Left في Figma
+  ],
+)
+```
+
+**نفس القاعدة تنطبق على:**
+- الأزرار والأيقونات في الـ Row
+- أي Row أفقي يحتوي على عناصر متعددة
+- الـ Stack مع PositionedDirectional (استخدم `start` و `end` بدلاً من `left` و `right`)
+
+**ملاحظة:** في الـ Column (عناصر عمودية)، الترتيب يبقى كما هو من الأعلى للأسفل.
+
 ### 4. تنظيم الأيقونات:
 - ضع الأيقونات في مجلد مخصص للصفحة داخل `assets/svg/client/[feature_name]/`
 - مثال: إذا كانت الصفحة في `lib/features/client/orders/`، ضع الأيقونات في `assets/svg/client/orders/`
@@ -170,14 +206,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 1. **دائماً استخدم `.h`, `.w`, `.r`, `.sp`** - لا تستخدم قيماً ثابتة بدون هذه الامتدادات
 2. **التصميم RTL** - تأكد من أن كل شيء يبدأ من اليمين
-3. **تنظيم الكود** - قسم الكود إلى methods خاصة (`_build...`) لكل قسم
-4. **الأيقونات** - ضعها في مجلد مخصص للصفحة
-5. **الألوان** - استخدم hex colors مثل `Color(0xFF101828)`
-6. **النصوص** - استخدم extension methods من `app_text_styles.dart`
-7. **الصور** - استخدم `CachedNetworkImage` مع `ClipRRect`
-8. **الأزرار** - استخدم `CustomButtonApp` و `CustomIconButtonApp`
-9. **المسافات** - استخدم `SizedBox` و `Padding` بشكل متسق
-10. **الـ Stack** - استخدم `PositionedDirectional` للعناصر المطلقة في RTL
+3. **عكس ترتيب العناصر من Figma** - عند قراءة Row من Figma، اعكس الترتيب: Left في Figma = آخر عنصر في Row، Right في Figma = أول عنصر في Row
+4. **تنظيم الكود** - قسم الكود إلى methods خاصة (`_build...`) لكل قسم
+5. **الأيقونات** - ضعها في مجلد مخصص للصفحة
+6. **الألوان** - استخدم hex colors مثل `Color(0xFF101828)`
+7. **النصوص** - استخدم extension methods من `app_text_styles.dart`
+8. **الصور** - استخدم `CachedNetworkImage` مع `ClipRRect`
+9. **الأزرار** - استخدم `CustomButtonApp` و `CustomIconButtonApp`
+10. **المسافات** - استخدم `SizedBox` و `Padding` بشكل متسق
+11. **الـ Stack** - استخدم `PositionedDirectional` للعناصر المطلقة في RTL
 
 ---
 

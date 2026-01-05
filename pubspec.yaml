@@ -95,6 +95,7 @@ flutter:
     - assets/images/orders/
     - assets/svg/nav/
     - assets/svg/client/
+    - assets/svg/cart/
     - assets/svg/client/home/
     - assets/svg/client/restaurant_details/
     - assets/svg/client/orders/

@@ -105,26 +105,21 @@ class _CustomButtonAppState extends State<CustomButtonApp> {
                         ),
                       )
                     else
-                      Padding(
-                        padding: const EdgeInsets.only(top: 3),
-
-                        child:
-                            widget.childWidget ??
-                            Text(
-                              widget.text ?? '',
-                              textAlign: TextAlign.center,
-                              style:
-                                  widget.textStyle ??
-                                  TextStyle(
-                                    height: widget.fontHeight,
-                                    fontSize: widget.fontSize ?? 16.sp,
-                                    color: widget.isFill
-                                        ? (widget.isEnable
-                                              ? Colors.white
-                                              : const Color(0xFFACACAC))
-                                        : AppColors.primary,
-                                  )
-                            ),
+                      widget.childWidget ??
+                      Text(
+                        widget.text ?? '',
+                        textAlign: TextAlign.center,
+                        style:
+                            widget.textStyle ??
+                            TextStyle(
+                              height: widget.fontHeight,
+                              fontSize: widget.fontSize ?? 16.sp,
+                              color: widget.isFill
+                                  ? (widget.isEnable
+                                        ? Colors.white
+                                        : const Color(0xFFACACAC))
+                                  : AppColors.primary,
+                            )
                       ),
                     if (widget.image != null && !widget.isLoading)
                       Padding(

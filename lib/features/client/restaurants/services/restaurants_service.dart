@@ -45,6 +45,16 @@ class RestaurantsService {
     }
   }
 
+  /// Fetch restaurant details by ID
+  Future<Restaurant> getRestaurantDetails(String restaurantId) async {
+    try {
+      final response = await _dioClient.get('/restaurants/$restaurantId');
+      return Restaurant.fromJson(response.data as Map<String, dynamic>);
+    } on DioException {
+      rethrow;
+    }
+  }
+
   /// Fetch restaurant categories
   Future<List<MenuCategory>> getMenuCategories(String restaurantId) async {
     try {

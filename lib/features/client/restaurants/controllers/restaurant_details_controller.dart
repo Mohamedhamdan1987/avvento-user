@@ -9,12 +9,13 @@ import '../../cart/controllers/cart_controller.dart';
 
 class RestaurantDetailsController extends GetxController {
   final RestaurantsService _restaurantsService = RestaurantsService();
-  final Restaurant restaurant;
+  final String restaurantId;
 
-  RestaurantDetailsController({required this.restaurant});
+  RestaurantDetailsController({required this.restaurantId});
 
   // Observable state
   final RxList<MenuCategory> _categories = <MenuCategory>[].obs;
+  final Rxn<Restaurant> _restaurant = Rxn<Restaurant>();
   final RxList<SubCategory> _subCategories = <SubCategory>[].obs;
   final RxList<MenuItem> _allItems = <MenuItem>[].obs;
   final RxList<MenuItem> _filteredItems = <MenuItem>[].obs;
@@ -22,6 +23,7 @@ class RestaurantDetailsController extends GetxController {
   final RxString _selectedCategoryId = ''.obs;
   final RxString _selectedSubCategoryId = ''.obs;
   
+  final RxBool _isLoadingRestaurantDetails = false.obs;
   final RxBool _isLoadingCategories = false.obs;
   final RxBool _isLoadingSubCategories = false.obs;
   final RxBool _isLoadingItems = false.obs;
@@ -30,12 +32,14 @@ class RestaurantDetailsController extends GetxController {
 
   // Getters
   List<MenuCategory> get categories => _categories;
+  Restaurant? get restaurant => _restaurant.value;
   List<SubCategory> get subCategories => _subCategories;
   List<MenuItem> get items => _filteredItems;
   
   String get selectedCategoryId => _selectedCategoryId.value;
   String get selectedSubCategoryId => _selectedSubCategoryId.value;
   
+  bool get isLoadingRestaurantDetails => _isLoadingRestaurantDetails.value;
   bool get isLoadingCategories => _isLoadingCategories.value;
   bool get isLoadingSubCategories => _isLoadingSubCategories.value;
   bool get isLoadingItems => _isLoadingItems.value;
@@ -50,6 +54,7 @@ class RestaurantDetailsController extends GetxController {
   }
 
   Future<void> fetchInitialData() async {
+    await getRestaurantDetails();
     await fetchCategories();
     await fetchItems();
   }
@@ -87,11 +92,24 @@ class RestaurantDetailsController extends GetxController {
     }
   }
 
+  Future<void> getRestaurantDetails() async {
+    try {
+      _isLoadingRestaurantDetails.value = true; // Or use a separate loading for restaurant details?
+      _errorMessage.value = '';
+      final restaurant = await _restaurantsService.getRestaurantDetails(restaurantId);
+      _restaurant.value = restaurant;
+    } catch (e) {
+      _errorMessage.value = 'فشل تحميل بيانات المطعم: ${e.toString()}';
+    } finally {
+      _isLoadingRestaurantDetails.value = false;
+    }
+  }
+
   Future<void> fetchCategories() async {
     try {
       _isLoadingCategories.value = true;
       _errorMessage.value = '';
-      final categories = await _restaurantsService.getMenuCategories(restaurant.user.id);
+      final categories = await _restaurantsService.getMenuCategories(restaurant!.user.id);
       _categories.assignAll(categories);
     } catch (e) {
       _errorMessage.value = 'فشل تحميل التصنيفات: ${e.toString()}';
@@ -104,7 +122,7 @@ class RestaurantDetailsController extends GetxController {
     try {
       _isLoadingItems.value = true;
       _errorMessage.value = '';
-      final items = await _restaurantsService.getMenuItems(restaurant.user.id);
+      final items = await _restaurantsService.getMenuItems(restaurant!.user.id);
       _allItems.assignAll(items);
       _filterItems();
     } catch (e) {
@@ -179,7 +197,7 @@ class RestaurantDetailsController extends GetxController {
     try {
       _isLoadingItems.value = true;
       final items = await _restaurantsService.getMenuItems(
-        restaurant.user.id,
+        restaurant!.user.id,
         categoryId: _selectedCategoryId.value,
         subCategoryId: _selectedSubCategoryId.value,
       );

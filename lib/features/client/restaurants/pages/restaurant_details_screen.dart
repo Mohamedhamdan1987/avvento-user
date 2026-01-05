@@ -14,11 +14,11 @@ import '../controllers/restaurants_controller.dart';
 import 'meal_details_dialog.dart';
 
 class RestaurantDetailsScreen extends StatelessWidget {
-  final Restaurant restaurant;
+  final String restaurantId;
   
-  RestaurantDetailsScreen({super.key, required this.restaurant}) {
+  RestaurantDetailsScreen({super.key, required this.restaurantId}) {
     Get.delete<RestaurantDetailsController>(); // Ensure fresh controller
-    Get.put(RestaurantDetailsController(restaurant: restaurant));
+    Get.put(RestaurantDetailsController(restaurantId: restaurantId));
   }
 
   RestaurantDetailsController get controller => Get.find<RestaurantDetailsController>();
@@ -30,9 +30,10 @@ class RestaurantDetailsScreen extends StatelessWidget {
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Obx(() {
-          if (controller.isLoadingCategories && controller.categories.isEmpty) {
+          if (controller.isLoadingRestaurantDetails || controller.restaurant == null ) {
             return const Center(child: CircularProgressIndicator());
           }
+
           
           return Column(
             children: [
@@ -87,9 +88,9 @@ class RestaurantDetailsScreen extends StatelessWidget {
           width: double.infinity,
             child: ClipRRect(
             borderRadius: BorderRadius.only(bottomRight: Radius.circular(40.r)),
-            child: restaurant.backgroundImage != null
+            child: controller.restaurant!.backgroundImage != null
                 ? CachedNetworkImage(
-                    imageUrl: restaurant.backgroundImage!,
+                    imageUrl: controller.restaurant!.backgroundImage!,
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: 280.h,
@@ -181,7 +182,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                restaurant.name,
+                controller.restaurant!.name,
                 style: const TextStyle().textColorBold(
                   fontSize: 25.sp,
                   color: Colors.white,
@@ -189,7 +190,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
               ),
               SizedBox(height: 4.h),
               Text(
-                restaurant.description,
+                controller.restaurant!.description,
                 style: const TextStyle().textColorMedium(
                   fontSize: 14.sp,
                   color: Colors.white.withOpacity(0.7),
@@ -229,9 +230,9 @@ class RestaurantDetailsScreen extends StatelessWidget {
             ],
           ),
           child: ClipOval(
-            child: restaurant.logo != null
+            child: controller.restaurant!.logo != null
                 ? CachedNetworkImage(
-                    imageUrl: restaurant.logo!,
+                    imageUrl: controller.restaurant!.logo!,
                     width: 98.w,
                     height: 98.h,
                     fit: BoxFit.cover,
@@ -254,8 +255,8 @@ class RestaurantDetailsScreen extends StatelessWidget {
       final distance = LocationUtils.calculateDistance(
         userLat: restaurantsController.userLat!,
         userLong: restaurantsController.userLong!,
-        restaurantLat: restaurant.lat,
-        restaurantLong: restaurant.long,
+        restaurantLat: controller.restaurant!.lat,
+        restaurantLong: controller.restaurant!.long,
       );
       distanceText = LocationUtils.formatDistance(distance);
       final price = LocationUtils.calculateDeliveryPrice(distanceInKm: distance);
@@ -488,6 +489,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildBrowseMenuSection() {
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -523,7 +525,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                 return GestureDetector(
                   onTap: () {
                     Get.to(() => CategoryMenuPage(
-                          restaurant: restaurant,
+                          restaurant: controller.restaurant!,
                           category: category,
                         ));
                   },

@@ -1,9 +1,13 @@
 import 'package:get/get.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../restaurants/services/restaurants_service.dart';
 import '../models/cart_model.dart';
+import '../../orders/services/orders_service.dart';
+import '../../orders/models/order_model.dart';
 
 class CartController extends GetxController {
   final RestaurantsService _restaurantsService = RestaurantsService();
+  final OrdersService _ordersService = OrdersService();
 
   final RxList<RestaurantCart> _carts = <RestaurantCart>[].obs;
   final Rx<RestaurantCart?> _detailedCart = Rx<RestaurantCart?>(null);
@@ -119,5 +123,41 @@ class CartController extends GetxController {
 
   void refreshCarts() {
     fetchAllCarts();
+  }
+
+  Future<void> placeOrder({
+    required String restaurantId,
+    required String deliveryAddress,
+    required double deliveryLat,
+    required double deliveryLong,
+    String? notes,
+  }) async {
+    _isLoading.value = true;
+    _errorMessage.value = '';
+    try {
+      final order = await _ordersService.createOrder(
+        restaurantId: restaurantId,
+        deliveryAddress: deliveryAddress,
+        deliveryLat: deliveryLat,
+        deliveryLong: deliveryLong,
+        notes: notes,
+      );
+      
+      // Clear the cart for this restaurant locally and refresh
+      _detailedCart.value = null;
+      await fetchAllCarts();
+      
+      Get.snackbar('نجاح', 'تم إرسال طلبك بنجاح');
+      
+      // Navigate to order details or success page
+      // For now, let's just go back to the restaurants list or orders page
+      Get.offAllNamed(AppRoutes.clientNavBar); 
+    } catch (e) {
+      _errorMessage.value = 'فشل إتمام الطلب';
+      print('Error placing order: $e');
+      Get.snackbar('خطأ', 'فشل إرسال الطلب، يرجى المحاولة مرة أخرى');
+    } finally {
+      _isLoading.value = false;
+    }
   }
 }

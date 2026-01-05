@@ -4,6 +4,7 @@ import '../home/pages/home_page.dart';
 import '../orders/pages/orders_page.dart';
 import '../cart/pages/cart_list_page.dart';
 import '../cart/controllers/cart_controller.dart';
+import '../account/pages/account_page.dart';
 import 'package:get/get.dart';
 
 class ClientNavBar extends StatefulWidget {
@@ -20,7 +21,7 @@ class _ClientNavBarState extends State<ClientNavBar> {
     const HomePage(),
     const OrdersPage(),
     const CartListPage(),
-    const Center(child: Text('حسابي')),
+    const AccountPage(),
   ];
 
   void _onTap(int index) {

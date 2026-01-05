@@ -17,6 +17,7 @@ class CustomTextField extends StatefulWidget {
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
   final List<TextInputFormatter>? inputFormatters;
+  final int? maxLines;
 
   const CustomTextField({
     super.key,
@@ -33,6 +34,7 @@ class CustomTextField extends StatefulWidget {
     this.keyboardType,
     this.validator,
     this.inputFormatters,
+    this.maxLines = 1,
   });
 
   @override
@@ -82,6 +84,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       keyboardType: widget.keyboardType,
       validator: widget.validator,
       inputFormatters: widget.inputFormatters,
+      maxLines: widget.maxLines,
       decoration: InputDecoration(
         hintText: widget.hint,
         hintStyle: TextStyle(

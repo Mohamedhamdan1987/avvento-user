@@ -26,12 +26,14 @@ class AppRoutes {
   static const String changePassword = '/change-password';
   static const String editAddress = '/edit-address';
   static const String editProfile = '/edit-profile';
+  static const String addressList = '/address-list';
+  static const String mapSelection = '/map-selection';
 
   // Restaurants Routes
   static const String restaurants = '/restaurants';
 
-  // Add more routes here as you add features
-  // Example:
-  // static const String profile = '/profile';
-  // static const String settings = '/settings';
+  static const String cartListPage = '/cart-list-page';
+  static const String restaurantCartDetails = '/restaurant-cart-details';
+
+
 }

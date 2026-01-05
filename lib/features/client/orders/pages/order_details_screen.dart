@@ -5,9 +5,12 @@ import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_butt
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import '../models/order_model.dart';
+import '../widgets/order_tracking_dialog.dart';
 
 class OrderDetailsScreen extends StatelessWidget {
-  final Map<String, dynamic> order;
+  final OrderModel order;
 
   const OrderDetailsScreen({
     super.key,
@@ -17,7 +20,7 @@ class OrderDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF9FAFB),
+      backgroundColor: const Color(0xFFF9FAFB),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
@@ -55,7 +58,7 @@ class OrderDetailsScreen extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
             blurRadius: 1,
-            offset: Offset(0, 1),
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -68,8 +71,8 @@ class OrderDetailsScreen extends StatelessWidget {
             children: [
               SizedBox(width: 32.w),
               Text(
-                'طلباتي',
-                style: TextStyle().textColorBold(
+                'تفاصيل الطلب',
+                style: const TextStyle().textColorBold(
                   fontSize: 18.sp,
                   color: Color(0xFF101828),
                 ),
@@ -86,7 +89,7 @@ class OrderDetailsScreen extends StatelessWidget {
                   iconName: 'assets/svg/arrow-right.svg',
                   width: 20.w,
                   height: 20.h,
-                  color: Color(0xFF101828),
+                  color: const Color(0xFF101828),
                 ),
               ),
             ],
@@ -106,7 +109,7 @@ class OrderDetailsScreen extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
             blurRadius: 30,
-            offset: Offset(0, 8),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -124,7 +127,8 @@ class OrderDetailsScreen extends StatelessWidget {
           SizedBox(height: 24.h),
           
           // Estimated Time Section
-          _buildEstimatedTimeSection(),
+          if (order.status != 'delivered' && order.status != 'cancelled' && order.status != 'completed')
+            _buildEstimatedTimeSection(),
           
           SizedBox(height: 24.h),
           
@@ -141,10 +145,11 @@ class OrderDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildProgressBar() {
+    int completedSteps = _getCompletedSteps(order.status);
     return Container(
       height: 6.h,
       decoration: BoxDecoration(
-        color: Color(0xFFF3F4F6),
+        color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(3.r),
       ),
       child: Row(
@@ -152,43 +157,34 @@ class OrderDetailsScreen extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Color(0xFF7F22FE),
+                color: completedSteps >= 1 ? const Color(0xFF7F22FE) : Colors.transparent,
                 borderRadius: BorderRadius.circular(3.r),
-                border: BorderDirectional(
-                  end: BorderSide(
-                    color: Colors.white,
-                    width: 0.76.w,
-                  ),
-                ),
+                border: completedSteps >= 1 ? BorderDirectional(end: BorderSide(color: Colors.white, width: 0.76.w)) : null,
               ),
             ),
           ),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Color(0xFF7F22FE),
+                color: completedSteps >= 2 ? const Color(0xFF7F22FE) : Colors.transparent,
                 borderRadius: BorderRadius.circular(3.r),
-                border: BorderDirectional(
-                  end: BorderSide(
-                    color: Colors.white,
-                    width: 0.76.w,
-                  ),
-                ),
+                border: completedSteps >= 2 ? BorderDirectional(end: BorderSide(color: Colors.white, width: 0.76.w)) : null,
               ),
             ),
           ),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.transparent,
+                color: completedSteps >= 3 ? const Color(0xFF7F22FE) : Colors.transparent,
                 borderRadius: BorderRadius.circular(3.r),
+                border: completedSteps >= 3 ? BorderDirectional(end: BorderSide(color: Colors.white, width: 0.76.w)) : null,
               ),
             ),
           ),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.transparent,
+                color: completedSteps >= 4 ? const Color(0xFF7F22FE) : Colors.transparent,
                 borderRadius: BorderRadius.circular(3.r),
               ),
             ),
@@ -196,6 +192,18 @@ class OrderDetailsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  int _getCompletedSteps(String? status) {
+    switch (status) {
+      case 'pending_restaurant': return 0;
+      case 'confirmed': return 1;
+      case 'preparing': return 2;
+      case 'on_the_way': return 3;
+      case 'delivered': return 4;
+      case 'completed': return 4;
+      default: return 1;
+    }
   }
 
   Widget _buildOrderHeader() {
@@ -206,12 +214,12 @@ class OrderDetailsScreen extends StatelessWidget {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
           decoration: BoxDecoration(
-            color: Color(0xFFF9FAFB),
+            color: const Color(0xFFF9FAFB),
             borderRadius: BorderRadius.circular(10.r),
           ),
           child: Text(
-            '#${order['id']}',
-            style: TextStyle().textColorBold(
+            '#${order.id.substring(order.id.length - 4)}',
+            style: const TextStyle().textColorBold(
               fontSize: 12.sp,
               color: Color(0xFF99A1AF),
             ),
@@ -227,29 +235,29 @@ class OrderDetailsScreen extends StatelessWidget {
                 width: 56.w,
                 height: 56.h,
                 decoration: BoxDecoration(
-                  color: Color(0xFFF9FAFB),
+                  color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(16.r),
                   border: Border.all(
-                    color: Color(0xFFF3F4F6),
+                    color: const Color(0xFFF3F4F6),
                     width: 0.76.w,
                   ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
                       blurRadius: 3,
-                      offset: Offset(0, 1),
+                      offset: const Offset(0, 1),
                     ),
                   ],
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16.r),
                   child: CachedNetworkImage(
-                    imageUrl: order['restaurantImage'] ?? '',
+                    imageUrl: order.restaurant.logo ?? '',
                     width: 56.w,
                     height: 56.h,
                     fit: BoxFit.cover,
                     errorWidget: (context, url, error) => Container(
-                      color: Color(0xFFF9FAFB),
+                      color: const Color(0xFFF9FAFB),
                     ),
                   ),
                 ),
@@ -261,8 +269,8 @@ class OrderDetailsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      order['restaurantName'] ?? '',
-                      style: TextStyle().textColorBold(
+                      order.restaurant.name,
+                      style: const TextStyle().textColorBold(
                         fontSize: 18.sp,
                         color: Color(0xFF101828),
                       ),
@@ -271,7 +279,7 @@ class OrderDetailsScreen extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                       decoration: BoxDecoration(
-                        color: Color(0xFFF5F3FF),
+                        color: _getStatusColor(order.status).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10.r),
                       ),
                       child: Row(
@@ -281,16 +289,16 @@ class OrderDetailsScreen extends StatelessWidget {
                             width: 8.w,
                             height: 8.h,
                             decoration: BoxDecoration(
-                              color: Color(0xFF7F22FE),
+                              color: _getStatusColor(order.status),
                               shape: BoxShape.circle,
                             ),
                           ),
                           SizedBox(width: 6.w),
                           Text(
-                            'جاري تحضير طلبك',
+                            _getStatusText(order.status),
                             style: TextStyle().textColorBold(
                               fontSize: 12.sp,
-                              color: Color(0xFF7F22FE),
+                              color: _getStatusColor(order.status),
                             ),
                           ),
                         ],
@@ -306,11 +314,35 @@ class OrderDetailsScreen extends StatelessWidget {
     );
   }
 
+  Color _getStatusColor(String? status) {
+    switch (status) {
+      case 'pending_restaurant': return const Color(0xFF7F22FE);
+      case 'confirmed': return const Color(0xFF00C950);
+      case 'preparing': return const Color(0xFF7F22FE);
+      case 'on_the_way': return const Color(0xFF7F22FE);
+      case 'delivered': return const Color(0xFF00C950);
+      case 'completed': return const Color(0xFF00C950);
+      default: return const Color(0xFF7F22FE);
+    }
+  }
+
+  String _getStatusText(String? status) {
+    switch (status) {
+      case 'pending_restaurant': return 'بانتظار قبول المطعم';
+      case 'confirmed': return 'تم تأكيد الطلب';
+      case 'preparing': return 'جاري تحضير طلبك';
+      case 'on_the_way': return 'في الطريق إليك';
+      case 'delivered': return 'تم تسليم الطلب';
+      case 'completed': return 'طلب مكتمل';
+      default: return 'جاري تحضير طلبك';
+    }
+  }
+
   Widget _buildEstimatedTimeSection() {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Row(
@@ -326,11 +358,11 @@ class OrderDetailsScreen extends StatelessWidget {
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
                   blurRadius: 3,
-                  offset: Offset(0, 1),
+                  offset: const Offset(0, 1),
                 ),
               ],
             ),
-            child: Center(
+            child:  Center(
               child: SvgIcon(
                 iconName: 'assets/svg/client/orders/clock_icon.svg',
                 width: 24.w,
@@ -347,25 +379,25 @@ class OrderDetailsScreen extends StatelessWidget {
               children: [
                 Text(
                   'وقت الوصول المتوقع',
-                  style: TextStyle().textColorNormal(
+                  style: const TextStyle().textColorNormal(
                     fontSize: 12.sp,
                     color: Color(0xFF99A1AF),
                   ),
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  order['estimatedTime'] ?? '12:45 م',
-                  style: TextStyle().textColorBold(
+                  '12:45 م',
+                  style: const TextStyle().textColorBold(
                     fontSize: 20.sp,
                     color: Color(0xFF101828),
                   ),
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  'يصل خلال ${order['timeRemaining'] ?? '15-20 دقيقة'}',
-                  style: TextStyle().textColorMedium(
+                  'يصل خلال 15-20 دقيقة',
+                  style: const TextStyle().textColorMedium(
                     fontSize: 12.sp,
-                    color: Color(0xFF00A63E),
+                    color: const Color(0xFF00A63E),
                   ),
                 ),
               ],
@@ -381,19 +413,39 @@ class OrderDetailsScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          order['items'] ?? '',
-          style: TextStyle().textColorNormal(
-            fontSize: 14.sp,
-            color: Color(0xFF4A5565),
-          ),
+          'محتويات الطلب',
+          style: const TextStyle().textColorBold(fontSize: 14.sp, color: Color(0xFF101828)),
         ),
-        SizedBox(height: 4.h),
-        Text(
-          'الإجمالي: ${order['price']} د.ل',
-          style: TextStyle().textColorNormal(
-            fontSize: 12.sp,
-            color: Color(0xFF99A1AF),
+        SizedBox(height: 12.h),
+        ...order.items.map((item) => Padding(
+          padding: EdgeInsets.only(bottom: 8.h),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${item.quantity}x عنصر', // item model doesn't have name, using generic or maybe itemId
+                style: const TextStyle().textColorNormal(fontSize: 14.sp, color: Color(0xFF4A5565)),
+              ),
+              Text(
+                '${item.totalPrice} د.ل',
+                style: const TextStyle().textColorBold(fontSize: 14.sp, color: Color(0xFF101828)),
+              ),
+            ],
           ),
+        )),
+        const Divider(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'الإجمالي',
+              style: const TextStyle().textColorBold(fontSize: 16.sp, color: Color(0xFF101828)),
+            ),
+            Text(
+              '${order.totalPrice} د.ل',
+              style: const TextStyle().textColorBold(fontSize: 18.sp, color: Color(0xFF7F22FE)),
+            ),
+          ],
         ),
       ],
     );
@@ -407,22 +459,22 @@ class OrderDetailsScreen extends StatelessWidget {
           child: CustomButtonApp(
             text: 'الدعم',
             onTap: () {
-              // Handle support
+              Get.toNamed('/restaurantSupport');
             },
             height: 48.h,
             borderRadius: 14.r,
             isFill: false,
-            borderColor: Color(0xFFE5E7EB),
+            borderColor: const Color(0xFFE5E7EB),
             borderWidth: 0.76.w,
             color: Colors.white,
-            textStyle: TextStyle().textColorBold(
+            textStyle: const TextStyle().textColorBold(
               fontSize: 14.sp,
               color: Color(0xFF101828),
             ),
             childWidget: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SvgIcon(
+                 SvgIcon(
                   iconName: 'assets/svg/client/orders/support_icon.svg',
                   width: 16.w,
                   height: 16.h,
@@ -431,33 +483,42 @@ class OrderDetailsScreen extends StatelessWidget {
                 SizedBox(width: 8.w),
                 Text(
                   'الدعم',
-                  style: TextStyle().textColorBold(
+                  style: const TextStyle().textColorBold(
                     fontSize: 14.sp,
-                    color: Color(0xFF101828),
+                    color: const Color(0xFF101828),
                   ),
                 ),
               ],
             ),
           ),
         ),
-        SizedBox(width: 12.w),
-        // Track Order Button
-        Expanded(
-          flex: 2,
-          child: CustomButtonApp(
-            text: 'تتبع الطلب',
-            onTap: () {
-              // Handle track order
-            },
-            height: 48.h,
-            borderRadius: 14.r,
-            color: Color(0xF07F22FE).withOpacity(0.94),
-            textStyle: TextStyle().textColorBold(
-              fontSize: 14.sp,
-              color: Colors.white,
+        if (order.status != 'delivered' && order.status != 'cancelled' && order.status != 'completed') ...[
+          SizedBox(width: 12.w),
+          // Track Order Button
+          Expanded(
+            flex: 2,
+            child: CustomButtonApp(
+              text: 'تتبع الطلب',
+              onTap: () {
+                 Get.toNamed('/orderTrackingMap', arguments: {
+                  'userLat': order.deliveryLat,
+                  'userLong': order.deliveryLong,
+                  'restaurantLat': order.deliveryLat, // Fallback
+                  'restaurantLong': order.deliveryLong, // Fallback
+                  'orderId': order.id,
+                  'status': OrderStatus.preparing,
+                });
+              },
+              height: 48.h,
+              borderRadius: 14.r,
+              color: const Color(0xF07F22FE).withOpacity(0.94),
+              textStyle: const TextStyle().textColorBold(
+                fontSize: 14.sp,
+                color: Colors.white,
+              ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }

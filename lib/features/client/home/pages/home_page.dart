@@ -87,18 +87,25 @@ class _HomePageContentState extends State<_HomePageContent> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        child: Column(
-          children: [
-            // Header with gradient background
-            _buildHeader(),
-            // Content sections
-            _buildContent(),
-            // Bottom spacing for nav bar
-            SizedBox(height: 100.h),
-          ],
-        ),
+      body: Column(
+        children: [
+          // Header with gradient background
+          _buildHeader(),
+
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
+                children: [
+                  // Content sections
+                  _buildContent(),
+                  // Bottom spacing for nav bar
+                  SizedBox(height: 100.h),
+                ],
+              ),
+            ),
+          ),
+        ],
       )
     );
   }

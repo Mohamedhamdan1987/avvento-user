@@ -54,12 +54,14 @@ class CartRestaurant {
 
 class RestaurantCart {
   final String id;
+  final String user;
   final CartRestaurant restaurant;
   final List<CartItem> items;
   final double totalPrice;
 
   RestaurantCart({
     required this.id,
+    required this.user,
     required this.restaurant,
     required this.items,
     required this.totalPrice,
@@ -68,6 +70,7 @@ class RestaurantCart {
   factory RestaurantCart.fromJson(Map<String, dynamic> json) {
     return RestaurantCart(
       id: json['_id'] as String,
+      user: json['user'] as String,
       restaurant: CartRestaurant.fromJson(json['restaurant'] as Map<String, dynamic>),
       items: (json['items'] as List<dynamic>)
           .map((i) => CartItem.fromJson(i as Map<String, dynamic>))

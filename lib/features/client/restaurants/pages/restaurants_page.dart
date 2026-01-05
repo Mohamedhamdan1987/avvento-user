@@ -1,3 +1,4 @@
+import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import 'package:avvento/core/widgets/reusable/svg_icon.dart';
@@ -19,7 +20,10 @@ class RestaurantsPage extends GetView<RestaurantsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('المطاعم'), centerTitle: true),
+      appBar: CustomAppBar(
+        title: 'المطاعم',
+        backgroundColor: Colors.white,
+      ),
       body: Column(
         children: [
           // Search Bar
@@ -130,6 +134,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Restaurant Stories Section
+                      if (controller.stories.isNotEmpty)
                       Padding(
                         padding: EdgeInsetsDirectional.only(
                           start: 24.w,
@@ -387,7 +392,7 @@ class RestaurantCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           // Navigate to restaurant details
-          Get.to(() => RestaurantDetailsScreen(restaurant: restaurant));
+          Get.to(() => RestaurantDetailsScreen(restaurantId: restaurant.id));
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(

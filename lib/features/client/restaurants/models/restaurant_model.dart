@@ -100,6 +100,7 @@ class Restaurant {
   final String phone;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isFavorite;
 
   Restaurant({
     required this.id,
@@ -115,6 +116,7 @@ class Restaurant {
     required this.phone,
     required this.createdAt,
     required this.updatedAt,
+    this.isFavorite = false,
   });
 
   factory Restaurant.fromJson(Map<String, dynamic> json) {
@@ -132,6 +134,7 @@ class Restaurant {
       phone: json['phone'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
+      isFavorite: json['isFavorite'] as bool? ?? false,
     );
   }
 
@@ -150,6 +153,7 @@ class Restaurant {
       'phone': phone,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'isFavorite': isFavorite,
     };
   }
 }

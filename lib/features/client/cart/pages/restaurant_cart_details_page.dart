@@ -1,5 +1,6 @@
 import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:avvento/features/client/restaurants/pages/restaurant_details_screen.dart';
+import 'package:avvento/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -11,7 +12,7 @@ import '../controllers/cart_controller.dart';
 import '../models/cart_model.dart';
 
 class RestaurantCartDetailsPage extends StatefulWidget {
-  final RestaurantCart cart;
+  final RestaurantCartResponse cart;
   const RestaurantCartDetailsPage({super.key, required this.cart});
 
   @override
@@ -25,7 +26,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.fetchRestaurantCart(widget.cart.restaurant.id);
+      controller.fetchRestaurantCart(widget.cart.restaurant.id!);
     });
   }
 
@@ -35,7 +36,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: CustomAppBar(
         title: 'السلة',
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF9FAFB),
         actions: [
           CustomIconButtonApp(
             onTap: () {
@@ -47,7 +48,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 confirmTextColor: Colors.white,
                 buttonColor: Colors.red,
                 onConfirm: () {
-                  controller.clearCart(widget.cart.restaurant.id);
+                  controller.clearCart(widget.cart.restaurant.id!);
                 },
               );
             },
@@ -117,7 +118,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
     );
   }
 
-  Widget _buildRestaurantHeader(RestaurantCart currentCart) {
+  Widget _buildRestaurantHeader(RestaurantCartResponse currentCart) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.76.w, vertical: 0.76.h),
       height: 73.51.h,
@@ -161,7 +162,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  currentCart.restaurant.name,
+                  currentCart.restaurant.name!,
                   style: const TextStyle().textColorBold(
                     fontSize: 14.sp,
                     color: Color(0xFF101828),
@@ -210,7 +211,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
     );
   }
 
-  Widget _buildCartItemCard(CartItem cartItem, int index, RestaurantCart currentCart) {
+  Widget _buildCartItemCard(CartItem cartItem, int index, RestaurantCartResponse currentCart) {
     return Container(
       height: 125.49.h,
       decoration: BoxDecoration(
@@ -240,7 +241,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                       confirmTextColor: Colors.white,
                       buttonColor: Colors.red,
                       onConfirm: () {
-                        controller.removeItem(currentCart.restaurant.id, index);
+                        controller.removeItem(currentCart.restaurant.id!, index);
                         Get.back();
                       },
                     );
@@ -313,7 +314,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                               GestureDetector(
                                 onTap: () {
                                   controller.updateQuantity(
-                                    restaurantId: currentCart.restaurant.id,
+                                    restaurantId: currentCart.restaurant.id!,
                                     itemIndex: index,
                                     quantity: cartItem.quantity + 1,
                                     notes: cartItem.notes,
@@ -345,7 +346,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                                 onTap: () {
                                   if (cartItem.quantity > 1) {
                                     controller.updateQuantity(
-                                      restaurantId: currentCart.restaurant.id,
+                                      restaurantId: currentCart.restaurant.id!,
                                       itemIndex: index,
                                       quantity: cartItem.quantity - 1,
                                       notes: cartItem.notes,
@@ -360,7 +361,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                                       confirmTextColor: Colors.white,
                                       buttonColor: Colors.red,
                                       onConfirm: () {
-                                        controller.removeItem(currentCart.restaurant.id, index);
+                                        controller.removeItem(currentCart.restaurant.id!, index);
                                         Get.back();
                                       },
                                     );
@@ -422,7 +423,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
       onTap: () {
         // Navigate to restaurant menu or add items
         // Get.back();
-        Get.to(() => RestaurantDetailsScreen(restaurantId: widget.cart.user));
+        Get.to(() => RestaurantDetailsScreen(restaurantId: widget.cart.restaurant.restaurantId!!));
 
       },
       child: Container(
@@ -581,7 +582,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
     );
   }
 
-  Widget _buildBottomSummary(RestaurantCart currentCart) {
+  Widget _buildBottomSummary(RestaurantCartResponse currentCart) {
     return Container(
       padding: EdgeInsets.only(top: 16.h, left: 24.w, right: 24.w, bottom: 24.h),
       decoration: BoxDecoration(
@@ -641,13 +642,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 onTap: controller.isLoading
                     ? null
                     : () {
-                        controller.placeOrder(
-                          restaurantId: currentCart.restaurant.id,
-                          deliveryAddress: 'طرابلس، حي الأندلس',
-                          deliveryLat: 32.8872,
-                          deliveryLong: 13.1913,
-                          notes: '',
-                        );
+                        Get.toNamed(AppRoutes.checkout, arguments: currentCart);
                       },
                 child: Container(
                   height: 56.h,

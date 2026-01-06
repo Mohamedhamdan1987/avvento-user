@@ -168,28 +168,28 @@ class RestaurantsService {
   }
 
   /// Fetch all carts for the current user
-  Future<List<RestaurantCart>> getAllCarts() async {
+  Future<List<RestaurantCartResponse>> getAllCarts() async {
     try {
       final response = await _dioClient.get('/cart/all');
       final responseData = response.data as List<dynamic>;
-      return responseData.map((item) => RestaurantCart.fromJson(item as Map<String, dynamic>)).toList();
+      return responseData.map((item) => RestaurantCartResponse.fromJson(item as Map<String, dynamic>)).toList();
     } on DioException {
       rethrow;
     }
   }
 
   /// Fetch a specific restaurant's cart
-  Future<RestaurantCart> getRestaurantCart(String restaurantId) async {
+  Future<RestaurantCartResponse> getRestaurantCart(String restaurantId) async {
     try {
       final response = await _dioClient.get('/cart/restaurant/$restaurantId');
-      return RestaurantCart.fromJson(response.data as Map<String, dynamic>);
+      return RestaurantCartResponse.fromJson(response.data as Map<String, dynamic>);
     } on DioException {
       rethrow;
     }
   }
 
   /// Update cart item quantity
-  Future<RestaurantCart> updateCartItem({
+  Future<RestaurantCartResponse> updateCartItem({
     required String restaurantId,
     required int itemIndex,
     required int quantity,
@@ -200,17 +200,17 @@ class RestaurantsService {
         'quantity': quantity,
         if (notes != null) 'notes': notes,
       });
-      return RestaurantCart.fromJson(response.data as Map<String, dynamic>);
+      return RestaurantCartResponse.fromJson(response.data as Map<String, dynamic>);
     } on DioException {
       rethrow;
     }
   }
 
   /// Remove item from cart
-  Future<RestaurantCart> removeCartItem(String restaurantId, int itemIndex) async {
+  Future<RestaurantCartResponse> removeCartItem(String restaurantId, int itemIndex) async {
     try {
       final response = await _dioClient.delete('/cart/restaurant/$restaurantId/items/$itemIndex');
-      return RestaurantCart.fromJson(response.data as Map<String, dynamic>);
+      return RestaurantCartResponse.fromJson(response.data as Map<String, dynamic>);
     } on DioException {
       rethrow;
     }

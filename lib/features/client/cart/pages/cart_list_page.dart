@@ -116,7 +116,7 @@ class CartListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRestaurantCartCard(BuildContext context, RestaurantCart cart) {
+  Widget _buildRestaurantCartCard(BuildContext context, RestaurantCartResponse cart) {
     return GestureDetector(
       onTap: () {
         Get.toNamed(AppRoutes.restaurantCartDetails, arguments: cart);
@@ -246,13 +246,13 @@ class CartListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRestaurantInfoSection(RestaurantCart cart) {
+  Widget _buildRestaurantInfoSection(RestaurantCartResponse cart) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Restaurant Name
         Text(
-          cart.restaurant.name,
+          cart.restaurant.name!,
           style: const TextStyle().textColorBold(
             fontSize: 18.sp,
             color: Color(0xFF101828),
@@ -362,7 +362,7 @@ class CartListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCartSummary(RestaurantCart cart) {
+  Widget _buildCartSummary(RestaurantCartResponse cart) {
     final firstItemName = cart.items.isNotEmpty
         ? cart.items.first.item.name
         : '';

@@ -9,14 +9,14 @@ class CartController extends GetxController {
   final RestaurantsService _restaurantsService = RestaurantsService();
   final OrdersService _ordersService = OrdersService();
 
-  final RxList<RestaurantCart> _carts = <RestaurantCart>[].obs;
-  final Rx<RestaurantCart?> _detailedCart = Rx<RestaurantCart?>(null);
+  final RxList<RestaurantCartResponse> _carts = <RestaurantCartResponse>[].obs;
+  final Rx<RestaurantCartResponse?> _detailedCart = Rx<RestaurantCartResponse?>(null);
   final RxBool _isLoading = false.obs;
   final RxInt _updatingItemIndex = (-1).obs;
   final RxString _errorMessage = ''.obs;
 
-  List<RestaurantCart> get carts => _carts;
-  RestaurantCart? get detailedCart => _detailedCart.value;
+  List<RestaurantCartResponse> get carts => _carts;
+  RestaurantCartResponse? get detailedCart => _detailedCart.value;
   bool get isLoading => _isLoading.value;
   int get updatingItemIndex => _updatingItemIndex.value;
   String get errorMessage => _errorMessage.value;

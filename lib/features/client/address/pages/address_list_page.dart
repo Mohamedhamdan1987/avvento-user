@@ -94,103 +94,122 @@ class AddressListPage extends StatelessWidget {
   }
 
   Widget _buildAddressCard(AddressModel address, AddressController controller) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 16.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(
-          color: address.isActive ? AppColors.purple : AppColors.borderLightGray,
-          width: address.isActive ? 2 : 1,
+    // Check if this page was opened for selection (from checkout)
+    final isSelectionMode = Get.arguments == true;
+    
+    return GestureDetector(
+      onTap: isSelectionMode
+          ? () {
+              // Return selected address
+              Get.back(result: address);
+            }
+          : null,
+      child: Container(
+        margin: EdgeInsets.only(bottom: 16.h),
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(
+            color: address.isActive ? AppColors.purple : AppColors.borderLightGray,
+            width: address.isActive ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Icon based on label
-          Container(
-            width: 48.w,
-            height: 48.h,
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: AppColors.purple.withOpacity(0.05),
-              shape: BoxShape.circle,
+        child: Row(
+          children: [
+            // Icon based on label
+            Container(
+              width: 48.w,
+              height: 48.h,
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: AppColors.purple.withOpacity(0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _getIconForLabel(address.label),
+                color: AppColors.purple,
+              ),
             ),
-            child: Icon(
-              _getIconForLabel(address.label),
-              color: AppColors.purple,
-            ),
-          ),
-          SizedBox(width: 16.w),
-          // Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      address.label,
-                      style: const TextStyle().textColorBold(
-                        fontSize: 16,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    if (address.isActive) ...[
-                      SizedBox(width: 8.w),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                        decoration: BoxDecoration(
-                          color: AppColors.successGreen.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8.r),
+            SizedBox(width: 16.w),
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        address.label,
+                        style: const TextStyle().textColorBold(
+                          fontSize: 16,
+                          color: AppColors.textDark,
                         ),
-                        child: Text(
-                          'افتراضي',
-                          style: const TextStyle().textColorMedium(
-                            fontSize: 10,
-                            color: AppColors.successGreen,
+                      ),
+                      if (address.isActive) ...[
+                        SizedBox(width: 8.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.successGreen.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Text(
+                            'افتراضي',
+                            style: const TextStyle().textColorMedium(
+                              fontSize: 10,
+                              color: AppColors.successGreen,
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
-                  ],
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  address.address,
-                  style: const TextStyle().textColorNormal(
-                    fontSize: 13,
-                    color: AppColors.textLight,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 8.w),
-          // Actions
-          Row(
-            children: [
-              if (!address.isActive)
-                IconButton(
-                  onPressed: () => controller.setActive(address.id),
-                  icon: const Icon(Icons.check_circle_outline, color: AppColors.textPlaceholder),
-                ),
-              IconButton(
-                onPressed: () => _showDeleteConfirmation(address, controller),
-                icon: const Icon(Icons.delete_outline, color: AppColors.notificationRed),
+                  SizedBox(height: 4.h),
+                  Text(
+                    address.address,
+                    style: const TextStyle().textColorNormal(
+                      fontSize: 13,
+                      color: AppColors.textLight,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ],
-          ),
-        ],
+            ),
+            SizedBox(width: 8.w),
+            // Actions
+            if (!isSelectionMode)
+              Row(
+                children: [
+                  if (!address.isActive)
+                    IconButton(
+                      onPressed: () => controller.setActive(address.id),
+                      icon: const Icon(Icons.check_circle_outline, color: AppColors.textPlaceholder),
+                    ),
+                  IconButton(
+                    onPressed: () => _showDeleteConfirmation(address, controller),
+                    icon: const Icon(Icons.delete_outline, color: AppColors.notificationRed),
+                  ),
+                ],
+              )
+            else
+              // Selection indicator
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16.r,
+                color: AppColors.textPlaceholder,
+              ),
+          ],
+        ),
       ),
     );
   }

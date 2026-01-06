@@ -34,6 +34,5 @@ class AppRoutes {
 
   static const String cartListPage = '/cart-list-page';
   static const String restaurantCartDetails = '/restaurant-cart-details';
-
-
+  static const String checkout = '/checkout';
 }

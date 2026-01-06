@@ -77,6 +77,62 @@ class LocationUtils {
     return '${price.toStringAsFixed(1)} دينار';
   }
 
+  /// Calculate estimated delivery time in minutes
+  /// Based on distance and average delivery speed
+  /// 
+  /// [restaurantLat] - Restaurant's latitude
+  /// [restaurantLong] - Restaurant's longitude
+  /// [deliveryLat] - Delivery address latitude
+  /// [deliveryLong] - Delivery address longitude
+  /// [averageSpeedKmh] - Average delivery speed in km/h (default: 30 km/h)
+  /// [preparationTimeMinutes] - Restaurant preparation time in minutes (default: 15 minutes)
+  /// 
+  /// Returns estimated delivery time in minutes (rounded to nearest integer)
+  static int calculateDeliveryTime({
+    required double restaurantLat,
+    required double restaurantLong,
+    required double deliveryLat,
+    required double deliveryLong,
+    double averageSpeedKmh = 30.0,
+    int preparationTimeMinutes = 15,
+  }) {
+    // Calculate distance in kilometers
+    final distance = calculateDistance(
+      userLat: deliveryLat,
+      userLong: deliveryLong,
+      restaurantLat: restaurantLat,
+      restaurantLong: restaurantLong,
+    );
+
+    // Calculate travel time in minutes
+    // Time = Distance / Speed (convert hours to minutes)
+    final travelTimeMinutes = (distance / averageSpeedKmh) * 60;
+
+    // Total time = preparation time + travel time
+    final totalTimeMinutes = preparationTimeMinutes + travelTimeMinutes;
+
+    // Round to nearest integer
+    return totalTimeMinutes.round();
+  }
+
+  /// Format delivery time for display
+  /// Returns formatted string like "25 دقيقة" or "1 ساعة"
+  /// 
+  /// [timeInMinutes] - Time in minutes
+  static String formatDeliveryTime(int timeInMinutes) {
+    if (timeInMinutes < 60) {
+      return '$timeInMinutes دقيقة';
+    } else {
+      final hours = timeInMinutes ~/ 60;
+      final minutes = timeInMinutes % 60;
+      if (minutes == 0) {
+        return '$hours ${hours == 1 ? 'ساعة' : 'ساعات'}';
+      } else {
+        return '$hours ${hours == 1 ? 'ساعة' : 'ساعات'} و $minutes دقيقة';
+      }
+    }
+  }
+
   /// Convert degrees to radians
   static double _degreesToRadians(double degrees) {
     return degrees * pi / 180.0;

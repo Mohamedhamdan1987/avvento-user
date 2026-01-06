@@ -17,6 +17,9 @@ class RestaurantDetailsScreen extends StatelessWidget {
   final String restaurantId;
   
   RestaurantDetailsScreen({super.key, required this.restaurantId}) {
+    if (!Get.isRegistered<RestaurantsController>()) {
+      Get.put(RestaurantsController());
+    }
     Get.delete<RestaurantDetailsController>(); // Ensure fresh controller
     Get.put(RestaurantDetailsController(restaurantId: restaurantId));
   }

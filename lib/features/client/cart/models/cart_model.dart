@@ -36,30 +36,58 @@ class CartRestaurant {
   final String id;
   final String name;
   final String? logo;
+  final double? lat;
+  final double? long;
+  final String? username;
+  final String? email;
+  final String? phone;
+  final String? restaurantId;
 
   CartRestaurant({
     required this.id,
     required this.name,
     this.logo,
+    this.lat,
+    this.long,
+    this.username,
+    this.email,
+    this.phone,
+    this.restaurantId,
   });
 
   factory CartRestaurant.fromJson(Map<String, dynamic> json) {
+    // Try to find lat/long at top level
+    double? lat = json['lat'] != null ? (json['lat'] as num).toDouble() : null;
+    double? long = json['long'] != null ? (json['long'] as num).toDouble() : null;
+    print("json: ${json['lat']}");
+    print("json: ${lat}");
+
+    // // Fallback to alternative names if still not found
+    // lat ??= json['latitude'] != null ? (json['latitude'] as num).toDouble() : null;
+    // long ??= json['longitude'] != null ? (json['longitude'] as num).toDouble() : null;
+
     return CartRestaurant(
       id: json['_id'] as String,
       name: json['name'] as String,
       logo: json['logo'] as String?,
+      lat: lat,
+      long: long,
+      username: json['username'] as String?,
+      email: json['email'] as String?,
+      phone: json['phone'] as String?,
+      restaurantId: json['restaurantId'] as String?,
     );
   }
 }
 
-class RestaurantCart {
+class RestaurantCartResponse {
   final String id;
   final String user;
   final CartRestaurant restaurant;
   final List<CartItem> items;
   final double totalPrice;
 
-  RestaurantCart({
+  RestaurantCartResponse({
     required this.id,
     required this.user,
     required this.restaurant,
@@ -67,8 +95,8 @@ class RestaurantCart {
     required this.totalPrice,
   });
 
-  factory RestaurantCart.fromJson(Map<String, dynamic> json) {
-    return RestaurantCart(
+  factory RestaurantCartResponse.fromJson(Map<String, dynamic> json) {
+    return RestaurantCartResponse(
       id: json['_id'] as String,
       user: json['user'] as String,
       restaurant: CartRestaurant.fromJson(json['restaurant'] as Map<String, dynamic>),

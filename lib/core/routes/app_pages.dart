@@ -20,6 +20,7 @@ import '../../features/client/orders/widgets/order_tracking_dialog.dart';
 import '../../features/client/cart/bindings/cart_binding.dart';
 import '../../features/client/cart/pages/cart_list_page.dart';
 import '../../features/client/cart/pages/restaurant_cart_details_page.dart';
+import '../../features/client/cart/pages/checkout_page.dart';
 import '../../features/client/cart/models/cart_model.dart';
 import '../../features/client/address/pages/address_list_page.dart';
 import '../../features/client/address/pages/map_selection_page.dart';
@@ -145,8 +146,17 @@ class AppPages {
     GetPage(
       name: AppRoutes.restaurantCartDetails,
       page: () {
-        final cart = Get.arguments as RestaurantCart;
+        final cart = Get.arguments as RestaurantCartResponse;
         return RestaurantCartDetailsPage(cart: cart);
+      },
+      binding: CartBinding(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: AppRoutes.checkout,
+      page: () {
+        final cart = Get.arguments as RestaurantCartResponse;
+        return CheckoutPage(cart: cart);
       },
       binding: CartBinding(),
       middlewares: [AuthMiddleware()],

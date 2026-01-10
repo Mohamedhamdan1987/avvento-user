@@ -27,7 +27,8 @@ class _LoginPageState extends State<LoginPage> {
     passwordController = TextEditingController();
     if (kDebugMode) {
       // Pre-fill for testing purposes
-      usernameController.text = 'mohamed';
+      // usernameController.text = 'mohamed';
+      usernameController.text = 'driver';
       passwordController.text = '123456';
     }
   }
@@ -47,7 +48,10 @@ class _LoginPageState extends State<LoginPage> {
     final username = usernameController.text;
     final password = passwordController.text;
 
-    final controller = Get.find<AuthController>();
+    // Safely get or initialize AuthController
+    final controller = Get.isRegistered<AuthController>()
+        ? Get.find<AuthController>()
+        : Get.put(AuthController());
     controller.login(username, password);
   }
 

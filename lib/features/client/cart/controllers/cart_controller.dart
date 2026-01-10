@@ -4,6 +4,7 @@ import '../../restaurants/services/restaurants_service.dart';
 import '../models/cart_model.dart';
 import '../../orders/services/orders_service.dart';
 import '../../orders/models/order_model.dart';
+import '../../restaurants/models/menu_item_model.dart';
 
 class CartController extends GetxController {
   final RestaurantsService _restaurantsService = RestaurantsService();
@@ -11,13 +12,18 @@ class CartController extends GetxController {
 
   final RxList<RestaurantCartResponse> _carts = <RestaurantCartResponse>[].obs;
   final Rx<RestaurantCartResponse?> _detailedCart = Rx<RestaurantCartResponse?>(null);
+  final RxList<MenuItem> _drinks = <MenuItem>[].obs; // Add drinks list
+  final RxList<Map<String, dynamic>> selectedDrinks = <Map<String, dynamic>>[].obs; // Selected drinks for order
   final RxBool _isLoading = false.obs;
+  final RxBool _isLoadingDrinks = false.obs; // Add loading state for drinks
   final RxInt _updatingItemIndex = (-1).obs;
   final RxString _errorMessage = ''.obs;
 
   List<RestaurantCartResponse> get carts => _carts;
   RestaurantCartResponse? get detailedCart => _detailedCart.value;
+  List<MenuItem> get drinks => _drinks; // Getter for drinks
   bool get isLoading => _isLoading.value;
+  bool get isLoadingDrinks => _isLoadingDrinks.value; // Getter for drinks loading
   int get updatingItemIndex => _updatingItemIndex.value;
   String get errorMessage => _errorMessage.value;
   bool get hasError => _errorMessage.value.isNotEmpty;
@@ -51,11 +57,26 @@ class CartController extends GetxController {
     try {
       final cart = await _restaurantsService.getRestaurantCart(restaurantId);
       _detailedCart.value = cart;
+      
+      // Fetch drinks when cart is loaded
+      fetchDrinks(restaurantId);
     } catch (e) {
       if (showLoading) _errorMessage.value = 'فشل تحميل بيانات السلة';
       print('Error fetching restaurant cart: $e');
     } finally {
       if (showLoading) _isLoading.value = false;
+    }
+  }
+
+  Future<void> fetchDrinks(String restaurantId) async {
+    _isLoadingDrinks.value = true;
+    try {
+      final fetchedDrinks = await _restaurantsService.getDrinks(restaurantId);
+      _drinks.assignAll(fetchedDrinks);
+    } catch (e) {
+      print('Error fetching drinks: $e');
+    } finally {
+      _isLoadingDrinks.value = false;
     }
   }
 
@@ -125,22 +146,49 @@ class CartController extends GetxController {
     fetchAllCarts();
   }
 
+  // Temporary drinks management
+  void addDrink(MenuItem drink, int quantity, String notes) {
+    selectedDrinks.add({
+      "drinkId": drink.id,
+      "quantity": quantity,
+      "notes": notes,
+      // Store display details
+      "name": drink.name,
+      "price": drink.price,
+      "image": drink.image,
+    });
+  }
+
+  void removeDrink(int index) {
+    if (index >= 0 && index < selectedDrinks.length) {
+      selectedDrinks.removeAt(index);
+    }
+  }
+
+  void clearDrinks() {
+    selectedDrinks.clear();
+  }
+
   Future<void> placeOrder({
     required String restaurantId,
-    required String deliveryAddress,
-    required double deliveryLat,
-    required double deliveryLong,
+    required String addressId,
     String? notes,
   }) async {
     _isLoading.value = true;
     _errorMessage.value = '';
     try {
+      // Clean drinks list to only send required fields
+      final drinksPayload = selectedDrinks.map((d) => {
+        "drinkId": d["drinkId"],
+        "quantity": d["quantity"],
+        "notes": d["notes"],
+      }).toList();
+
       final order = await _ordersService.createOrder(
         restaurantId: restaurantId,
-        deliveryAddress: deliveryAddress,
-        deliveryLat: deliveryLat,
-        deliveryLong: deliveryLong,
+        addressId: addressId,
         notes: notes,
+        drinks: drinksPayload.isNotEmpty ? drinksPayload : null,
       );
       
       // Clear the cart for this restaurant locally and refresh

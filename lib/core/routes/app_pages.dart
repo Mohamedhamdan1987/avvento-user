@@ -37,10 +37,14 @@ class AppPages {
     final token = storage.read<String>(AppConstants.tokenKey);
     final userData = storage.read<Map<String, dynamic>>(AppConstants.userKey);
 
+    print("userData: ${userData}");
+    // return AppRoutes.driverNavBar;
+
     // If token and user data exist, go to appropriate main page based on role
     if (token != null && token.isNotEmpty && userData != null) {
       final user = UserModel.fromJson(userData);
-      return user.type == 'driver' ? AppRoutes.driverNavBar : AppRoutes.clientNavBar;
+      print("user.type: ${user.role}");
+      return user.role == 'delivery' ? AppRoutes.driverNavBar : AppRoutes.clientNavBar;
     }
 
     // Otherwise, go to login page

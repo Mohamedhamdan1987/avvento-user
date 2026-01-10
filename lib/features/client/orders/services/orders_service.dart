@@ -8,18 +8,16 @@ class OrdersService {
   /// Create a new order
   Future<OrderModel> createOrder({
     required String restaurantId,
-    required String deliveryAddress,
-    required double deliveryLat,
-    required double deliveryLong,
+    required String addressId,
     String? notes,
+    List<Map<String, dynamic>>? drinks,
   }) async {
     try {
       final response = await _dioClient.post('/orders', data: {
         'restaurantId': restaurantId,
-        'deliveryAddress': deliveryAddress,
-        'deliveryLat': deliveryLat,
-        'deliveryLong': deliveryLong,
+        'addressId': addressId,
         'notes': notes ?? '',
+        if (drinks != null) 'drinks': drinks,
       });
       
       return OrderModel.fromJson(response.data as Map<String, dynamic>);

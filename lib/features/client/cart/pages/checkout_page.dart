@@ -13,7 +13,7 @@ import '../models/cart_model.dart';
 import '../../address/controllers/address_controller.dart';
 import '../../address/models/address_model.dart';
 
-enum PaymentMethod { cash, card }
+enum PaymentMethod { cash, card, wallet }
 
 class CheckoutPage extends StatefulWidget {
   final RestaurantCartResponse cart;
@@ -137,53 +137,135 @@ class _CheckoutPageState extends State<CheckoutPage> {
             border: Border.all(color: const Color(0xFFF3F4F6), width: 0.761),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Items List
-              ...widget.cart.items.map(
-                (item) => Padding(
-                  padding: EdgeInsets.only(bottom: 0.h),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 28,
-                        height: 28,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
+              ListView.separated(
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                final item = widget.cart.items[index];
+                return Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
 
-                          color: const Color(0x197F22FE),
-                          borderRadius: BorderRadius.circular(8.r),
-                          border: Border.all(
-                            color: const Color(0xFFF3F4F6),
-                            width: 0.761,
-                          ),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12.r),
-                          child: Text("${item.quantity}x"),
+                        color: const Color(0x197F22FE),
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(
+                          color: const Color(0xFFF3F4F6),
+                          width: 0.761,
                         ),
                       ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child:  Text(
-                          '${item.item.name}',
-                          style: const TextStyle().textColorMedium(
-                            fontSize: 14.sp,
-                            color: Color(0xFF101828),
-                          ),
-                        ),
-                        ),
-                      Text(
-                        '${item.totalPrice.toStringAsFixed(0)} د.ل',
-                        style: const TextStyle().textColorBold(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12.r),
+                        child: Text("${item.quantity}x"),
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child:  Text(
+                        '${item.item.name}',
+                        style: const TextStyle().textColorMedium(
                           fontSize: 14.sp,
                           color: Color(0xFF101828),
                         ),
                       ),
-                    ],
+                    ),
+                    Text(
+                      '${item.totalPrice.toStringAsFixed(0)} د.ل',
+                      style: const TextStyle().textColorBold(
+                        fontSize: 14.sp,
+                        color: Color(0xFF101828),
+                      ),
+                    ),
+                  ],
+                );
+              },
+                  separatorBuilder: (context, index) => Container( height: 10, ),
+                  itemCount: widget.cart.items.length),
+              
+              // Drinks List
+              if (cartController.selectedDrinks.isNotEmpty) ...[
+                 Container( height: 10, ),
+                 const Divider(color: Color(0xFFF3F4F6)),
+                 Container( height: 10, ),
+                 Text(
+                  'المشروبات',
+                  style: const TextStyle().textColorBold(
+                    fontSize: 12.sp,
+                    color: Color(0xFF697282),
                   ),
                 ),
-              ),
+                SizedBox(height: 8.h),
+                ListView.separated(
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemBuilder: (context, index) {
+                      final drink = cartController.selectedDrinks[index];
+                      return Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: const Color(0x197F22FE),
+                              borderRadius: BorderRadius.circular(8.r),
+                              border: Border.all(
+                                color: const Color(0xFFF3F4F6),
+                                width: 0.761,
+                              ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12.r),
+                              child: Text("${drink['quantity']}x"),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${drink['name']}',
+                                  style: const TextStyle().textColorMedium(
+                                    fontSize: 14.sp,
+                                    color: Color(0xFF101828),
+                                  ),
+                                ),
+                                if (drink['notes'] != null && drink['notes'].toString().isNotEmpty)
+                                  Text(
+                                    '${drink['notes']}',
+                                    style: const TextStyle().textColorNormal(
+                                      fontSize: 12.sp,
+                                      color: Color(0xFF9CA3AF),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '${((drink['price'] as num) * (drink['quantity'] as int)).toStringAsFixed(0)} د.ل',
+                            style: const TextStyle().textColorBold(
+                              fontSize: 14.sp,
+                              color: Color(0xFF101828),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                    separatorBuilder: (context, index) => Container(height: 10),
+                    itemCount: cartController.selectedDrinks.length),
+              ],
+
 
 
             ],
@@ -332,132 +414,323 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Widget _buildPaymentMethodSection() {
     return Container(
       padding: EdgeInsets.all(12.w),
-      // decoration: ShapeDecoration(
-      //   color: Colors.white.withValues(alpha: 0.95),
-      //   shape: RoundedRectangleBorder(
-      //     side: BorderSide(width: 0.76, color: const Color(0xFFF2F4F6)),
-      //     borderRadius: BorderRadius.circular(16),
-      //   ),
-      //   shadows: [
-      //     BoxShadow(
-      //       color: Color(0x19000000),
-      //       blurRadius: 1,
-      //       offset: Offset(0, 1),
-      //       spreadRadius: 0,
-      //     ),
-      //   ],
-      // ),
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(width: 0.76, color: const Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'طريقة الدفع',
-            style: const TextStyle().textColorBold(
-              fontSize: 18.sp,
-              color: Color(0xFF101828),
-            ),
-          ),
-          SizedBox(height: 16.h),
-          // Cash Payment
-          _buildPaymentMethodOption(
-            method: PaymentMethod.cash,
-            title: 'الدفع عند الاستلام',
-            icon: Icons.money,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'طريقة الدفع',
+                style: const TextStyle().textColorBold(
+                  fontSize: 16.sp,
+                  color: Color(0xFF101828),
+                ),
+              ),
+              CustomButtonApp(
+                onTap: () {
+                  _showPaymentMethodBottomSheet();
+                },
+                childWidget: Padding(
+                  padding: const EdgeInsets.only(bottom: 4.0),
+                  child: Text(
+                    'تغيير',
+                    style: const TextStyle().textColorBold(
+                      fontSize: 14.sp,
+                      color: Color(0xFF7F22FE),
+                    ),
+                  ),
+                ),
+                color: Color(0x197F22FE),
+                height: 28.h,
+                isFill: false,
+                borderColor: Colors.transparent,
+              ),
+            ],
           ),
           SizedBox(height: 12.h),
-          // Card Payment
-          _buildPaymentMethodOption(
-            method: PaymentMethod.card,
-            title: 'الدفع بالبطاقة',
-            icon: Icons.credit_card,
+          Row(
+            children: [
+              Container(
+                width: 40.w,
+                height: 40.h,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF9FAFB),
+                  shape: BoxShape.circle,
+                ),
+                padding: EdgeInsets.all(8.r),
+                child: _getPaymentIcon(selectedPaymentMethod),
+              ),
+              SizedBox(width: 12.w),
+              Text(
+                _getPaymentMethodName(selectedPaymentMethod),
+                style: const TextStyle().textColorBold(
+                  fontSize: 14.sp,
+                  color: Color(0xFF101828),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPaymentMethodOption({
-    required PaymentMethod method,
-    required String title,
-    required IconData icon,
-  }) {
-    final isSelected = selectedPaymentMethod == method;
+  Widget _getPaymentIcon(PaymentMethod method) {
+    switch (method) {
+      case PaymentMethod.cash:
+        return Icon(Icons.money, color: const Color(0xFF101828), size: 20.r);
+        // return SvgPicture.asset("assets/svg/client/delivery-bike.svg", color: const Color(0xFF101828)); 
+      case PaymentMethod.card: // Making 'card' represent 'banking' for now or generic card
+        return SvgPicture.asset("assets/svg/wallet/bank_card_outline.svg", color: const Color(0xFF101828));
+      case PaymentMethod.wallet:
+        return SvgPicture.asset("assets/svg/nav/wallet.svg", color: const Color(0xFF101828));
+      default:
+        return Icon(Icons.payment, color: const Color(0xFF101828), size: 20.r);
+    }
+  }
+
+  String _getPaymentMethodName(PaymentMethod method) {
+    switch (method) {
+      case PaymentMethod.cash:
+        return 'الدفع عند الاستلام';
+      case PaymentMethod.card:
+        return 'الخدمات المصرفية';
+      case PaymentMethod.wallet:
+        return 'المحفظة';
+      default:
+        return 'غير محدد';
+    }
+  }
+
+  void _showPaymentMethodBottomSheet() {
+    Get.bottomSheet(
+      Container(
+        padding: EdgeInsets.all(24.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setStateBottomSheet) {
+            // Mock wallet balance for now - usually fetch from controller
+            double walletBalance = 0.0; 
+            double orderTotal = widget.cart.totalPrice;
+            bool isWalletBalanceEnough = walletBalance >= orderTotal;
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 48.w,
+                    height: 5.h,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2.5.r),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 24.h),
+                Text(
+                  'اختر طريقة الدفع',
+                  style: const TextStyle().textColorBold(
+                    fontSize: 18.sp,
+                    color: Color(0xFF101828),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24.h),
+                
+                // Payment Options Grid
+                // We'll use a Wrap or Row/Column structure. The user described Cards.
+                // Since there are 3 options, maybe a Scrollable Row or just a Column of cards?
+                // "سداد بالمحفظة ... الدفع عند الاستلام ... الخدمات المصرفية"
+                // Let's make them vertically stacked large selection cards or a Grid. 
+                // Given the descriptions "Square with icon TR", "Cash image center", it sounds like Grid items (Cards).
+                
+                GridView.count(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 12.w,
+                    mainAxisSpacing: 12.h,
+                    childAspectRatio: 1.0,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      // 1. Wallet
+                      _buildPaymentSelectionCard(
+                        isSelected: selectedPaymentMethod == PaymentMethod.wallet,
+                        onTap: () {
+                          setStateBottomSheet(() {
+                             selectedPaymentMethod = PaymentMethod.wallet; 
+                          });
+                          setState(() {}); 
+                        },
+                        child: Stack(
+                          children: [
+                            PositionedDirectional(
+                              top: 8.h,
+                              end: 8.w,
+                              child: SvgPicture.asset(
+                                "assets/svg/nav/wallet.svg",
+                                width: 20.w,
+                                height: 20.h,
+                                color: selectedPaymentMethod == PaymentMethod.wallet ? const Color(0xFF7F22FE) : const Color(0xFF6A7282),
+                              ),
+                            ),
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(height: 16.h),
+                                  Text(
+                                    '${walletBalance.toStringAsFixed(1)} د.ل',
+                                    style: const TextStyle().textColorBold(
+                                      fontSize: 16.sp,
+                                      color: Color(0xFF101828),
+                                    ),
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    'الرصيد المتاح',
+                                    style: const TextStyle().textColorNormal(
+                                      fontSize: 12.sp,
+                                      color: Color(0xFF6A7282),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 12.h,
+                              left: 0,
+                              right: 0,
+                              child: Text(
+                                'المحفظة',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle().textColorBold(
+                                  fontSize: 14.sp,
+                                  color: selectedPaymentMethod == PaymentMethod.wallet ? const Color(0xFF7F22FE) : const Color(0xFF101828),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // 2. Cash
+                      _buildPaymentSelectionCard(
+                        isSelected: selectedPaymentMethod == PaymentMethod.cash,
+                        onTap: () {
+                           setStateBottomSheet(() {
+                             selectedPaymentMethod = PaymentMethod.cash;
+                           });
+                           setState(() {});
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.money, size: 40.r, color: selectedPaymentMethod == PaymentMethod.cash ? const Color(0xFF7F22FE) : const Color(0xFF6A7282)),
+                            SizedBox(height: 12.h),
+                            Text(
+                              'الدفع عند الاستلام',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle().textColorBold(
+                                fontSize: 14.sp,
+                                color: selectedPaymentMethod == PaymentMethod.cash ? const Color(0xFF7F22FE) : const Color(0xFF101828),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // 3. Banking
+                      _buildPaymentSelectionCard(
+                        isSelected: selectedPaymentMethod == PaymentMethod.card, // mapped to banking
+                        onTap: () {
+                           setStateBottomSheet(() {
+                             selectedPaymentMethod = PaymentMethod.card;
+                           });
+                           setState(() {});
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SvgPicture.asset(
+                              "assets/svg/wallet/bank_card_outline.svg",
+                               width: 40.w,
+                               height: 40.h,
+                               color: selectedPaymentMethod == PaymentMethod.card ? const Color(0xFF7F22FE) : const Color(0xFF6A7282)
+                            ),
+                            SizedBox(height: 12.h),
+                            Text(
+                              'الخدمات المصرفية',
+                              textAlign: TextAlign.center,
+                               style: const TextStyle().textColorBold(
+                                fontSize: 14.sp,
+                                color: selectedPaymentMethod == PaymentMethod.card ? const Color(0xFF7F22FE) : const Color(0xFF101828),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+
+                SizedBox(height: 32.h),
+                
+                // Bottom Button
+                CustomButtonApp(
+                  text: (selectedPaymentMethod == PaymentMethod.wallet && !isWalletBalanceEnough)
+                      ? 'تعبئة المحفظة'
+                      : 'تأكيد الاختيار',
+                  color: (selectedPaymentMethod == PaymentMethod.wallet && !isWalletBalanceEnough)
+                      ? Colors.orange // Or styling for top-up
+                      : const Color(0xFF7F22FE),
+                  onTap: () {
+                    if (selectedPaymentMethod == PaymentMethod.wallet && !isWalletBalanceEnough) {
+                      // Navigate to top-up
+                      Get.back(); // Close sheet
+                      // Get.toNamed(AppRoutes.walletTopUp); // Assuming route exists or show message
+                      Get.snackbar('تنبيه', 'رصيد المحفظة غير كافٍ');
+                    } else {
+                      Get.back();
+                    }
+                  },
+                ),
+                SizedBox(height: 16.h),
+              ],
+            );
+          },
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  Widget _buildPaymentSelectionCard({required bool isSelected, required VoidCallback onTap, required Widget child}) {
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedPaymentMethod = method;
-        });
-      },
+      onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(12.w),
-        decoration: ShapeDecoration(
-          color: Colors.white.withValues(alpha: 0.95),
-          shape: RoundedRectangleBorder(
-            side: BorderSide(width: 0.76, color: const Color(0xFFF2F4F6)),
-            borderRadius: BorderRadius.circular(16),
+        // width: 140.w, // Remove fixed width for GridView
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF7F22FE).withOpacity(0.05) : Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF7F22FE) : const Color(0xFFF3F4F6),
+            width: isSelected ? 2 : 1,
           ),
-          shadows: [
-            BoxShadow(
-              color: Color(0x19000000),
-              blurRadius: 1,
-              offset: Offset(0, 1),
-              spreadRadius: 0,
-            ),
-          ],
         ),
-        child: Row(
-          children: [
-            // Icon
-            Container(
-              width: 40.w,
-              height: 40.h,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? const Color(0xFF7F22FE).withOpacity(0.1)
-                    : Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: isSelected
-                    ? const Color(0xFF7F22FE)
-                    : const Color(0xFF6A7282),
-                size: 24.r,
-              ),
-            ),
-            SizedBox(width: 12.w),
-            // Title
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle().textColorBold(
-                  fontSize: 16.sp,
-                  color: Color(0xFF101828),
-                ),
-              ),
-            ),
-            // Radio Button
-            Container(
-              width: 24.w,
-              height: 24.h,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected
-                      ? const Color(0xFF7F22FE)
-                      : const Color(0xFFD1D5DB),
-                  width: 2,
-                ),
-                color: isSelected
-                    ? const Color(0xFF7F22FE)
-                    : Colors.transparent,
-              ),
-              child: isSelected
-                  ? Icon(Icons.check, color: Colors.white, size: 16.r)
-                  : null,
-            ),
-          ],
-        ),
+        child: child,
       ),
     );
   }
@@ -489,9 +762,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   if (address != null) {
                     cartController.placeOrder(
                       restaurantId: widget.cart.restaurant.id!,
-                      deliveryAddress: address.address,
-                      deliveryLat: address.lat,
-                      deliveryLong: address.long,
+                      addressId: address.id,
                       notes: '',
                     );
                   }
@@ -504,8 +775,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   String _getDeliveryTimeText(AddressModel deliveryAddress) {
-    print("lat::: ${widget.cart.restaurant.lat}");
-    print("long::: ${widget.cart.restaurant.long}");
     // Check if restaurant has coordinates
     if (widget.cart.restaurant.lat == null ||
         widget.cart.restaurant.long == null) {

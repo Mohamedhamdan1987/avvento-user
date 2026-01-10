@@ -20,15 +20,23 @@ class OrderItem {
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
+    // Handle item as Map (populated) or String (ID)
+    // Also check for 'drink' key as fallback if 'item' is missing (for drinks added to order)
+    dynamic itemData = json['item'] ?? json['drink'];
+    
+    final itemId = itemData is Map 
+        ? (itemData as Map<String, dynamic>)['_id'] as String
+        : (itemData as String? ?? '');
+        
     return OrderItem(
-      itemId: json['item'] as String,
-      quantity: json['quantity'] as int,
+      itemId: itemId,
+      quantity: json['quantity'] as int? ?? 0,
       selectedVariations: List<String>.from(json['selectedVariations'] ?? []),
       selectedAddOns: List<String>.from(json['selectedAddOns'] ?? []),
       notes: json['notes'] as String? ?? '',
-      unitPrice: (json['unitPrice'] as num).toDouble(),
-      totalPrice: (json['totalPrice'] as num).toDouble(),
-      id: json['_id'] as String,
+      unitPrice: (json['unitPrice'] as num?)?.toDouble() ?? 0.0,
+      totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0.0,
+      id: json['_id'] as String? ?? '',
     );
   }
 }
@@ -63,9 +71,9 @@ class OrderModel {
   final double tax;
   final double totalPrice;
   final String status;
-  final String deliveryAddress;
-  final double deliveryLat;
-  final double deliveryLong;
+  final String? deliveryAddress;  // Changed to nullable as it might be missing or object
+  final double? deliveryLat;      // Changed to nullable
+  final double? deliveryLong;     // Changed to nullable
   final String notes;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -80,18 +88,23 @@ class OrderModel {
     required this.tax,
     required this.totalPrice,
     required this.status,
-    required this.deliveryAddress,
-    required this.deliveryLat,
-    required this.deliveryLong,
+    this.deliveryAddress,
+    this.deliveryLat,
+    this.deliveryLong,
     required this.notes,
     required this.createdAt,
     required this.updatedAt,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    // Handle user as Map (populated) or String (ID)
+    final userId = json['user'] is Map 
+        ? (json['user'] as Map<String, dynamic>)['_id'] as String
+        : json['user'] as String;
+
     return OrderModel(
       id: json['_id'] as String,
-      userId: json['user'] as String,
+      userId: userId,
       restaurant: OrderRestaurant.fromJson(json['restaurant'] as Map<String, dynamic>),
       items: (json['items'] as List<dynamic>)
           .map((i) => OrderItem.fromJson(i as Map<String, dynamic>))
@@ -101,9 +114,11 @@ class OrderModel {
       tax: (json['tax'] as num).toDouble(),
       totalPrice: (json['totalPrice'] as num).toDouble(),
       status: json['status'] as String,
-      deliveryAddress: json['deliveryAddress'] as String,
-      deliveryLat: (json['deliveryLat'] as num).toDouble(),
-      deliveryLong: (json['deliveryLong'] as num).toDouble(),
+      deliveryAddress: json['deliveryAddress'] is Map 
+          ? (json['deliveryAddress'] as Map<String, dynamic>)['address'] as String? // Assuming structure if populated
+          : json['deliveryAddress'] as String?,
+      deliveryLat: json['deliveryLat'] != null ? (json['deliveryLat'] as num).toDouble() : null,
+      deliveryLong: json['deliveryLong'] != null ? (json['deliveryLong'] as num).toDouble() : null,
       notes: json['notes'] as String? ?? '',
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),

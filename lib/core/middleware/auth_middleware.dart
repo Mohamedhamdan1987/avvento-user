@@ -21,7 +21,7 @@ class AuthMiddleware extends GetMiddleware {
     if (isAuthenticated && _isAuthRoute(route)) {
       final user = UserModel.fromJson(userData);
       return RouteSettings(
-        name: user.type == 'driver' ? AppRoutes.driverNavBar : AppRoutes.clientNavBar,
+        name: user.role == 'delivery' ? AppRoutes.driverNavBar : AppRoutes.clientNavBar,
       );
     }
 

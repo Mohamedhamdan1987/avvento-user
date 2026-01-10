@@ -234,4 +234,15 @@ class RestaurantsService {
       rethrow;
     }
   }
+
+  /// Fetch restaurant drinks
+  Future<List<MenuItem>> getDrinks(String restaurantId) async {
+    try {
+      final response = await _dioClient.get('/drinks/restaurants/$restaurantId');
+      final responseData = response.data as List<dynamic>;
+      return responseData.map((item) => MenuItem.fromJson(item as Map<String, dynamic>)).toList();
+    } on DioException {
+      rethrow;
+    }
+  }
 }

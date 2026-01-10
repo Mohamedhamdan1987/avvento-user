@@ -85,7 +85,7 @@ class AuthController extends GetxController {
       // Navigate based on user role
       if (user.role == 'client') {
         Get.offAllNamed(AppRoutes.clientNavBar);
-      } else if (user.role == 'delivery' || user.role == 'driver') {
+      } else if (user.role == 'delivery' || user.role == 'delivery') {
         // TODO: Add driver route when implemented
         Get.offAllNamed(AppRoutes.login);
       } else {

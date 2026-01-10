@@ -8,8 +8,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
 import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
+import '../../../../core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import '../controllers/cart_controller.dart';
 import '../models/cart_model.dart';
+import '../../restaurants/models/menu_item_model.dart';
 
 class RestaurantCartDetailsPage extends StatefulWidget {
   final RestaurantCartResponse cart;
@@ -423,7 +425,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
       onTap: () {
         // Navigate to restaurant menu or add items
         // Get.back();
-        Get.to(() => RestaurantDetailsScreen(restaurantId: widget.cart.restaurant.restaurantId!!));
+        Get.to(() => RestaurantDetailsScreen(restaurantId: widget.cart.restaurant.restaurantId!!))?.then((value) {
+          controller.fetchRestaurantCart(widget.cart.restaurant.id!);
+        },);
 
       },
       child: Container(
@@ -456,33 +460,151 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
   }
 
   Widget _buildSuggestedDrinksSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'أضف مشروبات',
-          style: const TextStyle().textColorBold(
-            fontSize: 14.sp,
-            color: Color(0xFF101828),
+    return Obx(() {
+      if (controller.isLoadingDrinks) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      
+      if (controller.drinks.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Selected Drinks Section
+          if (controller.selectedDrinks.isNotEmpty) ...[
+            Text(
+              'المشروبات المختارة',
+              style: const TextStyle().textColorBold(
+                fontSize: 14.sp,
+                color: Color(0xFF101828),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            ListView.separated(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              itemCount: controller.selectedDrinks.length,
+              separatorBuilder: (context, index) => SizedBox(height: 12.h),
+              itemBuilder: (context, index) {
+                final drink = controller.selectedDrinks[index];
+                return Stack(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(
+                          color: const Color(0xFFF3F4F6),
+                          width: 0.761,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 60.w,
+                            height: 60.h,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF9FAFB),
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12.r),
+                              child: drink['image'] != null
+                                  ? CachedNetworkImage(
+                                      imageUrl: drink['image'],
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(color: Colors.grey[200]),
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  drink['name'],
+                                  style: const TextStyle().textColorBold(
+                                    fontSize: 14.sp,
+                                    color: Color(0xFF101828),
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  '${(drink['price'] as num).toStringAsFixed(0)} د.ل × ${drink['quantity']}',
+                                  style: const TextStyle().textColorMedium(
+                                    fontSize: 12.sp,
+                                    color: Color(0xFF6A7282),
+                                  ),
+                                ),
+                                if (drink['notes'] != null && drink['notes'].isNotEmpty)
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 4.h),
+                                    child: Text(
+                                      'ملاحظات: ${drink['notes']}',
+                                      style: const TextStyle().textColorNormal(
+                                        fontSize: 12.sp,
+                                        color: Color(0xFF9CA3AF),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          // Delete Button
+                           GestureDetector(
+                              onTap: () {
+                                controller.removeDrink(index);
+                              },
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: SvgIcon(
+                                  iconName: 'assets/svg/cart/delete.svg',
+                                  width: 20.w,
+                                  height: 20.h,
+                                  color: Colors.red.withOpacity(0.7),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            SizedBox(height: 24.h),
+          ],
+          
+          Text(
+            'أضف مشروبات',
+            style: const TextStyle().textColorBold(
+              fontSize: 14.sp,
+              color: Color(0xFF101828),
+            ),
           ),
-        ),
-        SizedBox(height: 12.h),
-        SizedBox(
-          height: 157.49.h,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: 3, // Placeholder - replace with actual drinks
-            separatorBuilder: (context, index) => SizedBox(width: 12.w),
-            itemBuilder: (context, index) {
-              return _buildDrinkCard();
-            },
+          SizedBox(height: 12.h),
+          SizedBox(
+            height: 157.49.h,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: controller.drinks.length,
+              separatorBuilder: (context, index) => SizedBox(width: 12.w),
+              itemBuilder: (context, index) {
+                return _buildDrinkCard(controller.drinks[index]);
+              },
+            ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
-  Widget _buildDrinkCard() {
+  Widget _buildDrinkCard(MenuItem drink) {
     return Container(
       width: 140.w,
       height: 149.49.h,
@@ -503,35 +625,44 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
               SizedBox(height: 12.h),
               // Drink Image
               Container(
-                width: 80.w,
+                width: double.infinity,
                 height: 80.h,
+                padding: EdgeInsets.symmetric(horizontal: 8.r),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(4.r),
-                  child: Container(
-                    color: Colors.grey[200],
-                    // Placeholder - replace with actual image
-                  ),
+                  child: drink.image != null
+                      ? CachedNetworkImage(
+                          imageUrl: drink.image!,
+                          fit: BoxFit.cover,
+                          errorWidget: (context, url, error) => Container(color: Colors.grey[200]),
+                        )
+                      : Container(
+                          color: Colors.grey[200],
+                        ),
                 ),
               ),
               SizedBox(height: 12.h),
               // Drink Name
-              Text(
-                'جرين كولا موهيتو',
-                style: const TextStyle().textColorBold(
-                  fontSize: 12.sp,
-                  color: Color(0xFF101828),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                child: Text(
+                  drink.name,
+                  style: const TextStyle().textColorBold(
+                    fontSize: 12.sp,
+                    color: Color(0xFF101828),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
               SizedBox(height: 4.h),
               // Drink Price
               Text(
-                '4 د.ل',
+                '${drink.price.toStringAsFixed(0)} د.ل',
                 style: const TextStyle().textColorNormal(
                   fontSize: 12.sp,
                   color: Color(0xFF6A7282),
@@ -542,22 +673,23 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
           ),
           // Add Button
           PositionedDirectional(
-            start: 29.24.w,
+            end: 15.24.w,
             top: 64.h,
             child: GestureDetector(
               onTap: () {
-                // Add drink to cart
+                _showAddDrinkBottomSheet(drink);
               },
               child: Container(
-                width: 28.w,
-                height: 28.h,
+                // width: 28.w,
+                // height: 28.h,
+                padding: EdgeInsets.all(1.r),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFFF3F4F6),
-                    width: 0.761,
-                  ),
+                  // border: Border.all(
+                  //   color: const Color(0xFFF3F4F6),
+                  //   width: 0.761,
+                  // ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
@@ -568,7 +700,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 ),
                 child: Center(
                   child: SvgIcon(
-                    iconName: 'assets/svg/client/restaurant_details/plus_icon.svg',
+                    iconName: 'assets/svg/cart/add.svg',
                     width: 16.w,
                     height: 16.h,
                     color: const Color(0xFF7F22FE),
@@ -688,6 +820,129 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
               )),
         ],
       ),
+    );
+  }
+
+  void _showAddDrinkBottomSheet(MenuItem drink) {
+    int quantity = 1;
+    final TextEditingController notesController = TextEditingController();
+
+    Get.bottomSheet(
+      Container(
+        padding: EdgeInsets.all(24.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 48.w,
+                    height: 5.h,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2.5.r),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 24.h),
+                Text(
+                  drink.name,
+                  style: const TextStyle().textColorBold(
+                    fontSize: 18.sp,
+                    color: const Color(0xFF101828),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        if (quantity > 1) {
+                          setState(() => quantity--);
+                        }
+                      },
+                      child: Container(
+                        width: 40.w,
+                        height: 40.h,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Icon(Icons.remove, color: const Color(0xFF101828)),
+                      ),
+                    ),
+                    SizedBox(width: 24.w),
+                    Text(
+                      '$quantity',
+                      style: const TextStyle().textColorBold(
+                        fontSize: 18.sp,
+                        color: const Color(0xFF101828),
+                      ),
+                    ),
+                    SizedBox(width: 24.w),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() => quantity++);
+                      },
+                      child: Container(
+                        width: 40.w,
+                        height: 40.h,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Icon(Icons.add, color: const Color(0xFF101828)),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24.h),
+                TextField(
+                  controller: notesController,
+                  decoration: InputDecoration(
+                    hintText: 'ملاحظات (مثل: بدون سكر، ثلج زيادة...)',
+                    filled: true,
+                    fillColor: const Color(0xFFF9FAFB),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  ),
+                  maxLines: 2,
+                ),
+                SizedBox(height: 24.h),
+                CustomButtonApp(
+                  text: 'إضافة للطلب - ${(drink.price * quantity).toStringAsFixed(0)} د.ل',
+                  onTap: () {
+                    controller.addDrink(drink, quantity, notesController.text);
+                    Get.back();
+                    Get.snackbar(
+                      'تمت الإضافة',
+                      'تم إضافة ${drink.name} إلى الطلب',
+                      snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: Colors.green,
+                      colorText: Colors.white,
+                      margin: EdgeInsets.all(16.w),
+                    );
+                  },
+                  color: const Color(0xFF7F22FE),
+                ),
+                SizedBox(height: 16.h),
+              ],
+            );
+          },
+        ),
+      ),
+      isScrollControlled: true,
     );
   }
 }

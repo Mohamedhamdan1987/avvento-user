@@ -7,6 +7,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/routes/app_routes.dart';
+import '../../../auth/controllers/auth_controller.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
@@ -220,7 +221,9 @@ class AccountPage extends StatelessWidget {
             title: 'تسجيل الخروج',
             titleColor: AppColors.notificationRed,
             showChevron: false,
-            onTap: () {},
+            onTap: () {
+              _showLogoutDialog();
+            },
           ),
         ],
       ),
@@ -294,6 +297,60 @@ class AccountPage extends StatelessWidget {
                 size: 20.r,
               )
             : null,
+      ),
+    );
+  }
+
+  void _showLogoutDialog() {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: Text(
+          'تسجيل الخروج',
+          style: const TextStyle().textColorBold(
+            fontSize: 18,
+            color: AppColors.textDark,
+          ),
+        ),
+        content: Text(
+          'هل أنت متأكد من رغبتك في تسجيل الخروج؟',
+          style: TextStyle(
+            fontSize: 16.sp,
+            color: AppColors.textMedium,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text(
+              'إلغاء',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: AppColors.textMedium,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back(); // Close dialog
+              // Safely get or initialize AuthController
+              final authController = Get.isRegistered<AuthController>()
+                  ? Get.find<AuthController>()
+                  : Get.put(AuthController());
+              authController.logout();
+            },
+            child: Text(
+              'تسجيل الخروج',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: AppColors.notificationRed,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

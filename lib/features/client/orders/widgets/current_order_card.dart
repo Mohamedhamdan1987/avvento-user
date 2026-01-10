@@ -390,8 +390,8 @@ class CurrentOrderCard extends StatelessWidget {
                 }
 
                 // Get user location
-                double userLat = order.deliveryLat;
-                double userLong = order.deliveryLong;
+                double? userLat = order.deliveryLat;
+                double? userLong = order.deliveryLong;
 
                 // Get restaurant location
                 final restaurantLat = order.deliveryLat; // Fallback

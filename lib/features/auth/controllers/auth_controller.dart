@@ -63,8 +63,9 @@ class AuthController extends GetxController {
         // Save user data to cache
         await _storage.write(AppConstants.userKey, result.data!.user.toJson());
 
+        print("Cached User: ${result.data!.user.toJson()}");
         // Navigate based on user type
-        if (result.data!.user.type == 'driver') {
+        if (result.data!.user.role == 'delivery') {
           Get.offAllNamed(AppRoutes.driverNavBar);
         } else {
           Get.offAllNamed(AppRoutes.clientNavBar);
@@ -153,7 +154,7 @@ class AuthController extends GetxController {
           await _storage.write(AppConstants.userKey, user.toJson());
 
           // Navigate based on user type
-          if (user.type == 'driver') {
+          if (user.role == 'delivery') {
             Get.offAllNamed(AppRoutes.driverNavBar);
           } else {
             Get.offAllNamed(AppRoutes.clientNavBar);
@@ -221,7 +222,7 @@ class AuthController extends GetxController {
         await _storage.write(AppConstants.userKey, result.data!.user.toJson());
 
         // Navigate based on user type
-        if (result.data!.user.type == 'driver') {
+        if (result.data!.user.role == 'delivery') {
           Get.offAllNamed(AppRoutes.driverNavBar);
         } else {
           Get.offAllNamed(AppRoutes.clientNavBar);

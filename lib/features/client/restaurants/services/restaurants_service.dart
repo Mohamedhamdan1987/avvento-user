@@ -6,16 +6,12 @@ import '../models/menu_category_model.dart';
 import '../models/menu_item_model.dart';
 import '../models/sub_category_model.dart';
 import '../../cart/models/cart_model.dart';
+import '../models/favorite_restaurant_model.dart';
 
 class RestaurantsService {
   final DioClient _dioClient = DioClient();
 
   /// Fetch restaurants with pagination and search
-  /// 
-  /// Parameters:
-  /// - [page]: Page number (default: 1)
-  /// - [limit]: Number of items per page (default: 10)
-  /// - [search]: Search query string (optional)
   Future<RestaurantsResponse> getRestaurants({
     int page = 1,
     int limit = 10,
@@ -27,7 +23,6 @@ class RestaurantsService {
         'limit': limit,
       };
 
-      // Add search parameter if provided
       if (search != null && search.isNotEmpty) {
         queryParameters['search'] = search;
       }
@@ -37,9 +32,19 @@ class RestaurantsService {
         queryParameters: queryParameters,
       );
 
-      // Parse the response
       final responseData = response.data as Map<String, dynamic>;
       return RestaurantsResponse.fromJson(responseData);
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Fetch favorite restaurants
+  Future<List<FavoriteRestaurant>> getFavoriteRestaurants() async {
+    try {
+      final response = await _dioClient.get('/restaurants/favorites/my');
+      final responseData = response.data as List<dynamic>;
+      return responseData.map((item) => FavoriteRestaurant.fromJson(item as Map<String, dynamic>)).toList();
     } on DioException {
       rethrow;
     }
@@ -143,6 +148,16 @@ class RestaurantsService {
       return response.data['isFavorite'] as bool? ?? false;
     } on DioException {
       return false;
+    }
+  }
+
+  /// Toggle restaurant favorite status
+  Future<bool> toggleFavorite(String restaurantId) async {
+    try {
+      final response = await _dioClient.post('/restaurants/$restaurantId/favorite');
+      return response.data['isFavorite'] as bool? ?? false;
+    } on DioException {
+      rethrow;
     }
   }
 

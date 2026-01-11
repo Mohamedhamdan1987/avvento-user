@@ -36,3 +36,9 @@ class AppLogger {
   }
 }
 
+void cprint(dynamic message) {
+  if (kDebugMode) {
+    debugPrint("[DEBUG PRINT==> $message");
+  }
+}
+

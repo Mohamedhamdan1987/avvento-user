@@ -36,25 +36,40 @@ class DriverOrderModel {
   });
 
   factory DriverOrderModel.fromJson(Map<String, dynamic> json) {
+    // Handle the nested user object
+    final user = json['user'] as Map<String, dynamic>?;
+    
+    // Handle the nested restaurant object
+    final restaurant = json['restaurant'] as Map<String, dynamic>?;
+
     return DriverOrderModel(
       id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
-      orderNumber: json['orderNumber']?.toString() ?? '',
-      customerId: json['customerId']?.toString() ?? json['customer']?['_id']?.toString() ?? '',
-      customerName: json['customerName']?.toString() ?? json['customer']?['username']?.toString() ?? '',
-      customerPhone: json['customerPhone']?.toString() ?? json['customer']?['phone']?.toString() ?? '',
-      restaurantId: json['restaurantId']?.toString() ?? json['restaurant']?['_id']?.toString() ?? '',
-      restaurantName: json['restaurantName']?.toString() ?? json['restaurant']?['name']?.toString() ?? '',
+      // Map _id to orderNumber if orderNumber is missing in the new API
+      orderNumber: json['orderNumber']?.toString() ?? json['_id']?.toString().substring(json['_id'].toString().length - 6).toUpperCase() ?? '',
+      customerId: user?['_id']?.toString() ?? json['customerId']?.toString() ?? '',
+      customerName: user?['name']?.toString() ?? user?['username']?.toString() ?? json['customerName']?.toString() ?? '',
+      customerPhone: user?['phone']?.toString() ?? json['customerPhone']?.toString() ?? '',
+      restaurantId: restaurant?['_id']?.toString() ?? json['restaurantId']?.toString() ?? '',
+      restaurantName: restaurant?['name']?.toString() ?? json['restaurantName']?.toString() ?? '',
       pickupLocation: PickupLocation.fromJson(
-        json['pickupLocation'] as Map<String, dynamic>? ?? json['restaurant']?['location'] as Map<String, dynamic>? ?? {},
+        json['pickupLocation'] as Map<String, dynamic>? ?? restaurant?['location'] as Map<String, dynamic>? ?? {
+          'address': restaurant?['address'] ?? '',
+          'lat': restaurant?['lat'] ?? 0,
+          'lng': restaurant?['lng'] ?? 0,
+        },
       ),
       deliveryLocation: DeliveryLocation.fromJson(
-        json['deliveryLocation'] as Map<String, dynamic>? ?? json['deliveryAddress'] as Map<String, dynamic>? ?? {},
+        {
+          'address': json['deliveryAddress'] ?? '',
+          'lat': json['deliveryLat'] ?? 0,
+          'lng': json['deliveryLong'] ?? 0,
+        },
       ),
       items: (json['items'] as List<dynamic>?)
               ?.map((item) => OrderItem.fromJson(item as Map<String, dynamic>))
               .toList() ??
           [],
-      totalAmount: (json['totalAmount'] ?? json['total'] ?? 0).toDouble(),
+      totalAmount: (json['totalPrice'] ?? json['totalAmount'] ?? json['total'] ?? 0).toDouble(),
       paymentMethod: json['paymentMethod']?.toString() ?? 'cash',
       status: json['status']?.toString() ?? 'pending',
       createdAt: json['createdAt'] != null
@@ -160,9 +175,9 @@ class OrderItem {
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
-      name: json['name']?.toString() ?? json['itemName']?.toString() ?? '',
+      name: json['name']?.toString() ?? json['itemName']?.toString() ?? 'وجبة',
       quantity: json['quantity'] as int? ?? 1,
-      price: (json['price'] ?? 0).toDouble(),
+      price: (json['unitPrice'] ?? json['price'] ?? 0).toDouble(),
     );
   }
 

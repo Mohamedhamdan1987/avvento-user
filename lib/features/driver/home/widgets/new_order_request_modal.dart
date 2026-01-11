@@ -276,8 +276,7 @@ class NewOrderRequestModal extends StatelessWidget {
                         text: 'رفض',
                         onTap: () {
                           controller.rejectOrder(order.id);
-                          Navigator.pop(context);
-                          controller.clearSelectedOrder();
+                          Get.back(); // Close bottom sheet
                         },
                         isFill: false,
                         borderColor: AppColors.borderGray,
@@ -296,8 +295,7 @@ class NewOrderRequestModal extends StatelessWidget {
                         text: 'قبول الطلب',
                         onTap: () {
                           controller.acceptOrder(order.id);
-                          Navigator.pop(context);
-                          controller.clearSelectedOrder();
+                          Get.back(); // Close bottom sheet
                         },
                         color: AppColors.primary,
                         height: 56.h,

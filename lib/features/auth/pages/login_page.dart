@@ -118,68 +118,37 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   SizedBox(height: 48.h),
                   // Username Field
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(
-                        color: AppColors.drawerPurple.withOpacity(0.2),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.drawerPurple.withOpacity(0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: CustomTextField(
-                      controller: usernameController,
-                      label: 'اسم المستخدم أو البريد الإلكتروني',
-                      hint: 'أدخل اسم المستخدم',
-                      prefixIcon: Icons.person_outline,
-                      borderRadius: 16,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'يرجى إدخال اسم المستخدم';
-                        }
-                        return null;
-                      },
-                    ),
+                  CustomTextField(
+                    controller: usernameController,
+                    label: 'اسم المستخدم أو البريد الإلكتروني',
+                    hint: 'أدخل اسم المستخدم',
+                    prefixIcon: Icons.person_outline,
+                    borderRadius: 16,
+                    borderColor: AppColors.drawerPurple.withOpacity(0.2),
+
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'يرجى إدخال اسم المستخدم';
+                      }
+                      return null;
+                    },
                   ),
                   SizedBox(height: 20.h),
                   // Password Field
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(
-                        color: AppColors.drawerPurple.withOpacity(0.2),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.drawerPurple.withOpacity(0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: CustomTextField(
-                      controller: passwordController,
-                      label: 'كلمة المرور',
-                      hint: 'أدخل كلمة المرور',
-                      prefixIcon: Icons.lock_outline,
-                      obscureText: true,
-                      borderRadius: 16,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'يرجى إدخال كلمة المرور';
-                        }
-                        return null;
-                      },
-                    ),
+                  CustomTextField(
+                    controller: passwordController,
+                    label: 'كلمة المرور',
+                    hint: 'أدخل كلمة المرور',
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: true,
+                    borderRadius: 16,
+                    borderColor: AppColors.drawerPurple.withOpacity(0.2),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'يرجى إدخال كلمة المرور';
+                      }
+                      return null;
+                    },
                   ),
                   SizedBox(height: 12.h),
                   // Forgot Password

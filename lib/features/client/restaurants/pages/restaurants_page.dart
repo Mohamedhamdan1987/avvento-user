@@ -9,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../controllers/restaurants_controller.dart';
+import '../../favorites/controllers/favorites_controller.dart';
 import '../../../../core/utils/location_utils.dart';
 import 'story_view_page.dart';
 import 'all_stories_page.dart';
@@ -380,19 +381,27 @@ class RestaurantsPage extends GetView<RestaurantsController> {
 }
 
 class RestaurantCard extends StatelessWidget {
-  final Restaurant restaurant;
+  final dynamic restaurant;
 
   const RestaurantCard({super.key, required this.restaurant});
 
   @override
   Widget build(BuildContext context) {
+    final bool isFavorite = restaurant.isFavorite;
+    final bool isActive = restaurant is Restaurant ? restaurant.user.isActive : restaurant.isOpen;
+    final String restaurantId = restaurant.id;
+    final String name = restaurant.name;
+    final String? backgroundImage = restaurant.backgroundImage;
+    final double lat = restaurant.lat;
+    final double long = restaurant.long;
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
           // Navigate to restaurant details
-          Get.to(() => RestaurantDetailsScreen(restaurantId: restaurant.id));
+          Get.to(() => RestaurantDetailsScreen(restaurantId: restaurantId));
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -401,13 +410,13 @@ class RestaurantCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Background Image
-              if (restaurant.backgroundImage != null)
+              if (backgroundImage != null)
                 ClipRRect(
                   borderRadius: const BorderRadius.all(Radius.circular(12)),
                   child: Stack(
                     children: [
                       CachedNetworkImage(
-                        imageUrl: restaurant.backgroundImage!,
+                        imageUrl: backgroundImage,
                         height: 130,
                         width: double.infinity,
                         fit: BoxFit.cover,
@@ -423,12 +432,18 @@ class RestaurantCard extends StatelessWidget {
                           );
                         },
                       ),
-                      PositionedDirectional(
+                      Positioned(
                         top: 12.h,
-                        start: 12.w,
+                        right: 12.w,
                         child: CustomIconButtonApp(
                           onTap: () {
-                            // Handle favorite toggle
+                            if (restaurant is Restaurant) {
+                              final controller = Get.find<RestaurantsController>();
+                              controller.toggleFavorite(restaurant);
+                            } else {
+                              final controller = Get.find<FavoritesController>();
+                              controller.toggleFavorite(restaurant);
+                            }
                           },
                           height: 40,
                           width: 40,
@@ -437,21 +452,18 @@ class RestaurantCard extends StatelessWidget {
                           borderColor: Colors.grey.withOpacity(0.5),
                           childWidget: SvgIcon(
                             iconName: "assets/svg/client/fav.svg",
-                            color: true ? null : Colors.white,
+                            color: isFavorite ? Colors.red : null,
                           ),
                         ),
                       ),
-                      PositionedDirectional(
+                      Positioned(
                         bottom: 12.h,
-                        end: 12.w,
+                        left: 12.w,
                         child: CustomButtonApp(
-                          onTap: () {
-                            // Handle favorite toggle
-                          },
+                          onTap: () {},
                           wrapContent: true,
                           borderRadius: 10,
                           height: 22.h,
-                          // padding: EdgeInsets.symmetric(vertical: 4.h),
                           isFill: true,
                           color: Colors.white,
                           borderColor: Colors.grey.withOpacity(0.5),
@@ -473,15 +485,15 @@ class RestaurantCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (!restaurant.user.isActive)
+                      if (!isActive)
                         Positioned.fill(
                           child: Container(
                             alignment: Alignment.center,
-                            color: Color(0xB27F22FE),
+                            color: const Color(0xB27F22FE),
                             child: Text(
                               'مغلق الأن',
                               textAlign: TextAlign.center,
-                              style: TextStyle().textColorBold(
+                              style: const TextStyle().textColorBold(
                                 color: Colors.white,
                                 fontSize: 20.sp,
                               ),
@@ -492,7 +504,7 @@ class RestaurantCard extends StatelessWidget {
                   ),
                 ),
 
-              Spacer(),
+              SizedBox(height: 8.h),
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -507,7 +519,7 @@ class RestaurantCard extends StatelessWidget {
                       children: [
                         // Name
                         Text(
-                          restaurant.name,
+                          name,
                           style: const TextStyle().textColorBold(
                             fontSize: 16.sp,
                           ),
@@ -533,58 +545,66 @@ class RestaurantCard extends StatelessWidget {
 
                     SizedBox(height: 4.h),
 
-                    Obx(() {
-                      final controller = Get.find<RestaurantsController>();
-                      final userLat = controller.userLat;
-                      final userLong = controller.userLong;
+                    Builder(
+                      builder: (context) {
+                        if (!Get.isRegistered<RestaurantsController>()) {
+                          return const SizedBox();
+                        }
+                        
+                        final controller = Get.find<RestaurantsController>();
+                        return Obx(() {
+                          final userLat = controller.userLat;
+                          final userLong = controller.userLong;
 
-                      String distanceText = '--';
-                      String priceText = '--';
+                          String distanceText = '--';
+                          String priceText = '--';
 
-                      if (userLat != null && userLong != null) {
-                        final distance = LocationUtils.calculateDistance(
-                          userLat: userLat,
-                          userLong: userLong,
-                          restaurantLat: restaurant.lat,
-                          restaurantLong: restaurant.long,
-                        );
-                        distanceText = LocationUtils.formatDistance(distance);
+                          if (userLat != null && userLong != null) {
+                            final distance = LocationUtils.calculateDistance(
+                              userLat: userLat,
+                              userLong: userLong,
+                              restaurantLat: lat,
+                              restaurantLong: long,
+                            );
+                            distanceText = LocationUtils.formatDistance(distance);
 
-                        final price = LocationUtils.calculateDeliveryPrice(
-                          distanceInKm: distance,
-                        );
-                        priceText = LocationUtils.formatPrice(price);
-                      }
+                            final price = LocationUtils.calculateDeliveryPrice(
+                              distanceInKm: distance,
+                            );
+                            priceText = LocationUtils.formatPrice(price);
+                          }
 
-                      return Row(
-                        children: [
-                          Text(
-                            "التوصيل: $priceText",
-                            style: const TextStyle().textColorMedium(
-                              fontSize: 10.sp,
-                              color: const Color(0xFF697282),
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Row(
+                          return Row(
                             children: [
-                              SvgIcon(
-                                iconName: "assets/svg/client/location.svg",
-                                color: const Color(0xFF738DAD),
-                              ),
-                              SizedBox(width: 2.w),
                               Text(
-                                "المسافة: $distanceText",
+                                "التوصيل: $priceText",
                                 style: const TextStyle().textColorMedium(
-                                  fontSize: 11.sp,
+                                  fontSize: 10.sp,
                                   color: const Color(0xFF697282),
                                 ),
                               ),
+                              SizedBox(width: 8.w),
+                              Row(
+                                children: [
+                                  SvgIcon(
+                                    iconName: "assets/svg/client/location.svg",
+                                    color: const Color(0xFF738DAD),
+                                  ),
+                                  SizedBox(width: 2.w),
+                                  Text(
+                                    "المسافة: $distanceText",
+                                    style: const TextStyle().textColorMedium(
+                                      fontSize: 11.sp,
+                                      color: const Color(0xFF697282),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
-                          ),
-                        ],
-                      );
-                    }),
+                          );
+                        });
+                      },
+                    ),
                   ],
                 ),
               ),

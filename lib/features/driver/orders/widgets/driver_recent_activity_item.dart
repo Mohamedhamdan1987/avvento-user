@@ -55,6 +55,65 @@ class DriverRecentActivityItem extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+
+          // Order number badge (on the left in RTL)
+          Container(
+            width: 50.w,
+            height: 50.h,
+            // padding: EdgeInsetsDirectional.symmetric(
+            //   horizontal: 8.w,
+            //   vertical: 2.h,
+            // ),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(100.r),
+            ),
+            child: Center(
+              child: Text(
+                '#${order.orderNumber}',
+                style: const TextStyle().textColorBold(
+                  fontSize: 10.sp,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: 12.w),
+
+
+          // Middle: Restaurant info and order number
+          Expanded(
+            child: Row(
+              children: [
+                // Restaurant info (on the right in RTL)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        order.restaurantName,
+                        style: const TextStyle().textColorBold(
+                          fontSize: 14.sp,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '${_getTimeAgo(order.createdAt)} • مكتمل',
+                        style: const TextStyle().textColorNormal(
+                          fontSize: 12.sp,
+                          color: const Color(0xFF99A1AF),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+
+              ],
+            ),
+          ),
+          SizedBox(width: 12.w),
           // Left side: Price and Status (in RTL, left = end)
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -87,59 +146,8 @@ class DriverRecentActivityItem extends StatelessWidget {
             ],
           ),
 
-          SizedBox(width: 12.w),
 
-          // Middle: Restaurant info and order number
-          Expanded(
-            child: Row(
-              children: [
-                // Restaurant info (on the right in RTL)
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        order.restaurantName,
-                        style: const TextStyle().textColorBold(
-                          fontSize: 14.sp,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        '${_getTimeAgo(order.createdAt)} • مكتمل',
-                        style: const TextStyle().textColorNormal(
-                          fontSize: 12.sp,
-                          color: const Color(0xFF99A1AF),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
 
-                SizedBox(width: 12.w),
-
-                // Order number badge (on the left in RTL)
-                Container(
-                  width: 40.w,
-                  height: 40.h,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.05),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      '#${order.orderNumber}',
-                      style: const TextStyle().textColorBold(
-                        fontSize: 14.sp,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

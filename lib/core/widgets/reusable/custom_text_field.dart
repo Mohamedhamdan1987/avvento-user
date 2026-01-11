@@ -12,6 +12,7 @@ class CustomTextField extends StatefulWidget {
   final bool obscureText;
   final TextEditingController? controller;
   final Color? fillColor;
+  final Color? borderColor;
   final double borderRadius;
   final EdgeInsetsGeometry? contentPadding;
   final TextInputType? keyboardType;
@@ -34,7 +35,7 @@ class CustomTextField extends StatefulWidget {
     this.keyboardType,
     this.validator,
     this.inputFormatters,
-    this.maxLines = 1,
+    this.maxLines = 1, this.borderColor,
   });
 
   @override
@@ -103,15 +104,20 @@ class _CustomTextFieldState extends State<CustomTextField> {
             ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(widget.borderRadius.r),
-          borderSide: BorderSide.none,
+          borderSide: widget.borderColor != null
+              ? BorderSide(color: widget.borderColor!)
+              : BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(widget.borderRadius.r),
-          borderSide: BorderSide.none,
+          borderSide: widget.borderColor != null
+              ? BorderSide(color: widget.borderColor!)
+              : BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(widget.borderRadius.r),
-          borderSide: BorderSide(color: AppColors.drawerPurple, width: 2),
+          borderSide: BorderSide(
+              color: widget.borderColor ?? AppColors.drawerPurple, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(widget.borderRadius.r),

@@ -1,9 +1,12 @@
+import 'package:avvento/core/utils/logger.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/utils/show_snackbar.dart';
 import '../models/driver_order_model.dart';
 import '../services/driver_orders_service.dart';
-import '../data/mock_orders_data.dart';
+import '../widgets/active_order_view.dart';
+import '../widgets/new_order_request_modal.dart';
 
 class DriverOrdersController extends GetxController {
   final DriverOrdersService _ordersService = DriverOrdersService();
@@ -37,84 +40,15 @@ class DriverOrdersController extends GetxController {
     _todayEarnings.value = earnings;
   }
 
-  // Load mock orders for testing
-  void loadMockOrders() {
-    _nearbyOrders.value = MockOrdersData.getMockOrders();
-    _updateMarkers();
-  }
-
-  // Add a single mock order for testing
-  void addMockOrder() {
-    final mockOrder = MockOrdersData.getSingleMockOrder();
-    // Create a new order with unique ID
-    final newOrder = DriverOrderModel(
-      id: 'order_${DateTime.now().millisecondsSinceEpoch}',
-      orderNumber: 'ORD-${DateTime.now().millisecondsSinceEpoch}',
-      customerId: mockOrder.customerId,
-      customerName: mockOrder.customerName,
-      customerPhone: mockOrder.customerPhone,
-      restaurantId: mockOrder.restaurantId,
-      restaurantName: mockOrder.restaurantName,
-      pickupLocation: mockOrder.pickupLocation,
-      deliveryLocation: mockOrder.deliveryLocation,
-      items: mockOrder.items,
-      totalAmount: mockOrder.totalAmount,
-      paymentMethod: mockOrder.paymentMethod,
-      status: mockOrder.status,
-      createdAt: DateTime.now(),
-      deliveryFee: mockOrder.deliveryFee,
-      notes: mockOrder.notes,
-    );
-    _nearbyOrders.add(newOrder);
-    _updateMarkers();
-  }
-
-  // Load active orders with different statuses for testing
-  void loadActiveMockOrders() {
-    _myOrders.value = MockOrdersData.getActiveMockOrders();
-    update();
-  }
-
-  // Load a specific active order by status for testing
-  void loadActiveOrderByStatus(String status) {
-    final order = MockOrdersData.getActiveOrderByStatus(status);
-    _myOrders.value = [order];
-    update();
-  }
-
-  // Add an active order with specific status for testing
-  void addActiveOrderByStatus(String status) {
-    final order = MockOrdersData.getActiveOrderByStatus(status);
-    // Create a new order with unique ID
-    final newOrder = DriverOrderModel(
-      id: 'active_order_${DateTime.now().millisecondsSinceEpoch}',
-      orderNumber: order.orderNumber,
-      customerId: order.customerId,
-      customerName: order.customerName,
-      customerPhone: order.customerPhone,
-      restaurantId: order.restaurantId,
-      restaurantName: order.restaurantName,
-      pickupLocation: order.pickupLocation,
-      deliveryLocation: order.deliveryLocation,
-      items: order.items,
-      totalAmount: order.totalAmount,
-      paymentMethod: order.paymentMethod,
-      status: status,
-      createdAt: DateTime.now(),
-      deliveryFee: order.deliveryFee,
-      notes: order.notes,
-    );
-    _myOrders.add(newOrder);
-    update();
-  }
-
   // Fetch nearby orders based on driver's location
   Future<void> fetchNearbyOrders({
     required double latitude,
     required double longitude,
     double radiusKm = 10.0,
   }) async {
-    _isLoading.value = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _isLoading.value = true;
+    });
     try {
       final result = await _ordersService.getNearbyOrders(
         latitude: latitude,
@@ -126,6 +60,8 @@ class DriverOrdersController extends GetxController {
         _nearbyOrders.value = result.data!;
         _updateMarkers();
       } else {
+        // Fallback to mock data if API fails during development, but show error
+        // loadMockOrders(); 
         showSnackBar(
           title: 'خطأ',
           message: result.message ?? 'فشل في جلب الطلبات القريبة',
@@ -143,12 +79,15 @@ class DriverOrdersController extends GetxController {
 
   // Fetch driver's assigned orders
   Future<void> fetchMyOrders({String? status}) async {
-    _isLoading.value = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _isLoading.value = true;
+    });
     try {
       final result = await _ordersService.getMyOrders(status: status);
 
       if (result.success && result.data != null) {
         _myOrders.value = result.data!;
+        _updateMarkers();
       } else {
         showSnackBar(
           title: 'خطأ',
@@ -179,12 +118,14 @@ class DriverOrdersController extends GetxController {
         _updateMarkers();
         
         showSnackBar(
-          title: 'نجح',
-          message: 'تم قبول الطلب بنجاح',
+          message: 'تم قبول الطلب بنجاح، بالتوفيق في التوصيل!',
+          isSuccess: true,
         );
         
         // Close bottom sheet
-        Get.back();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Get.back();
+        });
       } else {
         showSnackBar(
           title: 'خطأ',
@@ -217,7 +158,9 @@ class DriverOrdersController extends GetxController {
         );
         
         // Close bottom sheet
-        Get.back();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Get.back();
+        });
       } else {
         showSnackBar(
           title: 'خطأ',
@@ -251,8 +194,8 @@ class DriverOrdersController extends GetxController {
         }
         
         showSnackBar(
-          title: 'نجح',
-          message: 'تم تحديث حالة الطلب',
+          message: 'تم تحديث حالة الطلب بنجاح',
+          isSuccess: true,
         );
       } else {
         showSnackBar(
@@ -271,6 +214,26 @@ class DriverOrdersController extends GetxController {
   // Select an order to view details
   void selectOrder(DriverOrderModel order) {
     _selectedOrder.value = order;
+    
+    // Check if it's one of my active orders
+    final isMyOrder = _myOrders.any((o) => o.id == order.id);
+
+    // Open bottom sheet when order is selected
+    // Using GetX navigation to avoid build context issues
+    if (Get.isBottomSheetOpen == false) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.bottomSheet(
+          isMyOrder ? ActiveOrderView(order: order) : NewOrderRequestModal(order: order),
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          enableDrag: true,
+          isDismissible: true,
+        ).then((_) {
+          // Clear selection when modal is dismissed
+          _selectedOrder.value = null;
+        });
+      });
+    }
   }
 
   // Clear selected order
@@ -278,34 +241,74 @@ class DriverOrdersController extends GetxController {
     _selectedOrder.value = null;
     // Close any open bottom sheets
     if (Get.isBottomSheetOpen == true) {
-      Get.back();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.back();
+      });
     }
   }
 
-  // Update map markers for nearby orders
+  // Update map markers for nearby orders and my active orders
   void _updateMarkers() {
     _markers.clear();
     
+    // 1. Add markers for nearby available orders (RED) - at pickup location
     for (var order in _nearbyOrders) {
-      // Add marker for delivery location
       _markers.add(
         Marker(
-          markerId: MarkerId(order.id),
+          markerId: MarkerId('nearby_${order.id}'),
           position: LatLng(
-            order.deliveryLocation.latitude,
-            order.deliveryLocation.longitude,
+            order.pickupLocation.latitude,
+            order.pickupLocation.longitude,
           ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
           infoWindow: InfoWindow(
-            title: 'طلب #${order.orderNumber}',
-            snippet: order.deliveryLocation.address,
+            title: 'طلب متاح #${order.orderNumber}',
+            snippet: 'المطعم: ${order.restaurantName}',
           ),
           onTap: () {
             selectOrder(order);
           },
         ),
       );
-      update();
     }
+
+    // 2. Add markers for my current active orders
+    for (var order in _myOrders) {
+      // Skip delivered or cancelled orders
+      if (['delivered', 'cancelled'].contains(order.status.toLowerCase())) continue;
+
+      bool isPickupPhase = ['accepted', 'going_to_restaurant', 'at_restaurant'].contains(order.status.toLowerCase());
+      
+      LatLng markerPosition = isPickupPhase 
+          ? LatLng(order.pickupLocation.latitude, order.pickupLocation.longitude)
+          : LatLng(order.deliveryLocation.latitude, order.deliveryLocation.longitude);
+
+      double hue = isPickupPhase ? BitmapDescriptor.hueAzure : BitmapDescriptor.hueGreen;
+      String phaseTitle = isPickupPhase ? 'استلام من المطعم' : 'تسليم للعميل';
+      String targetName = isPickupPhase ? order.restaurantName : order.customerName;
+
+      _markers.add(
+        Marker(
+          markerId: MarkerId('my_${order.id}'),
+          position: markerPosition,
+          icon: BitmapDescriptor.defaultMarkerWithHue(hue),
+          infoWindow: InfoWindow(
+            title: 'طلبي #${order.orderNumber} ($phaseTitle)',
+            snippet: 'الوجهة: $targetName',
+          ),
+          onTap: () {
+            // For my orders, we might want a different modal or just focus on it
+            // For now, use the same modal
+            selectOrder(order);
+          },
+        ),
+      );
+    }
+    
+    // Ensure update() is called after build if triggered during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      update();
+    });
   }
 
   @override

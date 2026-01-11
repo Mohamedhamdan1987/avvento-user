@@ -22,21 +22,29 @@ class ActiveOrderView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<DriverOrdersController>();
 
-    // Show different views based on order status
-    switch (order.status.toLowerCase()) {
-      case 'accepted':
-      case 'going_to_restaurant':
-        return _buildGoingToRestaurantView(context, order, controller);
-      case 'at_restaurant':
-        return _buildAtRestaurantView(context, order, controller);
-      case 'picked_up':
-      case 'going_to_customer':
-        return _buildGoingToCustomerView(context, order, controller);
-      case 'at_customer':
-        return _buildAtCustomerView(context, order, controller);
-      default:
-        return const SizedBox.shrink();
-    }
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+      Builder(builder: (context) {
+        // Show different views based on order status
+        switch (order.status.toLowerCase()) {
+          case 'accepted':
+          case 'awaiting_delivery':
+            return _buildGoingToRestaurantView(context, order, controller);
+          case 'at_restaurant':
+            return _buildAtRestaurantView(context, order, controller);
+          case 'picked_up':
+          case 'going_to_customer':
+            return _buildGoingToCustomerView(context, order, controller);
+          case 'at_customer':
+            return _buildAtCustomerView(context, order, controller);
+          default:
+            return const SizedBox.shrink();
+        }
+      },)
+    ],);
+
+
   }
 
   // Going to Restaurant View

@@ -156,6 +156,40 @@ class Restaurant {
       'isFavorite': isFavorite,
     };
   }
+
+  Restaurant copyWith({
+    String? id,
+    RestaurantUser? user,
+    String? name,
+    String? address,
+    double? lat,
+    double? long,
+    String? backgroundImage,
+    String? logo,
+    String? ownerName,
+    String? description,
+    String? phone,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isFavorite,
+  }) {
+    return Restaurant(
+      id: id ?? this.id,
+      user: user ?? this.user,
+      name: name ?? this.name,
+      address: address ?? this.address,
+      lat: lat ?? this.lat,
+      long: long ?? this.long,
+      backgroundImage: backgroundImage ?? this.backgroundImage,
+      logo: logo ?? this.logo,
+      ownerName: ownerName ?? this.ownerName,
+      description: description ?? this.description,
+      phone: phone ?? this.phone,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isFavorite: isFavorite ?? this.isFavorite,
+    );
+  }
 }
 
 class PaginationModel {

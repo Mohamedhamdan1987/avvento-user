@@ -1,3 +1,4 @@
+import 'package:avvento/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -22,7 +23,9 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
   void initState() {
     super.initState();
     _initializeController();
-    _fetchOrders();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchOrders();
+    });
   }
 
   void _initializeController() {
@@ -190,7 +193,7 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
     return GetX<DriverOrdersController>(
       builder: (controller) {
         final completedOrders = controller.myOrders
-            .where((order) => order.status.toLowerCase() == 'delivered')
+            // .where((order) => order.status.toLowerCase() == 'delivered')
             .toList()
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Sort by newest first
 

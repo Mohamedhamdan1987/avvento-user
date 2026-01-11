@@ -1,3 +1,4 @@
+import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/features/client/pages/client_nav_bar.dart';
 import 'package:avvento/features/driver/pages/driver_nav_bar.dart';
 import 'package:avvento/features/auth/models/user_model.dart';
@@ -37,13 +38,13 @@ class AppPages {
     final token = storage.read<String>(AppConstants.tokenKey);
     final userData = storage.read<Map<String, dynamic>>(AppConstants.userKey);
 
-    print("userData: ${userData}");
+    // cprint("userData: ${userData}");
     // return AppRoutes.driverNavBar;
 
     // If token and user data exist, go to appropriate main page based on role
     if (token != null && token.isNotEmpty && userData != null) {
       final user = UserModel.fromJson(userData);
-      print("user.type: ${user.role}");
+      // print("user.type: ${user.role}");
       return user.role == 'delivery' ? AppRoutes.driverNavBar : AppRoutes.clientNavBar;
     }
 

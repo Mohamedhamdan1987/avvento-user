@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/routes/app_routes.dart';
 import '../../../auth/controllers/auth_controller.dart';
+import '../../favorites/pages/favorites_page.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
@@ -16,24 +17,21 @@ class AccountPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
-          children: [
-                    _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    SizedBox(height: 24.h),
-                    _buildSettingsList(),
-                    SizedBox(height: 100.h), // Spacing for navigation bar
-                  ],
-                ),
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  SizedBox(height: 24.h),
+                  _buildSettingsList(),
+                  SizedBox(height: 100.h), // Spacing for navigation bar
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -191,13 +189,15 @@ class AccountPage extends StatelessWidget {
           ),
           _buildSettingsItem(
             iconPath: 'assets/svg/client/home/favorite.svg',
-            title: 'المطاعم المفضلة',
-            onTap: () {},
+            title: 'المفضلة',
+            onTap: () => Get.to(() => const FavoritesPage()),
           ),
           _buildSettingsItem(
             iconPath: 'assets/svg/client/home/notification.svg',
             title: 'التنبيهات',
-            onTap: () {},
+            onTap: () {
+              Get.toNamed(AppRoutes.notifications);
+            },
           ),
           _buildSettingsItem(
             iconPath: 'assets/svg/client/home/location_pin.svg', // Placeholder for language or similar

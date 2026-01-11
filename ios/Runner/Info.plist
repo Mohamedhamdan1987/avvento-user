@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>يحتاج التطبيق إلى الوصول إلى موقعك لعرض الطلبات القريبة منك وتتبع عملية التوصيل.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>يحتاج التطبيق إلى الوصول إلى موقعك لعرض الطلبات القريبة منك وتتبع عملية التوصيل حتى في الخلفية.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>يحتاج التطبيق إلى الوصول إلى موقعك لعرض الطلبات القريبة منك وتتبع عملية التوصيل.</string>
 </dict>
 </plist>

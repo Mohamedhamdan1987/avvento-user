@@ -46,8 +46,8 @@ class BottomNavBar extends StatelessWidget {
             isActive: currentIndex == 1,
           ),
           _buildNavItem(
-            iconName: 'assets/svg/nav/wallet.svg',
-            label: 'المحفظة',
+            iconName: 'assets/svg/nav/cart.svg',
+            label: 'السلة',
             index: 2,
             isActive: currentIndex == 2,
           ),

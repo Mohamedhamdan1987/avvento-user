@@ -164,5 +164,44 @@ class RestaurantsController extends GetxController {
       print('Failed to love story: $e');
     }
   }
+
+  /// Toggle restaurant favorite status
+  Future<void> toggleFavorite(Restaurant restaurant) async {
+    try {
+      // Optimistic update
+      final index = _restaurants.indexWhere((r) => r.id == restaurant.id);
+      if (index != -1) {
+        _restaurants[index] = restaurant.copyWith(isFavorite: !restaurant.isFavorite);
+        _restaurants.refresh();
+      }
+
+      final isFavorite = await _restaurantsService.toggleFavorite(restaurant.id);
+      
+      // Update with actual result from server
+      if (index != -1) {
+        _restaurants[index] = _restaurants[index].copyWith(isFavorite: isFavorite);
+        _restaurants.refresh();
+      }
+      
+      Get.snackbar(
+        'نجاح',
+        isFavorite ? 'تمت إضافة المطعم إلى المفضلة' : 'تمت إزالة المطعم من المفضلة',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      // Revert on error
+      final index = _restaurants.indexWhere((r) => r.id == restaurant.id);
+      if (index != -1) {
+        _restaurants[index] = restaurant;
+        _restaurants.refresh();
+      }
+      
+      Get.snackbar(
+        'خطأ',
+        'فشل تحديث الحالة المفضلة',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
 }
 

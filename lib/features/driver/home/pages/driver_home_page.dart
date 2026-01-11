@@ -1,3 +1,4 @@
+import 'package:avvento/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -26,7 +27,9 @@ class _DriverHomePageState extends State<DriverHomePage> {
   void initState() {
     super.initState();
     _initializeController();
-    _getCurrentLocation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _getCurrentLocation();
+    });
   }
 
   void _initializeController() {
@@ -57,6 +60,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
         desiredAccuracy: LocationAccuracy.high,
       );
 
+      if (!mounted) return;
       setState(() {
         _currentLocation = LatLng(position.latitude, position.longitude);
         _isLoadingLocation = false;
@@ -70,20 +74,20 @@ class _DriverHomePageState extends State<DriverHomePage> {
       // Fetch nearby orders
       final controller = Get.find<DriverOrdersController>();
       
-      // Load mock orders for testing
-      // TODO: Remove this in production and uncomment the API call below
-      controller.loadMockOrders();
-      
-      // Uncomment for production:
-      // await controller.fetchNearbyOrders(
-      //   latitude: position.latitude,
-      //   longitude: position.longitude,
-      // );
+      // Load real orders from API
+      await controller.fetchNearbyOrders(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+
+      // Fetch driver's active orders to show on map
+      await controller.fetchMyOrders();
 
       // Initialize today's earnings (TODO: Fetch from API)
-      controller.setTodayEarnings(450.50);
+      // controller.setTodayEarnings(0.0);
     } catch (e) {
-      setState(() => _isLoadingLocation = false);
+      if (mounted) setState(() => _isLoadingLocation = false);
+      cprint("error in get location: $e");
       Get.snackbar(
         'خطأ',
         'فشل في الحصول على الموقع الحالي',
@@ -139,318 +143,272 @@ class _DriverHomePageState extends State<DriverHomePage> {
               top: 48.h,
               bottom: 0,
             ),
-            child: GetX<DriverOrdersController>(
-              builder: (controller) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Right side: Earnings and availability (in RTL, right = start)
-                    Row(
-                      children: [
-                        // Availability toggle
-                        Container(
-                          padding: EdgeInsetsDirectional.only(
-                            start: 0.76.w,
-                            end: 8.75.w,
-                            top: 0.76.h,
-                            bottom: 0.76.h,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Right side: Earnings and availability
+                Obx(() {
+                  final controller = Get.find<DriverOrdersController>();
+                  return Row(
+                    children: [
+                      // Availability toggle
+                      Container(
+                        padding: EdgeInsetsDirectional.only(
+                          start: 0.76.w,
+                          end: 8.75.w,
+                          top: 0.76.h,
+                          bottom: 0.76.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(
+                            color: AppColors.borderLightGray,
+                            width: 0.76.w,
                           ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(
-                              color: AppColors.borderLightGray,
-                              width: 0.76.w,
+                          borderRadius: BorderRadius.circular(100.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
                             ),
-                            borderRadius: BorderRadius.circular(100.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: () => controller.toggleAvailability(),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  width: 39.w,
-                                  height: 18.h,
-                                  decoration: BoxDecoration(
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: () => controller.toggleAvailability(),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                width: 39.w,
+                                height: 18.h,
+                                decoration: BoxDecoration(
+                                  color: controller.isAvailable
+                                      ? AppColors.primary
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(100.r),
+                                  border: Border.all(
                                     color: controller.isAvailable
                                         ? AppColors.primary
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(100.r),
-                                    border: Border.all(
-                                      color: controller.isAvailable
-                                          ? AppColors.primary
-                                          : AppColors.borderGray,
-                                      width: 0.76.w,
-                                    ),
+                                        : AppColors.borderGray,
+                                    width: 0.76.w,
                                   ),
-                                  child: Stack(
-                                    children: [
-                                      AnimatedPositionedDirectional(
-                                        duration: const Duration(milliseconds: 200),
-                                        start: controller.isAvailable ? 0.49.w : 21.23.w,
-                                        top: 0.49.h,
-                                        child: Container(
-                                          width: 16.w,
-                                          height: 16.h,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                          ),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    AnimatedPositionedDirectional(
+                                      duration: const Duration(milliseconds: 200),
+                                      start: controller.isAvailable ? 0.49.w : 21.23.w,
+                                      top: 0.49.h,
+                                      child: Container(
+                                        width: 16.w,
+                                        height: 16.h,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              SizedBox(width: 12.w),
-                              Text(
-                                controller.isAvailable ? 'متاح' : 'غير متاح',
-                                style: const TextStyle().textColorBold(
-                                  fontSize: 12,
-                                  color: AppColors.textPlaceholder,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        SizedBox(width: 12.w),
-
-                        // Earnings card
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16.w,
-                            vertical: 8.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(
-                              color: AppColors.borderLightGray,
-                              width: 0.76.w,
                             ),
-                            borderRadius: BorderRadius.circular(100.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
+                            SizedBox(width: 12.w),
+                            Text(
+                              controller.isAvailable ? 'متاح' : 'غير متاح',
+                              style: const TextStyle().textColorBold(
+                                fontSize: 12,
+                                color: AppColors.textPlaceholder,
                               ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'أرباح اليوم',
-                                style: const TextStyle().textColorNormal(
-                                  fontSize: 10,
-                                  color: AppColors.textPlaceholder,
-                                ),
-                              ),
-                              SizedBox(height: 2.h),
-                              Text(
-                                '${controller.todayEarnings.toStringAsFixed(2)} د.ل',
-                                style: const TextStyle().textColorBold(
-                                  fontSize: 14,
-                                  color: AppColors.textDark,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
 
-                    // Left side: Notification icon and test buttons (in RTL, left = end)
-                    Row(
-                      children: [
-                        // Load active orders button (for testing only)
-                        CustomIconButtonApp(
-                          width: 40.w,
-                          height: 40.h,
-                          radius: 100.r,
-                          color: Colors.white,
-                          borderColor: AppColors.borderLightGray,
-                          onTap: () {
-                            controller.loadActiveMockOrders();
-                            Get.snackbar(
-                              'تم',
-                              'تم تحميل الطلبات النشطة',
-                              snackPosition: SnackPosition.BOTTOM,
-                              duration: const Duration(seconds: 2),
-                            );
-                          },
-                          childWidget: Icon(
-                            Icons.shopping_bag,
-                            size: 20.r,
-                            color: AppColors.primary,
-                          ),
+                      SizedBox(width: 12.w),
+
+                      // Earnings card
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 8.h,
                         ),
-                        SizedBox(width: 8.w),
-                        // Add mock order button (for testing only)
-                        CustomIconButtonApp(
-                          width: 40.w,
-                          height: 40.h,
-                          radius: 100.r,
+                        decoration: BoxDecoration(
                           color: Colors.white,
-                          borderColor: AppColors.borderLightGray,
-                          onTap: () {
-                            controller.addMockOrder();
-                            Get.snackbar(
-                              'تم',
-                              'تم إضافة طلب تجريبي جديد',
-                              snackPosition: SnackPosition.BOTTOM,
-                              duration: const Duration(seconds: 2),
-                            );
-                          },
-                          childWidget: Icon(
-                            Icons.add,
-                            size: 20.r,
-                            color: AppColors.primary,
+                          border: Border.all(
+                            color: AppColors.borderLightGray,
+                            width: 0.76.w,
                           ),
+                          borderRadius: BorderRadius.circular(100.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 8.w),
-                        CustomIconButtonApp(
-                          width: 40.w,
-                          height: 40.h,
-                          radius: 100.r,
-                          color: Colors.white,
-                          borderColor: AppColors.borderLightGray,
-                          onTap: () {
-                            // TODO: Navigate to notifications
-                          },
-                          childWidget: Icon(
-                            Icons.notifications_outlined,
-                            size: 20.r,
-                            color: AppColors.textDark,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'أرباح اليوم',
+                              style: const TextStyle().textColorNormal(
+                                fontSize: 10,
+                                color: AppColors.textPlaceholder,
+                              ),
+                            ),
+                            SizedBox(height: 2.h),
+                            Text(
+                              '${controller.todayEarnings.toStringAsFixed(2)} د.ل',
+                              style: const TextStyle().textColorBold(
+                                fontSize: 14,
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ],
-                );
-              },
+                      ),
+                    ],
+                  );
+                }),
+
+                // Left side: Notification icon
+                CustomIconButtonApp(
+                  width: 40.w,
+                  height: 40.h,
+                  radius: 100.r,
+                  color: Colors.white,
+                  borderColor: AppColors.borderLightGray,
+                  onTap: () {
+                    // TODO: Navigate to notifications
+                  },
+                  childWidget: Icon(
+                    Icons.notifications_outlined,
+                    size: 20.r,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ],
             ),
           ),
 
-          // Show active order view if there's an active order
-          GetX<DriverOrdersController>(
-            builder: (controller) {
-              // Check if there's an active order (not delivered or cancelled)
-              final activeOrder = controller.myOrders.firstWhereOrNull(
-                (order) => !['delivered', 'cancelled'].contains(order.status.toLowerCase()),
-              );
+          // Show active orders view if there are active orders
+          Obx(() {
+            final controller = Get.find<DriverOrdersController>();
+            // Get all active orders (not delivered or cancelled)
+            final activeOrders = controller.myOrders.where(
+              (order) => !['delivered', 'cancelled'].contains(order.status.toLowerCase()),
+            ).toList();
 
-              if (activeOrder != null) {
-                return Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: ActiveOrderView(order: activeOrder),
-                );
-              }
-
-              return const SizedBox.shrink();
-            },
-          ),
-
-          // Show modal when order is selected from map marker (only if no active order)
-          GetX<DriverOrdersController>(
-            builder: (controller) {
-              // Don't show if there's an active order
-              final hasActiveOrder = controller.myOrders.any(
-                (order) => !['delivered', 'cancelled'].contains(order.status.toLowerCase()),
-              );
-
-              if (controller.selectedOrder != null && !hasActiveOrder) {
-                // Show modal bottom sheet when order is selected
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (Get.isBottomSheetOpen == false) {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      isDismissible: true,
-                      enableDrag: true,
-                      builder: (context) => NewOrderRequestModal(
-                        order: controller.selectedOrder!,
+            if (activeOrders.isNotEmpty) {
+              return Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // PageView for orders
+                    SizedBox(
+                      height: 400.h, // Adjusted height for better fit
+                      child: PageView.builder(
+                        itemCount: activeOrders.length,
+                        controller: PageController(viewportFraction: 0.95),
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 4.w),
+                            child: ActiveOrderView(order: activeOrders[index]),
+                          );
+                        },
                       ),
-                    ).then((_) {
-                      // Clear selection when modal is dismissed
-                      controller.clearSelectedOrder();
-                    });
-                  }
-                });
-              }
-
-              return const SizedBox.shrink();
-            },
-          ),
-
-          // Show empty state if no orders (only when no order is selected and no active order)
-          GetX<DriverOrdersController>(
-            builder: (controller) {
-              final hasActiveOrder = controller.myOrders.any(
-                (order) => !['delivered', 'cancelled'].contains(order.status.toLowerCase()),
-              );
-
-              if (controller.selectedOrder == null &&
-                  !hasActiveOrder &&
-                  controller.nearbyOrders.isEmpty &&
-                  !controller.isLoading) {
-                return Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    margin: EdgeInsets.all(16.w),
-                    padding: EdgeInsets.all(20.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, -5),
-                        ),
-                      ],
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: AppColors.textMedium,
-                          size: 24.r,
-                        ),
-                        SizedBox(width: 12.w),
-                        Text(
-                          'لا توجد طلبات قريبة حالياً',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            color: AppColors.textMedium,
+                    // Only show indicators if more than one order
+                    if (activeOrders.length > 1)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 16.h),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            activeOrders.length,
+                            (index) => Container(
+                              width: 8.w,
+                              height: 8.h,
+                              margin: EdgeInsets.symmetric(horizontal: 4.w),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.5),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              }
+                      ),
+                  ],
+                ),
+              );
+            }
 
-              return const SizedBox.shrink();
-            },
-          ),
+            return const SizedBox.shrink();
+          }),
+
+          // Modal is now triggered directly from DriverOrdersController.selectOrder using Get.bottomSheet
+
+          // Show empty state if no orders (only when no order is selected and no active order)
+          Obx(() {
+            final controller = Get.find<DriverOrdersController>();
+            final hasActiveOrder = controller.myOrders.any(
+              (order) => !['delivered', 'cancelled'].contains(order.status.toLowerCase()),
+            );
+
+            if (controller.selectedOrder == null &&
+                !hasActiveOrder &&
+                controller.nearbyOrders.isEmpty &&
+                !controller.isLoading) {
+              return Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  margin: EdgeInsets.all(16.w),
+                  padding: EdgeInsets.all(20.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: AppColors.textMedium,
+                        size: 24.r,
+                      ),
+                      SizedBox(width: 12.w),
+                      Text(
+                        'لا توجد طلبات قريبة حالياً',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          color: AppColors.textMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return const SizedBox.shrink();
+          }),
 
           // Loading indicator for location
           if (_isLoadingLocation)

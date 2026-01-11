@@ -11,12 +11,14 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/reusable/custom_text_field.dart';
+import 'package:avvento/features/client/address/controllers/address_controller.dart';
 import '../bindings/home_binding.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/category_card.dart';
 import '../widgets/promo_card.dart';
 import '../widgets/restaurant_circle_item.dart';
 import '../widgets/discount_card.dart';
+import '../../favorites/pages/favorites_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -111,6 +113,7 @@ class _HomePageContentState extends State<_HomePageContent> {
   }
 
   Widget _buildHeader() {
+    final addressController = Get.find<AddressController>();
     return Container(
       height: 277.h,
       decoration: BoxDecoration(
@@ -174,7 +177,7 @@ class _HomePageContentState extends State<_HomePageContent> {
           SafeArea(
             child: Padding(
               padding: EdgeInsets.only(
-                top: 56.h,
+                // top: 56.h,
                 left: 20.w,
                 right: 20.w,
               ),
@@ -229,52 +232,56 @@ class _HomePageContentState extends State<_HomePageContent> {
                         ],
                       ),
                       // Location
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12.w,
-                          vertical: 0.h,
-                        ),
-                        height: 24.h,
-                        decoration: BoxDecoration(
-                          color: AppColors.white.withOpacity(0.28),
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SvgPicture.asset(
-                              'assets/svg/client/home/location_pin.svg',
-                              width: 12.w,
-                              height: 12.h,
-                              colorFilter: const ColorFilter.mode(
-                                AppColors.white,
-                                BlendMode.srcIn,
+                      GestureDetector(
+                        onTap: () => Get.toNamed(AppRoutes.addressList),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 0.h,
+                          ),
+                          height: 24.h,
+                          decoration: BoxDecoration(
+                            color: AppColors.white.withOpacity(0.28),
+                            borderRadius: BorderRadius.circular(20.r),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SvgPicture.asset(
+                                'assets/svg/client/home/location_pin.svg',
+                                width: 12.w,
+                                height: 12.h,
+                                colorFilter: const ColorFilter.mode(
+                                  AppColors.white,
+                                  BlendMode.srcIn,
+                                ),
                               ),
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              'طرابلس، حي الأندلس',
-                              style: const TextStyle().textColorLight(
-                                fontSize: 12,
-                                color: AppColors.white.withOpacity(0.9),
+                              SizedBox(width: 4.w),
+                              Obx(() => Text(
+                                    addressController.activeAddress.value?.label ?? 'اختر عنوان',
+                                    style: const TextStyle().textColorLight(
+                                      fontSize: 12,
+                                      color: AppColors.white.withOpacity(0.9),
+                                    ),
+                                  )),
+                              SizedBox(width: 4.w),
+                              SvgPicture.asset(
+                                'assets/svg/client/home/chevron_down.svg',
+                                width: 12.w,
+                                height: 12.h,
+                                colorFilter: const ColorFilter.mode(
+                                  AppColors.white,
+                                  BlendMode.srcIn,
+                                ),
                               ),
-                            ),
-                            SizedBox(width: 4.w),
-                            SvgPicture.asset(
-                              'assets/svg/client/home/chevron_down.svg',
-                              width: 12.w,
-                              height: 12.h,
-                              colorFilter: const ColorFilter.mode(
-                                AppColors.white,
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 16.h),
+                  // SizedBox(height: 16.h),
+                  Spacer(),
                   // App title
                   Align(
                     alignment: Alignment.centerRight,
@@ -318,6 +325,8 @@ class _HomePageContentState extends State<_HomePageContent> {
                       ),
                     ),
                   ),
+                  SizedBox(height: 16.h),
+
                 ],
               ),
             ),
@@ -373,95 +382,96 @@ class _HomePageContentState extends State<_HomePageContent> {
           ),
           SizedBox(height: 24.h),
           // Promo Carousel
-          Column(
-            children: [
-              SizedBox(
-                height: 216.h,
-                child: PageView.builder(
-                  controller: _promoPageController,
-                  onPageChanged: (index) {
-                    widget.controller.setCurrentPromoPage(index);
-                  },
-                  itemBuilder: (context, index) {
-                    return PromoCard(
-                      imageUrl: 'assets/home_cover.jpg',
-                      restaurantName: 'مطعم الكوخ',
-                      rating: 4.5,
-                      distance: '1.2k',
-                      deliveryFee: '0',
-                      hasFreeDelivery: true,
-                      isFavorite: false,
-                      onTap: () {},
-                      onFavoriteTap: () {},
-                    );
-                  },
-                  itemCount: 4,
+          Obx(() {
+            if (widget.controller.featuredRestaurants.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return Column(
+              children: [
+                SizedBox(
+                  height: 216.h,
+                  child: PageView.builder(
+                    controller: _promoPageController,
+                    onPageChanged: (index) {
+                      widget.controller.setCurrentPromoPage(index);
+                    },
+                    itemBuilder: (context, index) {
+                      final restaurant = widget.controller.featuredRestaurants[index];
+                      return PromoCard(
+                        imageUrl: restaurant.backgroundImage ?? 'assets/home_cover.jpg',
+                        restaurantName: restaurant.name,
+                        rating: 4.5, // Hardcoded for now as API might not provide it
+                        distance: '${(index + 1) * 0.5}k', // Dummy distance
+                        deliveryFee: '0',
+                        hasFreeDelivery: true,
+                        isFavorite: restaurant.isFavorite,
+                        onTap: () {
+                          // Navigate to restaurant details if possible
+                        },
+                        onFavoriteTap: () => widget.controller.toggleFavorite(restaurant),
+                      );
+                    },
+                    itemCount: widget.controller.featuredRestaurants.length,
+                  ),
                 ),
-              ),
-              SizedBox(height: 16.h),
-              // Page indicators
-              Obx(() => Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(4, (index) {
-                  return Container(
-                    margin: EdgeInsets.symmetric(horizontal: 3.w),
-                    width: index == widget.controller.currentPromoPage ? 20.w : 6.w,
-                    height: 6.h,
-                    decoration: BoxDecoration(
-                      color: index == widget.controller.currentPromoPage
-                          ? AppColors.purple
-                          : AppColors.borderGray,
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                  );
-                }),
-              )),
-            ],
-          ),
+                SizedBox(height: 16.h),
+                // Page indicators
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(widget.controller.featuredRestaurants.length, (index) {
+                    return Container(
+                      margin: EdgeInsets.symmetric(horizontal: 3.w),
+                      width: index == widget.controller.currentPromoPage ? 20.w : 6.w,
+                      height: 6.h,
+                      decoration: BoxDecoration(
+                        color: index == widget.controller.currentPromoPage
+                            ? AppColors.purple
+                            : AppColors.borderGray,
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            );
+          }),
           SizedBox(height: 24.h),
           // Favorite Restaurants Section
           _buildSectionHeader(
             title: 'المطاعم المفضلة',
-            onViewAllTap: () {},
+            onViewAllTap: () => Get.to(() => const FavoritesPage()),
           ),
           SizedBox(height: 16.h),
-          SizedBox(
-            height: 110.h,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                RestaurantCircleItem(
-                  imageUrl: 'assets/home_cover.jpg',
-                  restaurantName: 'شاورما الخليل',
-                  onTap: () {},
+          Obx(() {
+            if (widget.controller.favoriteRestaurants.isEmpty) {
+              return Center(
+                child: Text(
+                  'لا توجد مطاعم مفضلة حالياً',
+                  style: const TextStyle().textColorLight(fontSize: 12),
                 ),
-                SizedBox(width: 16.w),
-                RestaurantCircleItem(
-                  imageUrl: 'assets/home_cover.jpg',
-                  restaurantName: 'مطعم الطازج',
-                  onTap: () {},
-                ),
-                SizedBox(width: 16.w),
-                RestaurantCircleItem(
-                  imageUrl: 'assets/home_cover.jpg',
-                  restaurantName: 'بيتزا كينغ',
-                  onTap: () {},
-                ),
-                SizedBox(width: 16.w),
-                RestaurantCircleItem(
-                  imageUrl: 'assets/home_cover.jpg',
-                  restaurantName: 'الدجاج المشوي',
-                  onTap: () {},
-                ),
-                SizedBox(width: 16.w),
-                RestaurantCircleItem(
-                  imageUrl: 'assets/home_cover.jpg',
-                  restaurantName: 'فطائر النخيل',
-                  onTap: () {},
-                ),
-              ],
-            ),
-          ),
+              );
+            }
+            return SizedBox(
+              height: 110.h,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: widget.controller.favoriteRestaurants.length,
+                itemBuilder: (context, index) {
+                  final restaurant = widget.controller.favoriteRestaurants[index];
+                  return Padding(
+                    padding: EdgeInsets.only(left: 16.w),
+                    child: RestaurantCircleItem(
+                      imageUrl: restaurant.logo ?? 'assets/home_cover.jpg',
+                      restaurantName: restaurant.name,
+                      onTap: () {
+                        // Navigate to restaurant details
+                      },
+                    ),
+                  );
+                },
+              ),
+            );
+          }),
           SizedBox(height: 24.h),
           // Weekly Discounts Section
           _buildSectionHeader(

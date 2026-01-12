@@ -26,7 +26,7 @@ class LoginResult {
 }
 
 class AuthService {
-  final DioClient _dioClient = DioClient();
+  final DioClient _dioClient = DioClient.instance;
 
   Future<LoginResult> login(LoginRequestModel request) async {
     try {

@@ -1,25 +1,32 @@
-import 'package:avvento/core/constants/app_colors.dart';
-import 'package:avvento/core/theme/app_text_styles.dart';
-import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../auth/controllers/auth_controller.dart';
 import '../../favorites/pages/favorites_page.dart';
+import '../../../profile/controllers/profile_controller.dart';
+import '../../../profile/pages/edit_profile_page.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Initialize AuthController if it doesn't exist
+    final authController = Get.isRegistered<AuthController>()
+        ? Get.find<AuthController>()
+        : Get.put(AuthController());
+    final profileController = Get.put(ProfileController());
+    final user = authController.getCachedUser();
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       body: Column(
         children: [
-          _buildHeader(),
+          _buildHeader(profileController, user),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
@@ -36,145 +43,156 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      height: 260.h,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32.r),
-          bottomRight: Radius.circular(32.r),
+  Widget _buildHeader(ProfileController profileController, dynamic user) {
+    return Obx(() {
+      final profile = profileController.userProfile.value;
+      return Container(
+        height: 260.h,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(32.r),
+            bottomRight: Radius.circular(32.r),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              offset: const Offset(0, 10),
+              blurRadius: 15,
+              spreadRadius: -3,
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            offset: const Offset(0, 10),
-            blurRadius: 15,
-            spreadRadius: -3,
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Background with gradient
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(32.r),
-                bottomRight: Radius.circular(32.r),
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.purple.withOpacity(0.8),
-                  AppColors.purple,
-                  AppColors.purpleDark,
-                ],
-                stops: const [0.0, 0.5, 1.0],
-              ),
-            ),
-          ),
-          // Decorative circles (optional, matching home aesthetic)
-          Positioned(
-            top: -50.h,
-            left: -50.w,
-            child: Container(
-              width: 150.w,
-              height: 150.h,
+        child: Stack(
+          children: [
+            // Background with gradient
+            Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32.r),
+                  bottomRight: Radius.circular(32.r),
+                ),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.purple.withOpacity(0.8),
+                    AppColors.purple,
+                    AppColors.purpleDark,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
               ),
             ),
-          ),
-          // Content
-          SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: Column(
-                children: [
-                  SizedBox(height: 12.h),
-                  Text(
-                    'حسابي',
-                    style: const TextStyle().textColorBold(
-                      fontSize: 18,
-                      color: AppColors.white,
+            // Decorative circles (optional, matching home aesthetic)
+            Positioned(
+              top: -50.h,
+              left: -50.w,
+              child: Container(
+                width: 150.w,
+                height: 150.h,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            // Content
+            SafeArea(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Column(
+                  children: [
+                    SizedBox(height: 12.h),
+                    Text(
+                      'حسابي',
+                      style: const TextStyle().textColorBold(
+                        fontSize: 18,
+                        color: AppColors.white,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 24.h),
-                  Row(
-                    children: [
-                      // Profile Image
-                      Container(
-                        width: 80.w,
-                        height: 80.h,
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.white, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                    SizedBox(height: 24.h),
+                    Row(
+                      children: [
+                        // Profile Image
+                        Container(
+                          width: 80.w,
+                          height: 80.h,
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                            image: profile?.logo != null
+                                ? DecorationImage(
+                                    image: NetworkImage(profile!.logo!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: profile?.logo == null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(40.r),
+                                  child: Image.network(
+                                    'https://ui-avatars.com/api/?name=${profile?.name ?? user?.username ?? "User"}&background=random',
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        const Icon(Icons.person, size: 40, color: AppColors.purple),
+                                  ),
+                                )
+                              : null,
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(40.r),
-                          child: Image.network(
-                            'https://ui-avatars.com/api/?name=User&background=random',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.person, size: 40, color: AppColors.purple),
+                        SizedBox(width: 16.w),
+                        // User Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                profile?.name ?? user?.username ?? 'مستخدم',
+                                style: const TextStyle().textColorBold(
+                                  fontSize: 20,
+                                  color: AppColors.white,
+                                ),
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                profile?.phone ?? user?.phone ?? '',
+                                style: const TextStyle().textColorNormal(
+                                  fontSize: 14,
+                                  color: AppColors.white.withOpacity(0.8),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                      SizedBox(width: 16.w),
-                      // User Info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'محمد حمدان',
-                              style: const TextStyle().textColorBold(
-                                fontSize: 20,
-                                color: AppColors.white,
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              '+218 91 000 0000',
-                              style: const TextStyle().textColorNormal(
-                                fontSize: 14,
-                                color: AppColors.white.withOpacity(0.8),
-                              ),
-                            ),
-                          ],
+                        // Edit Button
+                        CustomIconButtonApp(
+                          onTap: () => Get.to(() => const EditProfilePage()),
+                          width: 40.w,
+                          height: 40.h,
+                          color: AppColors.white.withOpacity(0.2),
+                          childWidget: const Icon(
+                            Icons.edit_outlined,
+                            color: AppColors.white,
+                            size: 20,
+                          ),
                         ),
-                      ),
-                      // Edit Button
-                      CustomIconButtonApp(
-                        onTap: () {},
-                        width: 40.w,
-                        height: 40.h,
-                        color: AppColors.white.withOpacity(0.2),
-                        childWidget: const Icon(
-                          Icons.edit_outlined,
-                          color: AppColors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildSettingsList() {

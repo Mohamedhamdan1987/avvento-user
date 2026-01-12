@@ -4,9 +4,10 @@ import 'interceptors/auth_interceptor.dart';
 import 'interceptors/logging_interceptor.dart';
 
 class DioClient {
+  static final DioClient instance = DioClient._internal();
   late Dio _dio;
 
-  DioClient() {
+  DioClient._internal() {
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConstants.baseUrl,

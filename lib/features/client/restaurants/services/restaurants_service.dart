@@ -9,7 +9,7 @@ import '../../cart/models/cart_model.dart';
 import '../models/favorite_restaurant_model.dart';
 
 class RestaurantsService {
-  final DioClient _dioClient = DioClient();
+  final DioClient _dioClient = DioClient.instance;
 
   /// Fetch restaurants with pagination and search
   Future<RestaurantsResponse> getRestaurants({

@@ -5,6 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import '../controllers/driver_orders_controller.dart';
@@ -30,6 +31,9 @@ class _DriverHomePageState extends State<DriverHomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _getCurrentLocation();
     });
+    
+    // Update FCM token on server
+    NotificationService.instance.updateTokenOnServer();
   }
 
   void _initializeController() {

@@ -3,7 +3,7 @@ import '../../../../core/network/dio_client.dart';
 import '../models/address_model.dart';
 
 class AddressService {
-  final DioClient _dioClient = DioClient();
+  final DioClient _dioClient = DioClient.instance;
 
   /// Fetch all addresses for the current user
   Future<List<AddressModel>> getAddresses() async {

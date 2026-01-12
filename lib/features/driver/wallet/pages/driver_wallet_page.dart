@@ -1,3 +1,4 @@
+import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -98,6 +99,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
   }
 
   Widget _buildHeaderSection() {
+
     return Container(
       padding: EdgeInsetsDirectional.only(
         start: 16.w,
@@ -105,7 +107,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
         top: 48.h,
         bottom: 12.h,
       ),
-      color: Colors.white,
+      // color: Colors.white,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -125,14 +127,14 @@ class _DriverWalletPageState extends State<DriverWalletPage>
             radius: 100.r,
             color: Colors.white,
             onTap: () {
-              Navigator.pop(context);
+
             },
             childWidget: SafeSvgIcon(
-              iconName: 'assets/svg/driver/wallet/back_arrow.svg',
+              iconName: 'assets/svg/driver/wallet/redresh_icon.svg',
               width: 20.w,
               height: 20.h,
               color: AppColors.textDark,
-              fallbackIcon: Icons.arrow_back,
+              fallbackIcon: Icons.refresh,
             ),
           ),
         ],
@@ -232,7 +234,8 @@ class _DriverWalletPageState extends State<DriverWalletPage>
                     Expanded(
                       child: _buildActionButton(
                         text: 'تسوية عهدة',
-                        icon: Icons.swap_horiz,
+                        iconName: 'assets/svg/driver/wallet/settlement_icon.svg',
+                        fallbackIcon: Icons.swap_horiz,
                         isPrimary: false,
                         onTap: () {
                           // TODO: Implement settlement
@@ -244,7 +247,8 @@ class _DriverWalletPageState extends State<DriverWalletPage>
                     Expanded(
                       child: _buildActionButton(
                         text: 'سحب أرباح',
-                        icon: Icons.arrow_upward,
+                        iconName: 'assets/svg/driver/wallet/withdraw_icon.svg',
+                        fallbackIcon: Icons.arrow_upward,
                         isPrimary: true,
                         onTap: () {
                           // TODO: Implement withdrawal
@@ -263,7 +267,8 @@ class _DriverWalletPageState extends State<DriverWalletPage>
 
   Widget _buildActionButton({
     required String text,
-    required IconData icon,
+    required String iconName,
+    required IconData fallbackIcon,
     required bool isPrimary,
     required VoidCallback onTap,
   }) {
@@ -278,10 +283,12 @@ class _DriverWalletPageState extends State<DriverWalletPage>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 16.r,
+            SafeSvgIcon(
+              iconName: iconName,
+              width: 16.r,
+              height: 16.r,
               color: Colors.white,
+              fallbackIcon: fallbackIcon,
             ),
             SizedBox(width: 8.w),
             Text(
@@ -306,7 +313,8 @@ class _DriverWalletPageState extends State<DriverWalletPage>
             title: 'عليك (عهد نقدية)',
             amount: -104.50,
             iconColor: const Color(0xFFFFFBEB),
-            icon: Icons.remove_circle_outline,
+            iconName: 'assets/svg/driver/wallet/debt_icon.svg',
+            fallbackIcon: Icons.remove_circle_outline,
           ),
         ),
         SizedBox(width: 16.w),
@@ -316,7 +324,8 @@ class _DriverWalletPageState extends State<DriverWalletPage>
             title: 'أرباحك (الصافي)',
             amount: 145.50,
             iconColor: const Color(0xFFF0FDF4),
-            icon: Icons.account_balance_wallet,
+            iconName: 'assets/svg/driver/wallet/income_icon.svg',
+            fallbackIcon: Icons.account_balance_wallet,
           ),
         ),
       ],
@@ -326,6 +335,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
   Widget _buildTabBar() {
     return Container(
       height: 48.h,
+      width: double.infinity,
       padding: EdgeInsets.all(2.w),
       decoration: BoxDecoration(
         color: const Color(0xFFE5E7EB).withOpacity(0.5),
@@ -333,6 +343,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
       ),
       child: TabBar(
         controller: _tabController,
+        tabAlignment: TabAlignment.fill,
         indicator: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10.r),
@@ -355,6 +366,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
           fontSize: 14.sp,
           color: AppColors.textDark,
         ),
+        indicatorSize: TabBarIndicatorSize.tab,
         unselectedLabelStyle: const TextStyle().textColorBold(
           fontSize: 14.sp,
           color: AppColors.textDark,
@@ -376,21 +388,24 @@ class _DriverWalletPageState extends State<DriverWalletPage>
         'amount': 9.75,
         'title': 'توصيل طلب #8291',
         'description': '10:30 ص • أرباح توصيل',
-        'icon': Icons.arrow_upward,
+        'iconName': 'assets/svg/driver/wallet/income_icon.svg',
+        'fallbackIcon': Icons.arrow_upward,
       },
       {
         'type': 'debit',
         'amount': 45.50,
         'title': 'تحصيل كاش #8291',
         'description': '10:32 ص • عهدة نقدية',
-        'icon': Icons.arrow_downward,
+        'iconName': 'assets/svg/driver/wallet/debt_icon.svg',
+        'fallbackIcon': Icons.arrow_downward,
       },
       {
         'type': 'credit',
         'amount': 50.00,
         'title': 'بونص أسبوعي',
         'description': 'أمس • مكافأة تحقيق الهدف',
-        'icon': Icons.arrow_upward,
+        'iconName': 'assets/svg/driver/wallet/income_icon.svg',
+        'fallbackIcon': Icons.arrow_upward,
       },
     ];
 
@@ -405,7 +420,8 @@ class _DriverWalletPageState extends State<DriverWalletPage>
             amount: transaction['amount'] as double,
             title: transaction['title'] as String,
             description: transaction['description'] as String,
-            icon: transaction['icon'] as IconData,
+            iconName: transaction['iconName'] as String,
+            fallbackIcon: transaction['fallbackIcon'] as IconData,
           ),
         );
       },
@@ -433,10 +449,12 @@ class _DriverWalletPageState extends State<DriverWalletPage>
                 color: AppColors.lightBackground,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.account_balance_wallet_outlined,
-                size: 32.r,
+              child: SafeSvgIcon(
+                iconName: 'assets/svg/driver/wallet/wallet_empty_icon.svg',
+                width: 32.r,
+                height: 32.r,
                 color: AppColors.textLight,
+                fallbackIcon: Icons.account_balance_wallet_outlined,
               ),
             ),
             SizedBox(height: 24.h),

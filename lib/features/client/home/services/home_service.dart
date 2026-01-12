@@ -4,7 +4,7 @@ import '../../../../core/network/dio_client.dart';
 
 
 class HomeService {
-  final DioClient _dioClient = DioClient();
+  final DioClient _dioClient = DioClient.instance;
 
 
 }

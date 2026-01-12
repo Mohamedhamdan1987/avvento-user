@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/reusable/safe_svg_icon.dart';
 
 class WalletTransactionItem extends StatelessWidget {
   final String type; // 'credit' or 'debit'
   final double amount;
   final String title;
   final String description;
-  final IconData icon;
+  final String iconName;
+  final IconData fallbackIcon;
 
   const WalletTransactionItem({
     super.key,
@@ -16,7 +18,8 @@ class WalletTransactionItem extends StatelessWidget {
     required this.amount,
     required this.title,
     required this.description,
-    required this.icon,
+    required this.iconName,
+    required this.fallbackIcon,
   });
 
   @override
@@ -91,10 +94,14 @@ class WalletTransactionItem extends StatelessWidget {
                     color: iconBackgroundColor,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    icon,
-                    size: 18.r,
-                    color: amountColor,
+                  child: Center(
+                    child: SafeSvgIcon(
+                      iconName: iconName,
+                      width: 18.r,
+                      height: 18.r,
+                      color: amountColor,
+                      fallbackIcon: fallbackIcon,
+                    ),
                   ),
                 ),
               ],

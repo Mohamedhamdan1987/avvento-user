@@ -7,8 +7,24 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'core/routes/app_pages.dart';
 import 'core/theme/app_theme.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'core/services/notification_service.dart';
+import 'firebase_options.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  
+  // Initialize Notification Service
+  await NotificationService.instance.initialize();
+  
+  // Background message handler
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   // Initialize intl date formatting for Arabic
   await initializeDateFormatting('ar', null);

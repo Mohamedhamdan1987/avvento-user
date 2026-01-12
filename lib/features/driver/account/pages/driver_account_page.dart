@@ -5,6 +5,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/reusable/custom_app_bar.dart';
 import '../../../auth/controllers/auth_controller.dart';
+import '../../../profile/controllers/profile_controller.dart';
+import '../../../profile/pages/edit_profile_page.dart';
 
 class DriverAccountPage extends StatelessWidget {
   const DriverAccountPage({super.key});
@@ -15,6 +17,7 @@ class DriverAccountPage extends StatelessWidget {
     final authController = Get.isRegistered<AuthController>()
         ? Get.find<AuthController>()
         : Get.put(AuthController());
+    final profileController = Get.put(ProfileController());
     final user = authController.getCachedUser();
 
     return Scaffold(
@@ -27,98 +30,110 @@ class DriverAccountPage extends StatelessWidget {
         child: Column(
           children: [
             // Profile header
-            Container(
-              margin: EdgeInsets.all(16.w),
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Avatar
-                  Container(
-                    width: 80.w,
-                    height: 80.w,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      shape: BoxShape.circle,
+            Obx(() {
+              final profile = profileController.userProfile.value;
+              return Container(
+                width: double.infinity,
+                margin: EdgeInsets.all(16.w),
+                padding: EdgeInsets.all(24.w),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
                     ),
-                    child: Icon(
-                      Icons.person,
-                      size: 40.r,
-                      color: AppColors.primary,
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Avatar
+                    Container(
+                      width: 80.w,
+                      height: 80.w,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        image: profile?.logo != null
+                            ? DecorationImage(
+                                image: NetworkImage(profile!.logo!),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: profile?.logo == null
+                          ? Icon(
+                              Icons.person,
+                              size: 40.r,
+                              color: AppColors.primary,
+                            )
+                          : null,
                     ),
-                  ),
-                  SizedBox(height: 16.h),
-                  // Name
-                  Text(
-                    user?.username ?? 'السائق',
-                    style: const TextStyle().textColorBold(
-                      fontSize: 20,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  // Phone
-                  Text(
-                    user?.phone ?? '',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: AppColors.textMedium,
-                    ),
-                  ),
-                  if (user?.email != null) ...[
-                    SizedBox(height: 4.h),
+                    SizedBox(height: 16.h),
+                    // Name
                     Text(
-                      user!.email!,
+                      profile?.name ?? user?.username ?? 'السائق',
+                      style: const TextStyle().textColorBold(
+                        fontSize: 20,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    // Phone
+                    Text(
+                      profile?.phone ?? user?.phone ?? '',
                       style: TextStyle(
                         fontSize: 14.sp,
                         color: AppColors.textMedium,
                       ),
                     ),
-                  ],
-                  SizedBox(height: 16.h),
-                  // Driver badge
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 8.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.delivery_dining,
-                          size: 20.r,
-                          color: AppColors.primary,
+                    if (profile?.email != null || user?.email != null) ...[
+                      SizedBox(height: 4.h),
+                      Text(
+                        profile?.email ?? user!.email!,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppColors.textMedium,
                         ),
-                        SizedBox(width: 8.w),
-                        Text(
-                          'سائق توصيل',
-                          style: TextStyle(
-                            fontSize: 14.sp,
+                      ),
+                    ],
+                    SizedBox(height: 16.h),
+                    // Driver badge
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 8.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.delivery_dining,
+                            size: 20.r,
                             color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 8.w),
+                          Text(
+                            'سائق توصيل',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                  ],
+                ),
+              );
+            }),
 
             // Menu items
             Container(
@@ -140,7 +155,7 @@ class DriverAccountPage extends StatelessWidget {
                     icon: Icons.person_outline,
                     title: 'تعديل الملف الشخصي',
                     onTap: () {
-                      // TODO: Navigate to edit profile
+                      Get.to(() => const EditProfilePage());
                     },
                   ),
                   _buildDivider(),

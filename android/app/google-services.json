@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "963288500468",
+    "project_id": "avvento-d946e",
+    "storage_bucket": "avvento-d946e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:963288500468:android:98bcdb6b07ed1b44d376a1",
+        "android_client_info": {
+          "package_name": "com.masterlibya.avvento"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNUENB5azo63ZdDbDoO7RPSNbZpPGoL0I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

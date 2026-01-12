@@ -2,19 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/reusable/safe_svg_icon.dart';
 
 class WalletSummaryCard extends StatelessWidget {
   final String title;
   final double amount;
   final Color iconColor;
-  final IconData icon;
+  final String iconName;
+  final IconData fallbackIcon;
 
   const WalletSummaryCard({
     super.key,
     required this.title,
     required this.amount,
     required this.iconColor,
-    required this.icon,
+    required this.iconName,
+    required this.fallbackIcon,
   });
 
   @override
@@ -49,10 +52,14 @@ class WalletSummaryCard extends StatelessWidget {
                   color: iconColor,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  size: 20.r,
-                  color: AppColors.textDark,
+                child: Center(
+                  child: SafeSvgIcon(
+                    iconName: iconName,
+                    width: 20.w,
+                    height: 20.h,
+                    color: AppColors.textDark,
+                    fallbackIcon: fallbackIcon,
+                  ),
                 ),
               ),
               SizedBox(height: 10.h),

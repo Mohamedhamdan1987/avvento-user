@@ -51,5 +51,16 @@
 	<string>يحتاج التطبيق إلى الوصول إلى موقعك لعرض الطلبات القريبة منك وتتبع عملية التوصيل حتى في الخلفية.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>يحتاج التطبيق إلى الوصول إلى موقعك لعرض الطلبات القريبة منك وتتبع عملية التوصيل.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>نحتاج للوصول إلى الكاميرا لالتقاط صور للمنتجات أو تحديث الملف الشخصي.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>نحتاج للوصول إلى معرض الصور لاختيار صور للمنتجات أو تحديث الملف الشخصي.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>نحتاج للوصول إلى الميكروفون عند تسجيل مقاطع الفيديو.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

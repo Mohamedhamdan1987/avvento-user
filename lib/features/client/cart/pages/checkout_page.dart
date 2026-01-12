@@ -760,9 +760,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ? () {
                   final address = addressController.activeAddress.value;
                   if (address != null) {
+                    String paymentStr = 'cash';
+                    if (selectedPaymentMethod == PaymentMethod.card) {
+                      paymentStr = 'gateway';
+                    } else if (selectedPaymentMethod == PaymentMethod.wallet) {
+                      paymentStr = 'wallet';
+                    }
+
                     cartController.placeOrder(
                       restaurantId: widget.cart.restaurant.id!,
                       addressId: address.id,
+                      deliveryAddress: address.address,
+                      deliveryLat: address.lat,
+                      deliveryLong: address.long,
+                      payment: paymentStr,
                       notes: '',
                     );
                   }

@@ -9,6 +9,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/reusable/custom_text_field.dart';
 import 'package:avvento/features/client/address/controllers/address_controller.dart';
@@ -69,6 +70,9 @@ class _HomePageContentState extends State<_HomePageContent> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     _promoPageController = PageController(initialPage: widget.controller.currentPromoPage);
+    
+    // Update FCM token on server
+    NotificationService.instance.updateTokenOnServer();
   }
 
   @override

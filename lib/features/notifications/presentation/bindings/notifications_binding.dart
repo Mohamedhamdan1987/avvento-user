@@ -7,8 +7,8 @@ import '../controllers/notifications_controller.dart';
 class NotificationsBinding extends Bindings {
   @override
   void dependencies() {
-    // Create DioClient instance
-    final dioClient = DioClient();
+    // Use DioClient singleton
+    final dioClient = DioClient.instance;
     final remoteDataSource = NotificationsRemoteDataSourceImpl(dioClient);
     final repository = NotificationsRepositoryImpl(remoteDataSource);
     Get.lazyPut<NotificationsController>(

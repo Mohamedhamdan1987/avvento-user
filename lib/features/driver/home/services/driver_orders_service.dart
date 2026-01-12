@@ -4,7 +4,7 @@ import '../../../../core/network/dio_client.dart';
 import '../models/driver_order_model.dart';
 
 class DriverOrdersService {
-  final DioClient _dioClient = DioClient();
+  final DioClient _dioClient = DioClient.instance;
 
   // Get nearby orders for driver
   Future<ApiResponse<List<DriverOrderModel>>> getNearbyOrders({

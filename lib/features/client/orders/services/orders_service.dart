@@ -2,13 +2,19 @@ import 'package:dio/dio.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/order_model.dart';
 
-class OrdersService {
-  final DioClient _dioClient = DioClient();
+  class OrdersService {
+  final DioClient _dioClient = DioClient.instance;
 
+  /// Create a new order
   /// Create a new order
   Future<OrderModel> createOrder({
     required String restaurantId,
     required String addressId,
+    required String deliveryAddress,
+    required double deliveryLat,
+    required double deliveryLong,
+    required String payment,
+    String? paymentGatewayTransactionId,
     String? notes,
     List<Map<String, dynamic>>? drinks,
   }) async {
@@ -16,10 +22,16 @@ class OrdersService {
       final response = await _dioClient.post('/orders', data: {
         'restaurantId': restaurantId,
         'addressId': addressId,
+        'deliveryAddress': deliveryAddress,
+        'deliveryLat': deliveryLat,
+        'deliveryLong': deliveryLong,
+        'paymentMethod': payment,
+        if (paymentGatewayTransactionId != null)
+          'paymentGatewayTransactionId': paymentGatewayTransactionId,
         'notes': notes ?? '',
         if (drinks != null) 'drinks': drinks,
       });
-      
+
       return OrderModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException {
       rethrow;

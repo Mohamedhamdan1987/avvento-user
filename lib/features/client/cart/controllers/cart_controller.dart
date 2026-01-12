@@ -172,6 +172,11 @@ class CartController extends GetxController {
   Future<void> placeOrder({
     required String restaurantId,
     required String addressId,
+    required String deliveryAddress,
+    required double deliveryLat,
+    required double deliveryLong,
+    required String payment,
+    String? paymentGatewayTransactionId,
     String? notes,
   }) async {
     _isLoading.value = true;
@@ -187,6 +192,11 @@ class CartController extends GetxController {
       final order = await _ordersService.createOrder(
         restaurantId: restaurantId,
         addressId: addressId,
+        deliveryAddress: deliveryAddress,
+        deliveryLat: deliveryLat,
+        deliveryLong: deliveryLong,
+        payment: payment,
+        paymentGatewayTransactionId: paymentGatewayTransactionId,
         notes: notes,
         drinks: drinksPayload.isNotEmpty ? drinksPayload : null,
       );

@@ -3,14 +3,7 @@ import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-enum OrderStatus {
-  pendingAcceptance, // بانتظار قبول المطعم
-  confirmed, // تم تأكيد الطلب
-  preparing, // جاري التحضير
-  onTheWay, // في الطريق إليك
-  waitingPickup, // في انتظار الاستلام
-  delivered, // تم تسليم الطلب
-}
+import 'package:avvento/core/enums/order_status.dart';
 
 class OrderTrackingDialog extends StatelessWidget {
   final String orderId;
@@ -105,7 +98,7 @@ class OrderTrackingDialog extends StatelessWidget {
 
                       // Driver Info (if applicable)
                       if (status == OrderStatus.onTheWay ||
-                          status == OrderStatus.waitingPickup)
+                          status == OrderStatus.awaitingDelivery)
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 24.w),
                           child: _buildDriverInfo(),
@@ -124,20 +117,7 @@ class OrderTrackingDialog extends StatelessWidget {
   }
 
   String _getStatusTitle() {
-    switch (status) {
-      case OrderStatus.pendingAcceptance:
-        return 'بانتظار قبول المطعم';
-      case OrderStatus.confirmed:
-        return 'تم تأكيد الطلب';
-      case OrderStatus.preparing:
-        return 'جاري التحضير';
-      case OrderStatus.onTheWay:
-        return 'في الطريق إليك';
-      case OrderStatus.waitingPickup:
-        return 'في انتظار الاستلام';
-      case OrderStatus.delivered:
-        return 'تم تسليم الطلب';
-    }
+    return status.label;
   }
 
   Widget _buildAnimationSection() {
@@ -164,7 +144,7 @@ class OrderTrackingDialog extends StatelessWidget {
 
   Widget _getAnimationWidget() {
     switch (status) {
-      case OrderStatus.pendingAcceptance:
+      case OrderStatus.pendingRestaurant:
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -272,7 +252,7 @@ class OrderTrackingDialog extends StatelessWidget {
           ),
         );
 
-      case OrderStatus.waitingPickup:
+      case OrderStatus.awaitingDelivery:
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -322,6 +302,11 @@ class OrderTrackingDialog extends StatelessWidget {
             ],
           ),
         );
+      case OrderStatus.cancelled:
+        // TODO: Handle this case.
+        return Center(
+          child: Text('تم الغاء الطلب', style: TextStyle(fontSize: 30.sp)),
+        );
     }
   }
 
@@ -348,7 +333,7 @@ class OrderTrackingDialog extends StatelessWidget {
                 time: '12:30',
                 title: 'بانتظار قبول المطعم',
                 isActive: status.index >= 0,
-                isCurrent: status == OrderStatus.pendingAcceptance,
+                isCurrent: status == OrderStatus.pendingRestaurant,
                 icon: "assets/svg/client/orders/pending_acceptance.svg",
               ),
 
@@ -381,7 +366,7 @@ class OrderTrackingDialog extends StatelessWidget {
                 time: '01:05',
                 title: 'في انتظار الاستلام',
                 isActive: status.index >= 4,
-                isCurrent: status == OrderStatus.waitingPickup,
+                isCurrent: status == OrderStatus.awaitingDelivery,
                 icon: "assets/svg/client/orders/waiting_pickup.svg",
               ),
               SizedBox(height: 24.h),

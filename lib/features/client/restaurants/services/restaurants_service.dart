@@ -113,14 +113,14 @@ class RestaurantsService {
 
   /// Fetch restaurant stories
   Future<List<Story>> getStories() async {
-    try {
+    // try {
       final response = await _dioClient.get('/stories');
       
       final responseData = response.data as List<dynamic>;
       return responseData.map((item) => Story.fromJson(item as Map<String, dynamic>)).toList();
-    } on DioException {
-      rethrow;
-    }
+    // } on DioException {
+    //   rethrow;
+    // }
   }
 
   /// Add item to favorites
@@ -256,6 +256,15 @@ class RestaurantsService {
       final response = await _dioClient.get('/drinks/restaurants/$restaurantId');
       final responseData = response.data as List<dynamic>;
       return responseData.map((item) => MenuItem.fromJson(item as Map<String, dynamic>)).toList();
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// View a story
+  Future<void> viewStory(String storyId) async {
+    try {
+      await _dioClient.post('/stories/$storyId/view');
     } on DioException {
       rethrow;
     }

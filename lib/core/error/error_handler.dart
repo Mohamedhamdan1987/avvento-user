@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+import '../constants/app_constants.dart';
 import '../utils/show_snackbar.dart';
 import 'api_exception.dart';
 import 'failures.dart';
@@ -19,10 +20,13 @@ class ErrorHandler {
     } else if (failure is ServerFailure) {
       userMessage = 'حدث خطأ في الخادم، يرجى المحاولة لاحقاً';
     } else if (failure is UnauthorizedFailure) {
-      // Use the actual message from the API if available, otherwise use default
-      userMessage = failure.message.isNotEmpty 
-          ? failure.message 
-          : 'غير مصرح لك بالوصول';
+      if (failure.message == 'Invalid credentials') {
+        userMessage = AppConstants.invalidCredentialsErrorMessage;
+      } else {
+        userMessage = failure.message.isNotEmpty 
+            ? failure.message 
+            : 'غير مصرح لك بالوصول';
+      }
       // Optionally handle logout here
       // Get.find<AuthController>().logout();
     } else if (failure is ValidationFailure) {
@@ -50,7 +54,9 @@ class ErrorHandler {
     } else if (failure is ServerFailure) {
       return 'حدث خطأ في الخادم، يرجى المحاولة لاحقاً';
     } else if (failure is UnauthorizedFailure) {
-      // Use the actual message from the API if available
+      if (failure.message == 'Invalid credentials') {
+        return AppConstants.invalidCredentialsErrorMessage;
+      }
       return failure.message.isNotEmpty 
           ? failure.message 
           : 'غير مصرح لك بالوصول';

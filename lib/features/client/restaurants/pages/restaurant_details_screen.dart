@@ -6,12 +6,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import '../../../../core/widgets/reusable/svg_icon.dart';
 import '../controllers/restaurant_details_controller.dart';
 import '../../../../core/utils/location_utils.dart';
 import '../controllers/restaurants_controller.dart';
 import 'meal_details_dialog.dart';
+import 'restaurant_search_page.dart';
 
 class RestaurantDetailsScreen extends StatelessWidget {
   final String restaurantId;
@@ -150,7 +152,13 @@ class RestaurantDetailsScreen extends StatelessWidget {
                   height: 40.h,
                   radius: 100.r,
                   color: Color(0x997F22FE),
-                  onTap: () {},
+                  onTap: () {
+                    Get.to(() => RestaurantSearchPage(
+                          restaurant: controller.restaurant!,
+                          categories: controller.categories,
+                          allItems: controller.allItems,
+                        ));
+                  },
                   childWidget: SvgIcon(
                     iconName: 'assets/svg/search-icon.svg',
                     width: 20.w,
@@ -751,7 +759,21 @@ class RestaurantDetailsScreen extends StatelessWidget {
 
                   // Quantity Selector
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
+                      // favorite
+                      GestureDetector(
+                        onTap: () => controller.toggleFavorite(item.id),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4.w),
+                          child: Icon(
+                            item.isFav ? Icons.favorite : Icons.favorite_border,
+                            size: 20.w,
+                            color: item.isFav ? AppColors.primary : Colors.grey[400],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
                       Text(
                         '${item.price} د.ل',
                         style: const TextStyle().textColorMedium(
@@ -759,8 +781,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                           color: const Color(0xFF0A191E),
                         ),
                       ),
-                      SizedBox(height: 4.h),
-                      _buildQuantitySelector(),
+                      // _buildQuantitySelector(),
                     ],
                   ),
                 ],),

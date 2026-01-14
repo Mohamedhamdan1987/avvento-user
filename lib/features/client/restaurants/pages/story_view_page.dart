@@ -46,7 +46,7 @@ class _StoryViewPageState extends State<StoryViewPage> {
         items.add(StoryItem.pageImage(
           url: story.mediaUrl,
           caption: Text(
-            story.text,
+            story.text ?? '',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -61,6 +61,7 @@ class _StoryViewPageState extends State<StoryViewPage> {
             textAlign: TextAlign.center,
           ),
           controller: _storyController,
+          duration: const Duration(seconds: 10),
         ));
       } else if (story.mediaType == 'video') {
         Duration? videoDuration;
@@ -77,7 +78,7 @@ class _StoryViewPageState extends State<StoryViewPage> {
         items.add(StoryItem.pageVideo(
           story.mediaUrl,
           caption: Text(
-            story.text,
+            story.text ?? '',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -97,13 +98,14 @@ class _StoryViewPageState extends State<StoryViewPage> {
       } else {
         // Text story
         items.add(StoryItem.text(
-          title: story.text,
+          title: story.text ?? '',
           backgroundColor: const Color(0xFF7F22FE), // Purple brand color
           textStyle: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             fontFamily: 'IBM Plex Sans Arabic',
           ),
+          duration: const Duration(seconds: 10),
         ));
       }
     }
@@ -145,6 +147,9 @@ class _StoryViewPageState extends State<StoryViewPage> {
               controller: _storyController,
               repeat: false,
               onStoryShow: (s, index) {
+                 final story = widget.stories[widget.initialIndex + _storyItems.indexOf(s)];
+                 Get.find<RestaurantsController>().viewStory(story.id);
+
                  // We need to update the header safely
                  WidgetsBinding.instance.addPostFrameCallback((_) {
                    if (mounted) {

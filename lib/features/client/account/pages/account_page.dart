@@ -206,6 +206,11 @@ class AccountPage extends StatelessWidget {
             onTap: () => Get.toNamed(AppRoutes.addressList),
           ),
           _buildSettingsItem(
+            iconPath: 'assets/svg/nav/wallet.svg',
+            title: 'محفظتي',
+            onTap: () => Get.toNamed(AppRoutes.wallet),
+          ),
+          _buildSettingsItem(
             iconPath: 'assets/svg/client/home/favorite.svg',
             title: 'المفضلة',
             onTap: () => Get.to(() => const FavoritesPage()),
@@ -219,14 +224,18 @@ class AccountPage extends StatelessWidget {
           ),
           _buildSettingsItem(
             iconPath: 'assets/svg/client/home/location_pin.svg', // Placeholder for language or similar
-            title: 'اللغة',
-            subtitle: 'العربية',
-            onTap: () {},
+            title: 'تغيير كلمة المرور',
+            onTap: () {
+              Get.toNamed(AppRoutes.changePassword);
+            },
           ),
           _buildSettingsItem(
             iconPath: 'assets/svg/client/home/search.svg', // Placeholder for help
             title: 'الدعم والمساعدة',
-            onTap: () {},
+            onTap: () {
+              Get.toNamed(AppRoutes.restaurantSupport);
+
+            },
           ),
           _buildSettingsItem(
             iconPath: 'assets/svg/client/home/store.svg', // Placeholder for about

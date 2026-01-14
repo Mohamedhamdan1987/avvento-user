@@ -1,3 +1,4 @@
+import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -77,6 +78,9 @@ class _DriverHomePageState extends State<DriverHomePage> {
 
       // Fetch nearby orders
       final controller = Get.find<DriverOrdersController>();
+      
+      // Update location on server
+      await controller.updateLocation(position.latitude, position.longitude);
       
       // Load real orders from API
       await controller.fetchNearbyOrders(
@@ -288,7 +292,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
                   color: Colors.white,
                   borderColor: AppColors.borderLightGray,
                   onTap: () {
-                    // TODO: Navigate to notifications
+                    Get.toNamed(AppRoutes.notifications);
+
                   },
                   childWidget: Icon(
                     Icons.notifications_outlined,
@@ -305,7 +310,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
             final controller = Get.find<DriverOrdersController>();
             // Get all active orders (not delivered or cancelled)
             final activeOrders = controller.myOrders.where(
-              (order) => !['delivered', 'cancelled'].contains(order.status.toLowerCase()),
+              (order) => !['delivered', 'cancelled'].contains(order.status.toString().toLowerCase()),
             ).toList();
 
             if (activeOrders.isNotEmpty) {
@@ -364,7 +369,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
           Obx(() {
             final controller = Get.find<DriverOrdersController>();
             final hasActiveOrder = controller.myOrders.any(
-              (order) => !['delivered', 'cancelled'].contains(order.status.toLowerCase()),
+              (order) => !['delivered', 'cancelled'].contains(order.status.toString().toLowerCase()),
             );
 
             if (controller.selectedOrder == null &&

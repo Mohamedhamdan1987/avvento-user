@@ -163,4 +163,34 @@ class DriverOrdersService {
       );
     }
   }
+  // Update driver location
+  Future<ApiResponse<void>> updateDriverLocation({
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      await _dioClient.patch(
+        '/delivery/location',
+        data: {
+          'lat': latitude,
+          'long': longitude,
+        },
+      );
+
+      return ApiResponse(
+        success: true,
+        data: null,
+      );
+    } on DioException catch (e) {
+      return ApiResponse(
+        success: false,
+        message: e.response?.data?['message']?.toString() ?? 'حدث خطأ في الاتصال',
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'حدث خطأ غير متوقع: ${e.toString()}',
+      );
+    }
+  }
 }

@@ -8,10 +8,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../controllers/cart_controller.dart';
 import '../models/cart_model.dart';
 import '../../address/controllers/address_controller.dart';
 import '../../address/models/address_model.dart';
+import '../../wallet/controllers/client_wallet_controller.dart';
 
 enum PaymentMethod { cash, card, wallet }
 
@@ -26,6 +28,7 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   final CartController cartController = Get.find<CartController>();
   final AddressController addressController = Get.put(AddressController());
+  final ClientWalletController walletController = Get.put(ClientWalletController());
   PaymentMethod selectedPaymentMethod = PaymentMethod.cash;
 
   @override
@@ -518,200 +521,193 @@ class _CheckoutPageState extends State<CheckoutPage> {
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
-        child: StatefulBuilder(
-          builder: (context, setStateBottomSheet) {
-            // Mock wallet balance for now - usually fetch from controller
-            double walletBalance = 0.0; 
+        child: Obx(() {
+            double walletBalance = walletController.wallet.value?.balance ?? 0.0;
             double orderTotal = widget.cart.totalPrice;
             bool isWalletBalanceEnough = walletBalance >= orderTotal;
 
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 48.w,
-                    height: 5.h,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2.5.r),
+            return StatefulBuilder(
+              builder: (context, setStateBottomSheet) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 48.w,
+                        height: 5.h,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2.5.r),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                Text(
-                  'اختر طريقة الدفع',
-                  style: const TextStyle().textColorBold(
-                    fontSize: 18.sp,
-                    color: Color(0xFF101828),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 24.h),
-                
-                // Payment Options Grid
-                // We'll use a Wrap or Row/Column structure. The user described Cards.
-                // Since there are 3 options, maybe a Scrollable Row or just a Column of cards?
-                // "سداد بالمحفظة ... الدفع عند الاستلام ... الخدمات المصرفية"
-                // Let's make them vertically stacked large selection cards or a Grid. 
-                // Given the descriptions "Square with icon TR", "Cash image center", it sounds like Grid items (Cards).
-                
-                GridView.count(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 12.w,
-                    mainAxisSpacing: 12.h,
-                    childAspectRatio: 1.0,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      // 1. Wallet
-                      _buildPaymentSelectionCard(
-                        isSelected: selectedPaymentMethod == PaymentMethod.wallet,
-                        onTap: () {
-                          setStateBottomSheet(() {
-                             selectedPaymentMethod = PaymentMethod.wallet; 
-                          });
-                          setState(() {}); 
-                        },
-                        child: Stack(
-                          children: [
-                            PositionedDirectional(
-                              top: 8.h,
-                              end: 8.w,
-                              child: SvgPicture.asset(
-                                "assets/svg/nav/wallet.svg",
-                                width: 20.w,
-                                height: 20.h,
-                                color: selectedPaymentMethod == PaymentMethod.wallet ? const Color(0xFF7F22FE) : const Color(0xFF6A7282),
-                              ),
-                            ),
-                            Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SizedBox(height: 16.h),
-                                  Text(
-                                    '${walletBalance.toStringAsFixed(1)} د.ل',
-                                    style: const TextStyle().textColorBold(
-                                      fontSize: 16.sp,
-                                      color: Color(0xFF101828),
-                                    ),
+                    SizedBox(height: 24.h),
+                    Text(
+                      'اختر طريقة الدفع',
+                      style: const TextStyle().textColorBold(
+                        fontSize: 18.sp,
+                        color: Color(0xFF101828),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 24.h),
+                    
+                    GridView.count(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12.w,
+                        mainAxisSpacing: 12.h,
+                        childAspectRatio: 1.0,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          // 1. Wallet
+                          _buildPaymentSelectionCard(
+                            isSelected: selectedPaymentMethod == PaymentMethod.wallet,
+                            onTap: () {
+                              setStateBottomSheet(() {
+                                 selectedPaymentMethod = PaymentMethod.wallet; 
+                              });
+                              setState(() {}); 
+                            },
+                            child: Stack(
+                              children: [
+                                PositionedDirectional(
+                                  top: 8.h,
+                                  end: 8.w,
+                                  child: SvgPicture.asset(
+                                    "assets/svg/nav/wallet.svg",
+                                    width: 20.w,
+                                    height: 20.h,
+                                    color: selectedPaymentMethod == PaymentMethod.wallet ? const Color(0xFF7F22FE) : const Color(0xFF6A7282),
                                   ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    'الرصيد المتاح',
-                                    style: const TextStyle().textColorNormal(
-                                      fontSize: 12.sp,
-                                      color: Color(0xFF6A7282),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 12.h,
-                              left: 0,
-                              right: 0,
-                              child: Text(
-                                'المحفظة',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle().textColorBold(
-                                  fontSize: 14.sp,
-                                  color: selectedPaymentMethod == PaymentMethod.wallet ? const Color(0xFF7F22FE) : const Color(0xFF101828),
                                 ),
-                              ),
+                                Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(height: 16.h),
+                                      Text(
+                                        '${walletBalance.toStringAsFixed(1)} د.ل',
+                                        style: const TextStyle().textColorBold(
+                                          fontSize: 16.sp,
+                                          color: Color(0xFF101828),
+                                        ),
+                                      ),
+                                      SizedBox(height: 4.h),
+                                      Text(
+                                        'الرصيد المتاح',
+                                        style: const TextStyle().textColorNormal(
+                                          fontSize: 12.sp,
+                                          color: Color(0xFF6A7282),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 12.h,
+                                  left: 0,
+                                  right: 0,
+                                  child: Text(
+                                    'المحفظة',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle().textColorBold(
+                                      fontSize: 14.sp,
+                                      color: selectedPaymentMethod == PaymentMethod.wallet ? const Color(0xFF7F22FE) : const Color(0xFF101828),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                          
+                          // 2. Cash
+                          _buildPaymentSelectionCard(
+                            isSelected: selectedPaymentMethod == PaymentMethod.cash,
+                            onTap: () {
+                               setStateBottomSheet(() {
+                                 selectedPaymentMethod = PaymentMethod.cash;
+                               });
+                               setState(() {});
+                            },
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.money, size: 40.r, color: selectedPaymentMethod == PaymentMethod.cash ? const Color(0xFF7F22FE) : const Color(0xFF6A7282)),
+                                SizedBox(height: 12.h),
+                                Text(
+                                  'الدفع عند الاستلام',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle().textColorBold(
+                                    fontSize: 14.sp,
+                                    color: selectedPaymentMethod == PaymentMethod.cash ? const Color(0xFF7F22FE) : const Color(0xFF101828),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          
+                          // 3. Banking
+                          _buildPaymentSelectionCard(
+                            isSelected: selectedPaymentMethod == PaymentMethod.card, // mapped to banking
+                            onTap: () {
+                               setStateBottomSheet(() {
+                                 selectedPaymentMethod = PaymentMethod.card;
+                               });
+                               setState(() {});
+                            },
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SvgPicture.asset(
+                                  "assets/svg/wallet/bank_card_outline.svg",
+                                   width: 40.w,
+                                   height: 40.h,
+                                   color: selectedPaymentMethod == PaymentMethod.card ? const Color(0xFF7F22FE) : const Color(0xFF6A7282)
+                                ),
+                                SizedBox(height: 12.h),
+                                Text(
+                                  'الخدمات المصرفية',
+                                  textAlign: TextAlign.center,
+                                   style: const TextStyle().textColorBold(
+                                    fontSize: 14.sp,
+                                    color: selectedPaymentMethod == PaymentMethod.card ? const Color(0xFF7F22FE) : const Color(0xFF101828),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      
-                      // 2. Cash
-                      _buildPaymentSelectionCard(
-                        isSelected: selectedPaymentMethod == PaymentMethod.cash,
-                        onTap: () {
-                           setStateBottomSheet(() {
-                             selectedPaymentMethod = PaymentMethod.cash;
-                           });
-                           setState(() {});
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.money, size: 40.r, color: selectedPaymentMethod == PaymentMethod.cash ? const Color(0xFF7F22FE) : const Color(0xFF6A7282)),
-                            SizedBox(height: 12.h),
-                            Text(
-                              'الدفع عند الاستلام',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle().textColorBold(
-                                fontSize: 14.sp,
-                                color: selectedPaymentMethod == PaymentMethod.cash ? const Color(0xFF7F22FE) : const Color(0xFF101828),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      // 3. Banking
-                      _buildPaymentSelectionCard(
-                        isSelected: selectedPaymentMethod == PaymentMethod.card, // mapped to banking
-                        onTap: () {
-                           setStateBottomSheet(() {
-                             selectedPaymentMethod = PaymentMethod.card;
-                           });
-                           setState(() {});
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SvgPicture.asset(
-                              "assets/svg/wallet/bank_card_outline.svg",
-                               width: 40.w,
-                               height: 40.h,
-                               color: selectedPaymentMethod == PaymentMethod.card ? const Color(0xFF7F22FE) : const Color(0xFF6A7282)
-                            ),
-                            SizedBox(height: 12.h),
-                            Text(
-                              'الخدمات المصرفية',
-                              textAlign: TextAlign.center,
-                               style: const TextStyle().textColorBold(
-                                fontSize: 14.sp,
-                                color: selectedPaymentMethod == PaymentMethod.card ? const Color(0xFF7F22FE) : const Color(0xFF101828),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
 
 
-                SizedBox(height: 32.h),
-                
-                // Bottom Button
-                CustomButtonApp(
-                  text: (selectedPaymentMethod == PaymentMethod.wallet && !isWalletBalanceEnough)
-                      ? 'تعبئة المحفظة'
-                      : 'تأكيد الاختيار',
-                  color: (selectedPaymentMethod == PaymentMethod.wallet && !isWalletBalanceEnough)
-                      ? Colors.orange // Or styling for top-up
-                      : const Color(0xFF7F22FE),
-                  onTap: () {
-                    if (selectedPaymentMethod == PaymentMethod.wallet && !isWalletBalanceEnough) {
-                      // Navigate to top-up
-                      Get.back(); // Close sheet
-                      // Get.toNamed(AppRoutes.walletTopUp); // Assuming route exists or show message
-                      Get.snackbar('تنبيه', 'رصيد المحفظة غير كافٍ');
-                    } else {
-                      Get.back();
-                    }
-                  },
-                ),
-                SizedBox(height: 16.h),
-              ],
+                    SizedBox(height: 32.h),
+                    
+                    // Bottom Button
+                    CustomButtonApp(
+                      text: (selectedPaymentMethod == PaymentMethod.wallet && !isWalletBalanceEnough)
+                          ? 'تعبئة المحفظة'
+                          : 'تأكيد الاختيار',
+                      color: (selectedPaymentMethod == PaymentMethod.wallet && !isWalletBalanceEnough)
+                          ? AppColors.notificationRed // Distinct color for top-up
+                          : const Color(0xFF7F22FE),
+                      onTap: () {
+                        if (selectedPaymentMethod == PaymentMethod.wallet && !isWalletBalanceEnough) {
+                          // Navigate to top-up (ClientWalletPage)
+                          Get.back(); // Close sheet
+                          Get.toNamed(AppRoutes.wallet);
+                        } else {
+                          Get.back();
+                        }
+                      },
+                    ),
+                    SizedBox(height: 16.h),
+                  ],
+                );
+              },
             );
-          },
-        ),
+          }),
       ),
       isScrollControlled: true,
     );
@@ -751,13 +747,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
       child: Obx(() {
         final activeAddress = addressController.activeAddress.value;
         final hasAddress = activeAddress != null;
+        
+        final walletBalance = walletController.wallet.value?.balance ?? 0.0;
+        final orderTotal = widget.cart.totalPrice;
+        final isWalletBalanceEnough = walletBalance >= orderTotal;
+        final isWalletSelected = selectedPaymentMethod == PaymentMethod.wallet;
 
         return CustomButtonApp(
-          text: 'إتمام الطلب',
+          text: (isWalletSelected && !isWalletBalanceEnough) ? 'تعبئة المحفظة' : 'إتمام الطلب',
           isLoading: cartController.isLoading,
           isEnable: hasAddress,
           onTap: hasAddress
               ? () {
+                  if (isWalletSelected && !isWalletBalanceEnough) {
+                    Get.toNamed(AppRoutes.wallet);
+                    return;
+                  }
                   final address = addressController.activeAddress.value;
                   if (address != null) {
                     String paymentStr = 'cash';

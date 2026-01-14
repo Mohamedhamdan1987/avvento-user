@@ -1,3 +1,4 @@
+import 'package:avvento/core/constants/app_colors.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
 import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
@@ -198,6 +199,18 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
             childWidget: Obx(() {
               final controller = Get.find<RestaurantDetailsController>();
               final isFav = controller.isItemFavorite(widget.menuItem.id);
+              return GestureDetector(
+                onTap: () => controller.toggleFavorite(widget.menuItem.id),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border,
+                    size: 20.w,
+                    color: isFav ? AppColors.primary : Colors.grey[400],
+                  ),
+                ),
+              );
+
               return SvgIcon(
                 iconName: 'assets/svg/client/fav.svg',
                 width: 24.w,

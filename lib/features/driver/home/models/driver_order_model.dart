@@ -1,3 +1,5 @@
+import '../../../../core/enums/order_status.dart';
+
 class DriverOrderModel {
   final String id;
   final String orderNumber;
@@ -11,7 +13,7 @@ class DriverOrderModel {
   final List<OrderItem> items;
   final double totalAmount;
   final String paymentMethod;
-  final String status;
+  final OrderStatus status;
   final DateTime createdAt;
   final double? deliveryFee;
   final String? notes;
@@ -71,7 +73,7 @@ class DriverOrderModel {
           [],
       totalAmount: (json['totalPrice'] ?? json['totalAmount'] ?? json['total'] ?? 0).toDouble(),
       paymentMethod: json['paymentMethod']?.toString() ?? 'cash',
-      status: json['status']?.toString() ?? 'pending',
+      status: OrderStatus.fromString(json['status']?.toString() ?? 'pending'),
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'].toString())
           : DateTime.now(),
@@ -94,7 +96,7 @@ class DriverOrderModel {
       'items': items.map((item) => item.toJson()).toList(),
       'totalAmount': totalAmount,
       'paymentMethod': paymentMethod,
-      'status': status,
+      'status': status.value,
       'createdAt': createdAt.toIso8601String(),
       if (deliveryFee != null) 'deliveryFee': deliveryFee,
       if (notes != null) 'notes': notes,

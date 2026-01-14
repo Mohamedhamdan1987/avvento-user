@@ -34,6 +34,7 @@ class RestaurantDetailsController extends GetxController {
   List<MenuCategory> get categories => _categories;
   Restaurant? get restaurant => _restaurant.value;
   List<SubCategory> get subCategories => _subCategories;
+  List<MenuItem> get allItems => _allItems;
   List<MenuItem> get items => _filteredItems;
   
   String get selectedCategoryId => _selectedCategoryId.value;

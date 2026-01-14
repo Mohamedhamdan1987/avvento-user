@@ -53,16 +53,16 @@ class RestaurantsController extends GetxController {
 
   /// Fetch stories
   Future<void> fetchStories() async {
-    try {
+    // try {
       _isLoadingStories.value = true;
       final stories = await _restaurantsService.getStories();
       _stories.assignAll(stories);
-    } catch (e) {
-      // Silently fail for now or log error
-      print('Failed to fetch stories: $e');
-    } finally {
-      _isLoadingStories.value = false;
-    }
+    // } catch (e) {
+    //   // Silently fail for now or log error
+    //   print('Failed to fetch stories: $e');
+    // } finally {
+    //   _isLoadingStories.value = false;
+    // }
   }
 
   /// Fetch restaurants (initial load or refresh)
@@ -201,6 +201,15 @@ class RestaurantsController extends GetxController {
         'فشل تحديث الحالة المفضلة',
         snackPosition: SnackPosition.BOTTOM,
       );
+    }
+  }
+
+  /// View a story
+  Future<void> viewStory(String storyId) async {
+    try {
+      await _restaurantsService.viewStory(storyId);
+    } catch (e) {
+      print('Failed to view story: $e');
     }
   }
 }

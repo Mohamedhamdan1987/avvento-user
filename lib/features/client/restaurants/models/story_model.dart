@@ -31,7 +31,7 @@ class Story {
   final StoryRestaurant restaurant;
   final String mediaType;
   final String mediaUrl;
-  final String text;
+  final String? text;
   final DateTime createdAt;
   final DateTime expiresAt;
   final int viewersCount;
@@ -55,7 +55,7 @@ class Story {
       restaurant: StoryRestaurant.fromJson(json['restaurant'] as Map<String, dynamic>),
       mediaType: json['mediaType'] as String,
       mediaUrl: json['mediaUrl'] as String? ?? '',
-      text: json['text'] as String,
+      text: json['text'] as String? ?? '',
       createdAt: DateTime.parse(json['createdAt'] as String),
       expiresAt: DateTime.parse(json['expiresAt'] as String),
       viewersCount: json['viewersCount'] as int? ?? 0,

@@ -1,3 +1,5 @@
+import '../enums/order_status.dart';
+
 class AppConstants {
   // App Info
   static const String appName = 'We Pay';
@@ -26,12 +28,12 @@ class AppConstants {
   static const int maxUsernameLength = 30;
 
   // Order Statuses
-  final statuses = <Map<String, String?>>[
+  static List<Map<String, dynamic>> get statuses => [
     {'label': 'الكل', 'value': null},
-    {'label': 'قيد المراجعة', 'value': 'قيد المراجعة'},
-    {'label': 'بانتظار الدفع', 'value': 'بانتظار الدفع'},
-    {'label': 'قيد التنفيذ', 'value': 'قيد التنفيذ'},
-    {'label': 'تم الشحن', 'value': 'تم الشحن'},
+    ...OrderStatus.values.map((status) => {
+      'label': status.label,
+      'value': status.value,
+    }),
   ];
 
   // Error Messages
@@ -39,6 +41,7 @@ class AppConstants {
   static const String timeoutErrorMessage = 'انتهت مهلة الاتصال، يرجى المحاولة مرة أخرى';
   static const String serverErrorMessage = 'حدث خطأ في الخادم، يرجى المحاولة لاحقاً';
   static const String unauthorizedErrorMessage = 'غير مصرح لك بالوصول';
+  static const String invalidCredentialsErrorMessage = 'اسم المستخدم أو كلمة المرور غير صحيحة';
   static const String unknownErrorMessage = 'حدث خطأ غير متوقع';
 }
 

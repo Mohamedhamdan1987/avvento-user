@@ -13,6 +13,7 @@ import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/reusable/custom_text_field.dart';
 import 'package:avvento/features/client/address/controllers/address_controller.dart';
+import '../../restaurants/pages/restaurant_details_screen.dart';
 import '../bindings/home_binding.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/category_card.dart';
@@ -410,7 +411,8 @@ class _HomePageContentState extends State<_HomePageContent> {
                         hasFreeDelivery: true,
                         isFavorite: restaurant.isFavorite,
                         onTap: () {
-                          // Navigate to restaurant details if possible
+                          Get.to(() => RestaurantDetailsScreen(restaurantId: restaurant.id));
+
                         },
                         onFavoriteTap: () => widget.controller.toggleFavorite(restaurant),
                       );
@@ -468,7 +470,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                       imageUrl: restaurant.logo ?? 'assets/home_cover.jpg',
                       restaurantName: restaurant.name,
                       onTap: () {
-                        // Navigate to restaurant details
+                        Get.to(() => RestaurantDetailsScreen(restaurantId: restaurant.id));
                       },
                     ),
                   );

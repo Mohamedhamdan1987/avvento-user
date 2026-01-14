@@ -43,20 +43,20 @@ class _RegisterPageState extends State<RegisterPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.drawerPurple),
-        title: Text(
-          'إنشاء حساب جديد',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textDark,
-          ),
-        ),
-        centerTitle: true,
-      ),
+      // appBar: AppBar(
+      //   backgroundColor: Colors.transparent,
+      //   elevation: 0,
+      //   iconTheme: const IconThemeData(color: AppColors.drawerPurple),
+      //   title: Text(
+      //     'إنشاء حساب جديد',
+      //     style: TextStyle(
+      //       fontSize: 20.sp,
+      //       fontWeight: FontWeight.bold,
+      //       color: AppColors.textDark,
+      //     ),
+      //   ),
+      //   centerTitle: true,
+      // ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -86,232 +86,113 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 SizedBox(height: 32.h),
                 // Name Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: AppColors.drawerPurple.withOpacity(0.2),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.drawerPurple.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: CustomTextField(
-                    controller: nameController,
-                    label: 'الاسم الكامل',
-                    hint: 'أدخل الاسم الكامل',
-                    prefixIcon: Icons.person,
-                    borderRadius: 16,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'يرجى إدخال الاسم الكامل';
-                      }
-                      return null;
-                    },
-                  ),
+                CustomTextField(
+                  controller: nameController,
+                  // label: 'الاسم الكامل',
+                  hint: 'أدخل الاسم الكامل',
+                  prefixIcon: Icons.person,
+                  borderRadius: 16,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال الاسم الكامل';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: 16.h),
                 // Username Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: AppColors.drawerPurple.withOpacity(0.2),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.drawerPurple.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: CustomTextField(
-                    controller: usernameController,
-                    label: 'اسم المستخدم',
-                    hint: 'أدخل اسم المستخدم',
-                    prefixIcon: Icons.account_circle,
-                    borderRadius: 16,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'يرجى إدخال اسم المستخدم';
-                      }
-                      return null;
-                    },
-                  ),
+                CustomTextField(
+                  controller: usernameController,
+                  // label: 'اسم المستخدم',
+                  hint: 'أدخل اسم المستخدم',
+                  prefixIcon: Icons.account_circle,
+                  borderRadius: 16,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال اسم المستخدم';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: 16.h),
                 // Email Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: AppColors.drawerPurple.withOpacity(0.2),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.drawerPurple.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: CustomTextField(
-                    controller: emailController,
-                    label: 'البريد الإلكتروني',
-                    hint: 'أدخل البريد الإلكتروني',
-                    prefixIcon: Icons.email,
-                    keyboardType: TextInputType.emailAddress,
-                    borderRadius: 16,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'يرجى إدخال البريد الإلكتروني';
-                      }
-                      return null;
-                    },
-                  ),
+                CustomTextField(
+                  controller: emailController,
+                  // label: 'البريد الإلكتروني',
+                  hint: 'أدخل البريد الإلكتروني',
+                  prefixIcon: Icons.email,
+                  keyboardType: TextInputType.emailAddress,
+                  borderRadius: 16,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال البريد الإلكتروني';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: 16.h),
                 // Phone Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: AppColors.drawerPurple.withOpacity(0.2),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.drawerPurple.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: CustomTextField(
-                    controller: phoneController,
-                    label: 'رقم الهاتف',
-                    hint: 'أدخل رقم الهاتف',
-                    prefixIcon: Icons.phone,
-                    keyboardType: TextInputType.phone,
-                    borderRadius: 16,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'يرجى إدخال رقم الهاتف';
-                      }
-                      return null;
-                    },
-                  ),
+                CustomTextField(
+                  controller: phoneController,
+                  // label: 'رقم الهاتف',
+                  hint: 'أدخل رقم الهاتف',
+                  prefixIcon: Icons.phone,
+                  keyboardType: TextInputType.phone,
+                  borderRadius: 16,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال رقم الهاتف';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: 16.h),
                 // Password Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: AppColors.drawerPurple.withOpacity(0.2),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.drawerPurple.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: CustomTextField(
-                    controller: passwordController,
-                    label: 'كلمة المرور',
-                    hint: 'أدخل كلمة المرور',
-                    prefixIcon: Icons.lock,
-                    obscureText: true,
-                    borderRadius: 16,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'يرجى إدخال كلمة المرور';
-                      }
-                      if (value.length < 6) {
-                        return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
-                      }
-                      return null;
-                    },
-                  ),
+                CustomTextField(
+                  controller: passwordController,
+                  // label: 'كلمة المرور',
+                  hint: 'أدخل كلمة المرور',
+                  prefixIcon: Icons.lock,
+                  obscureText: true,
+                  borderRadius: 16,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'يرجى إدخال كلمة المرور';
+                    }
+                    if (value.length < 6) {
+                      return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: 16.h),
                 // Confirm Password Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: AppColors.drawerPurple.withOpacity(0.2),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.drawerPurple.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: CustomTextField(
-                    controller: confirmPasswordController,
-                    label: 'تأكيد كلمة المرور',
-                    hint: 'أعد إدخال كلمة المرور',
-                    prefixIcon: Icons.lock_outline,
-                    obscureText: true,
-                    borderRadius: 16,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'يرجى تأكيد كلمة المرور';
-                      }
-                      if (value != passwordController.text) {
-                        return 'كلمات المرور غير متطابقة';
-                      }
-                      return null;
-                    },
-                  ),
+                CustomTextField(
+                  controller: confirmPasswordController,
+                  // label: 'تأكيد كلمة المرور',
+                  hint: 'أعد إدخال كلمة المرور',
+                  prefixIcon: Icons.lock_outline,
+                  obscureText: true,
+                  borderRadius: 16,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'يرجى تأكيد كلمة المرور';
+                    }
+                    if (value != passwordController.text) {
+                      return 'كلمات المرور غير متطابقة';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: 16.h),
                 // Address Field (Optional)
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: AppColors.drawerPurple.withOpacity(0.2),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.drawerPurple.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: CustomTextField(
-                    controller: addressController,
-                    label: 'العنوان (اختياري)',
-                    hint: 'أدخل العنوان',
-                    prefixIcon: Icons.location_on,
-                    borderRadius: 16,
-                  ),
+                CustomTextField(
+                  controller: addressController,
+                  label: 'العنوان (اختياري)',
+                  hint: 'أدخل العنوان',
+                  prefixIcon: Icons.location_on,
+                  borderRadius: 16,
                 ),
                 SizedBox(height: 32.h),
                 // Register Button

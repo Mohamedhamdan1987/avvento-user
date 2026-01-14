@@ -1,3 +1,4 @@
+import 'package:avvento/core/enums/order_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -27,19 +28,18 @@ class ActiveOrderView extends StatelessWidget {
       children: [
       Builder(builder: (context) {
         // Show different views based on order status
-        switch (order.status.toLowerCase()) {
-          case 'accepted':
-          case 'awaiting_delivery':
+        switch (order.status) {
+          case OrderStatus.confirmed:
+          case OrderStatus.preparing:
+          case OrderStatus.awaitingDelivery:
             return _buildGoingToRestaurantView(context, order, controller);
-          case 'at_restaurant':
-            return _buildAtRestaurantView(context, order, controller);
-          case 'picked_up':
-          case 'going_to_customer':
+          case OrderStatus.onTheWay:
             return _buildGoingToCustomerView(context, order, controller);
-          case 'at_customer':
-            return _buildAtCustomerView(context, order, controller);
-          default:
+          case OrderStatus.delivered:
+          case OrderStatus.cancelled:
             return const SizedBox.shrink();
+          default:
+            return _buildGoingToRestaurantView(context, order, controller);
         }
       },)
     ],);
@@ -251,7 +251,7 @@ class ActiveOrderView extends StatelessWidget {
             onTap: () {
               controller.updateOrderStatus(
                 orderId: order.id,
-                status: 'at_restaurant',
+                status: 'on_the_way',
               );
             },
             color: AppColors.primary,
@@ -261,10 +261,13 @@ class ActiveOrderView extends StatelessWidget {
               fontSize: 20,
               color: Colors.white,
             ),
-            icon: Icon(
-              Icons.arrow_forward,
-              color: Colors.white,
-              size: 16.r,
+            icon: Padding(
+              padding: EdgeInsetsDirectional.only(end:  8.0, top: 6),
+              child: Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+                size: 16.r,
+              ),
             ),
           ),
         ],
@@ -779,7 +782,7 @@ class ActiveOrderView extends StatelessWidget {
             onTap: () {
               controller.updateOrderStatus(
                 orderId: order.id,
-                status: 'at_customer',
+                status: 'delivered',
               );
             },
             color: AppColors.primary,
@@ -789,10 +792,13 @@ class ActiveOrderView extends StatelessWidget {
               fontSize: 20,
               color: Colors.white,
             ),
-            icon: Icon(
-              Icons.arrow_forward,
-              color: Colors.white,
-              size: 16.r,
+            icon: Padding(
+              padding: EdgeInsetsDirectional.only(end:  8.0, top: 6),
+              child: Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+                size: 16.r,
+              ),
             ),
           ),
         ],

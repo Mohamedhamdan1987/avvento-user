@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/reusable/custom_app_bar.dart';
 import '../../../auth/controllers/auth_controller.dart';
@@ -163,7 +164,7 @@ class DriverAccountPage extends StatelessWidget {
                     icon: Icons.lock_outline,
                     title: 'تغيير كلمة المرور',
                     onTap: () {
-                      // TODO: Navigate to change password
+                      Get.toNamed(AppRoutes.changePassword);
                     },
                   ),
                   _buildDivider(),
@@ -171,18 +172,18 @@ class DriverAccountPage extends StatelessWidget {
                     icon: Icons.notifications_outlined,
                     title: 'الإشعارات',
                     onTap: () {
-                      // TODO: Navigate to notifications settings
+                      Get.toNamed(AppRoutes.notifications);
                     },
                   ),
-                  _buildDivider(),
-                  _buildMenuItem(
-                    icon: Icons.language_outlined,
-                    title: 'اللغة',
-                    subtitle: 'العربية',
-                    onTap: () {
-                      // TODO: Show language selection
-                    },
-                  ),
+                  // _buildDivider(),
+                  // _buildMenuItem(
+                  //   icon: Icons.language_outlined,
+                  //   title: 'اللغة',
+                  //   subtitle: 'العربية',
+                  //   onTap: () {
+                  //     // TODO: Show language selection
+                  //   },
+                  // ),
                 ],
               ),
             ),
@@ -208,7 +209,8 @@ class DriverAccountPage extends StatelessWidget {
                     icon: Icons.help_outline,
                     title: 'المساعدة والدعم',
                     onTap: () {
-                      // TODO: Navigate to support
+                      Get.toNamed(AppRoutes.restaurantSupport);
+
                     },
                   ),
                   _buildDivider(),

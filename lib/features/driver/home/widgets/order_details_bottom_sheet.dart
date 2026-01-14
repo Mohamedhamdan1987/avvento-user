@@ -58,14 +58,14 @@ class OrderDetailsBottomSheet extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(order.status).withOpacity(0.1),
+                  color: _getStatusColor(order.status.value).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
-                  _getStatusText(order.status),
+                  _getStatusText(order.status.value),
                   style: TextStyle(
                     fontSize: 12.sp,
-                    color: _getStatusColor(order.status),
+                    color: _getStatusColor(order.status.value),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -237,7 +237,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
               SizedBox(height: 24.h),
               
               // Action buttons (only show for pending orders)
-              if (order.status == 'pending') ...[
+              if (order.status.value == 'pending') ...[
                 Obx(() => Row(
                   children: [
                     Expanded(

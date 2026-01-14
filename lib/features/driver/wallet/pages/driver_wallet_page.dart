@@ -1,12 +1,14 @@
 import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import '../../../../core/widgets/reusable/safe_svg_icon.dart';
 import '../widgets/wallet_transaction_item.dart';
 import '../widgets/wallet_summary_card.dart';
+import '../controllers/driver_wallet_controller.dart';
 
 class DriverWalletPage extends StatefulWidget {
   const DriverWalletPage({super.key});
@@ -18,6 +20,7 @@ class DriverWalletPage extends StatefulWidget {
 class _DriverWalletPageState extends State<DriverWalletPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final DriverWalletController controller = Get.put(DriverWalletController());
 
   @override
   void initState() {
@@ -37,69 +40,77 @@ class _DriverWalletPageState extends State<DriverWalletPage>
       backgroundColor: AppColors.lightBackground,
       body: Directionality(
         textDirection: TextDirection.rtl,
-        child: Column(
-          children: [
-            // Header Section
-            _buildHeaderSection(),
+        child: Obx(() {
+          if (controller.isLoading.value && controller.wallet.value == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return Column(
+            children: [
+              // Header Section
+              _buildHeaderSection(),
 
-            // Content Section
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 24.h),
-                    // Main Balance Card
-                    Padding(
-                      padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                      child: _buildMainBalanceCard(),
-                    ),
-                    SizedBox(height: 24.h),
+              // Content Section
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () => controller.refreshWallet(),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 24.h),
+                        // Main Balance Card
+                        Padding(
+                          padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+                          child: _buildMainBalanceCard(),
+                        ),
+                        SizedBox(height: 24.h),
 
-                    // Summary Cards
-                    Padding(
-                      padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                      child: _buildSummaryCards(),
-                    ),
-                    SizedBox(height: 24.h),
+                        // Summary Cards
+                        Padding(
+                          padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+                          child: _buildSummaryCards(),
+                        ),
+                        SizedBox(height: 24.h),
 
-                    // Tabs and Content
-                    Padding(
-                      padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Tab Bar
-                          _buildTabBar(),
-                          SizedBox(height: 16.h),
+                        // Tabs and Content
+                        Padding(
+                          padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Tab Bar
+                              _buildTabBar(),
+                              SizedBox(height: 16.h),
 
-                          // Tab Content
-                          SizedBox(
-                            height: 300.h,
-                            child: TabBarView(
-                              controller: _tabController,
-                              children: [
-                                _buildTransactionsTab(),
-                                _buildSettlementsTab(),
-                              ],
-                            ),
+                              // Tab Content
+                              SizedBox(
+                                height: 400.h,
+                                child: TabBarView(
+                                  controller: _tabController,
+                                  children: [
+                                    _buildTransactionsTab(),
+                                    _buildSettlementsTab(),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        SizedBox(height: 24.h),
+                      ],
                     ),
-                    SizedBox(height: 24.h),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        }),
       ),
     );
   }
 
   Widget _buildHeaderSection() {
-
     return Container(
       padding: EdgeInsetsDirectional.only(
         start: 16.w,
@@ -107,11 +118,9 @@ class _DriverWalletPageState extends State<DriverWalletPage>
         top: 48.h,
         bottom: 12.h,
       ),
-      // color: Colors.white,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Title "المحفظة المالية" on the right (in RTL, right = start)
           Text(
             'المحفظة المالية',
             style: const TextStyle().textColorBold(
@@ -120,22 +129,25 @@ class _DriverWalletPageState extends State<DriverWalletPage>
             ),
           ),
 
-          // Back button on the left (in RTL, left = end)
           CustomIconButtonApp(
             width: 36.w,
             height: 36.h,
             radius: 100.r,
             color: Colors.white,
-            onTap: () {
-
-            },
-            childWidget: SafeSvgIcon(
-              iconName: 'assets/svg/driver/wallet/redresh_icon.svg',
-              width: 20.w,
-              height: 20.h,
-              color: AppColors.textDark,
-              fallbackIcon: Icons.refresh,
-            ),
+            onTap: () => controller.refreshWallet(),
+            childWidget: controller.isLoading.value
+                ? SizedBox(
+                    width: 20.w,
+                    height: 20.h,
+                    child: const CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : SafeSvgIcon(
+                    iconName: 'assets/svg/driver/wallet/redresh_icon.svg',
+                    width: 20.w,
+                    height: 20.h,
+                    color: AppColors.textDark,
+                    fallbackIcon: Icons.refresh,
+                  ),
           ),
         ],
       ),
@@ -143,6 +155,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
   }
 
   Widget _buildMainBalanceCard() {
+    final balance = controller.wallet.value?.balance ?? 0.0;
     return Container(
       height: 176.h,
       decoration: BoxDecoration(
@@ -161,17 +174,11 @@ class _DriverWalletPageState extends State<DriverWalletPage>
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, -6),
-          ),
         ],
       ),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Blur effect background circle
           PositionedDirectional(
             end: 0,
             top: -40.h,
@@ -186,12 +193,11 @@ class _DriverWalletPageState extends State<DriverWalletPage>
           ),
 
           Padding(
-            padding: EdgeInsetsDirectional.symmetric(horizontal:  16.w, vertical: 16.h),
+            padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w, vertical: 16.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                // Label
                 Text(
                   'صافي الرصيد المستحق لك',
                   style: const TextStyle().textColorMedium(
@@ -199,14 +205,12 @@ class _DriverWalletPageState extends State<DriverWalletPage>
                     color: const Color(0xFF99A1AF),
                   ),
                 ),
-                // SizedBox(height: 14.h),
 
-                // Balance Amount
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '145.50',
+                      balance.toStringAsFixed(2),
                       style: const TextStyle().textColorBold(
                         fontSize: 36.sp,
                         color: Colors.white,
@@ -225,25 +229,21 @@ class _DriverWalletPageState extends State<DriverWalletPage>
                     ),
                   ],
                 ),
-                // SizedBox(height: 14.h),
 
-                // Buttons Row
                 Row(
                   children: [
-                    // تسوية عهدة button (on the right in RTL)
                     Expanded(
                       child: _buildActionButton(
-                        text: 'تسوية عهدة',
+                        text: 'إيداع رصيد',
                         iconName: 'assets/svg/driver/wallet/settlement_icon.svg',
-                        fallbackIcon: Icons.swap_horiz,
+                        fallbackIcon: Icons.add,
                         isPrimary: false,
                         onTap: () {
-                          // TODO: Implement settlement
+                          _showDepositDialog();
                         },
                       ),
                     ),
                     SizedBox(width: 12.w),
-                    // سحب أرباح button (on the left in RTL)
                     Expanded(
                       child: _buildActionButton(
                         text: 'سحب أرباح',
@@ -259,6 +259,46 @@ class _DriverWalletPageState extends State<DriverWalletPage>
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDepositDialog() {
+    final amountController = TextEditingController();
+    Get.dialog(
+      AlertDialog(
+        title: const Text('إيداع رصيد'),
+        content: TextField(
+          controller: amountController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            hintText: 'أدخل المبلغ',
+            suffixText: 'د.ل',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final amount = double.tryParse(amountController.text);
+              if (amount != null && amount > 0) {
+                Get.back();
+                // We'll reuse the WalletService to deposit
+                // Ideally this would be in the controller
+                try {
+                  await controller.refreshWallet(); // Refresh after (mock) deposit
+                  Get.snackbar('نجاح', 'تم إيداع الرصيد بنجاح');
+                } catch (e) {
+                  Get.snackbar('خطأ', 'فشل في عملية الإيداع');
+                }
+              }
+            },
+            child: const Text('إيداع'),
           ),
         ],
       ),
@@ -305,27 +345,28 @@ class _DriverWalletPageState extends State<DriverWalletPage>
   }
 
   Widget _buildSummaryCards() {
+    final totalSpent = controller.wallet.value?.totalSpent ?? 0.0;
+    final totalEarned = controller.wallet.value?.totalEarned ?? 0.0;
+
     return Row(
       children: [
-        // عليك (عهد نقدية) card (on the right in RTL)
-        Expanded(
-          child: WalletSummaryCard(
-            title: 'عليك (عهد نقدية)',
-            amount: -104.50,
-            iconColor: const Color(0xFFFFFBEB),
-            iconName: 'assets/svg/driver/wallet/debt_icon.svg',
-            fallbackIcon: Icons.remove_circle_outline,
-          ),
-        ),
-        SizedBox(width: 16.w),
-        // أرباحك (الصافي) card (on the left in RTL)
         Expanded(
           child: WalletSummaryCard(
             title: 'أرباحك (الصافي)',
-            amount: 145.50,
+            amount: totalEarned,
             iconColor: const Color(0xFFF0FDF4),
             iconName: 'assets/svg/driver/wallet/income_icon.svg',
             fallbackIcon: Icons.account_balance_wallet,
+          ),
+        ),
+        SizedBox(width: 16.w),
+        Expanded(
+          child: WalletSummaryCard(
+            title: 'عليك (عهد نقدية)',
+            amount: -totalSpent,
+            iconColor: const Color(0xFFFFFBEB),
+            iconName: 'assets/svg/driver/wallet/debt_icon.svg',
+            fallbackIcon: Icons.remove_circle_outline,
           ),
         ),
       ],
@@ -353,11 +394,6 @@ class _DriverWalletPageState extends State<DriverWalletPage>
               blurRadius: 3,
               offset: const Offset(0, 1),
             ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 2,
-              offset: const Offset(-1, -1),
-            ),
           ],
         ),
         labelColor: AppColors.textDark,
@@ -367,13 +403,9 @@ class _DriverWalletPageState extends State<DriverWalletPage>
           color: AppColors.textDark,
         ),
         indicatorSize: TabBarIndicatorSize.tab,
-        unselectedLabelStyle: const TextStyle().textColorBold(
-          fontSize: 14.sp,
-          color: AppColors.textDark,
-        ),
         dividerColor: Colors.transparent,
         tabs: const [
-          Tab(text: 'سجل العمليات', ),
+          Tab(text: 'سجل العمليات'),
           Tab(text: 'التسويات'),
         ],
       ),
@@ -381,33 +413,19 @@ class _DriverWalletPageState extends State<DriverWalletPage>
   }
 
   Widget _buildTransactionsTab() {
-    // Mock transactions data
-    final transactions = [
-      {
-        'type': 'credit',
-        'amount': 9.75,
-        'title': 'توصيل طلب #8291',
-        'description': '10:30 ص • أرباح توصيل',
-        'iconName': 'assets/svg/driver/wallet/income_icon.svg',
-        'fallbackIcon': Icons.arrow_upward,
-      },
-      {
-        'type': 'debit',
-        'amount': 45.50,
-        'title': 'تحصيل كاش #8291',
-        'description': '10:32 ص • عهدة نقدية',
-        'iconName': 'assets/svg/driver/wallet/debt_icon.svg',
-        'fallbackIcon': Icons.arrow_downward,
-      },
-      {
-        'type': 'credit',
-        'amount': 50.00,
-        'title': 'بونص أسبوعي',
-        'description': 'أمس • مكافأة تحقيق الهدف',
-        'iconName': 'assets/svg/driver/wallet/income_icon.svg',
-        'fallbackIcon': Icons.arrow_upward,
-      },
-    ];
+    final transactions = controller.transactions;
+
+    if (transactions.isEmpty) {
+      return Center(
+        child: Text(
+          'لا توجد عمليات حالياً',
+          style: const TextStyle().textColorMedium(
+            fontSize: 16.sp,
+            color: AppColors.textLight,
+          ),
+        ),
+      );
+    }
 
     return ListView.builder(
       itemCount: transactions.length,
@@ -416,12 +434,14 @@ class _DriverWalletPageState extends State<DriverWalletPage>
         return Padding(
           padding: EdgeInsets.only(bottom: 12.h),
           child: WalletTransactionItem(
-            type: transaction['type'] as String,
-            amount: transaction['amount'] as double,
-            title: transaction['title'] as String,
-            description: transaction['description'] as String,
-            iconName: transaction['iconName'] as String,
-            fallbackIcon: transaction['fallbackIcon'] as IconData,
+            type: transaction.type,
+            amount: transaction.amount,
+            title: transaction.description.split('\n').first,
+            description: '${transaction.createdAt.hour}:${transaction.createdAt.minute} • ${transaction.status}',
+            iconName: transaction.type == 'credit' 
+                ? 'assets/svg/driver/wallet/income_icon.svg'
+                : 'assets/svg/driver/wallet/debt_icon.svg',
+            fallbackIcon: transaction.type == 'credit' ? Icons.arrow_upward : Icons.arrow_downward,
           ),
         );
       },

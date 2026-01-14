@@ -8,6 +8,7 @@ import 'package:avvento/features/support/presentation/bindings/support_binding.d
 import 'package:avvento/features/support/presentation/pages/support_page.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:avvento/features/profile/pages/change_password_page.dart';
 import '../../features/auth/bindings/auth_binding.dart';
 import '../../features/auth/pages/forget_password_page.dart';
 import '../../features/auth/pages/login_page.dart';
@@ -18,6 +19,7 @@ import '../../features/client/restaurants/bindings/restaurants_binding.dart';
 import '../../features/client/restaurants/pages/restaurants_page.dart';
 import '../../features/client/orders/pages/order_tracking_map_page.dart';
 import '../../features/client/orders/widgets/order_tracking_dialog.dart';
+import 'package:avvento/core/enums/order_status.dart';
 import '../../features/client/cart/bindings/cart_binding.dart';
 import '../../features/client/cart/pages/cart_list_page.dart';
 import '../../features/client/cart/pages/restaurant_cart_details_page.dart';
@@ -25,6 +27,7 @@ import '../../features/client/cart/pages/checkout_page.dart';
 import '../../features/client/cart/models/cart_model.dart';
 import '../../features/client/address/pages/address_list_page.dart';
 import '../../features/client/address/pages/map_selection_page.dart';
+import '../../features/client/wallet/pages/client_wallet_page.dart';
 import '../constants/app_constants.dart';
 import '../middleware/auth_middleware.dart';
 import 'app_routes.dart';
@@ -172,8 +175,18 @@ class AppPages {
       middlewares: [AuthMiddleware()],
     ),
     GetPage(
+      name: AppRoutes.changePassword,
+      page: () => const ChangePasswordPage(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
       name: AppRoutes.mapSelection,
       page: () => const MapSelectionPage(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: AppRoutes.wallet,
+      page: () => const ClientWalletPage(),
       middlewares: [AuthMiddleware()],
     ),
   ];

@@ -1,3 +1,4 @@
+import 'package:avvento/core/enums/order_status.dart';
 import 'package:avvento/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -247,6 +248,22 @@ class DriverOrdersController extends GetxController {
     }
   }
 
+  // Update driver location
+  Future<void> updateLocation(double latitude, double longitude) async {
+    try {
+      final result = await _ordersService.updateDriverLocation(
+        latitude: latitude,
+        longitude: longitude,
+      );
+
+      if (!result.success) {
+        cprint('Failed to update location: ${result.message}');
+      }
+    } catch (e) {
+      cprint('Error updating location: $e');
+    }
+  }
+
   // Update map markers for nearby orders and my active orders
   void _updateMarkers() {
     _markers.clear();
@@ -275,9 +292,13 @@ class DriverOrdersController extends GetxController {
     // 2. Add markers for my current active orders
     for (var order in _myOrders) {
       // Skip delivered or cancelled orders
-      if (['delivered', 'cancelled'].contains(order.status.toLowerCase())) continue;
+      if ([OrderStatus.delivered, OrderStatus.cancelled].contains(order.status)) continue;
 
-      bool isPickupPhase = ['accepted', 'going_to_restaurant', 'at_restaurant'].contains(order.status.toLowerCase());
+      bool isPickupPhase = [
+        OrderStatus.confirmed,
+        OrderStatus.preparing,
+        OrderStatus.awaitingDelivery
+      ].contains(order.status);
       
       LatLng markerPosition = isPickupPhase 
           ? LatLng(order.pickupLocation.latitude, order.pickupLocation.longitude)

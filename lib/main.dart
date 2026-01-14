@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/routes/app_pages.dart';
 import 'core/theme/app_theme.dart';
@@ -31,6 +32,9 @@ void main() async {
 
   // Initialize GetStorage
   await GetStorage.init();
+
+  // Initialize Hive
+  await Hive.initFlutter();
 
   runApp(const MyApp());
 }

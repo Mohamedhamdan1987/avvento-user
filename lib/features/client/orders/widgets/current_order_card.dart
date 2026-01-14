@@ -1,8 +1,10 @@
 import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
+import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/features/client/restaurants/controllers/restaurants_controller.dart';
+import 'package:avvento/core/enums/order_status.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -66,8 +68,10 @@ class CurrentOrderCard extends StatelessWidget {
   }
 
   Widget _buildProgressBar() {
-    final status = order.status;
+    final status = OrderStatus.fromString(order.status);
     int completedSteps = _getCompletedSteps(status);
+    // Total steps excluding 'cancelled'
+    int totalSteps = OrderStatus.values.where((e) => e != OrderStatus.cancelled).length;
 
     return Container(
       height: 6.h,
@@ -76,85 +80,49 @@ class CurrentOrderCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(3.r),
       ),
       child: Row(
-        children: [
-          Expanded(
+        children: List.generate(totalSteps, (index) {
+          bool isCompleted = completedSteps >= index;
+          return Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: completedSteps >= 1
-                    ? const Color(0xFF7F22FE)
-                    : Colors.transparent,
+                color: isCompleted ? const Color(0xFF7F22FE) : Colors.transparent,
                 borderRadius: BorderRadius.circular(3.r),
-                border: completedSteps >= 1
+                border: isCompleted && index < totalSteps - 1
                     ? BorderDirectional(
                         end: BorderSide(color: Colors.white, width: 0.76.w),
                       )
                     : null,
               ),
             ),
-          ),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: completedSteps >= 2
-                    ? const Color(0xFF7F22FE)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(3.r),
-                border: completedSteps >= 2
-                    ? BorderDirectional(
-                        end: BorderSide(color: Colors.white, width: 0.76.w),
-                      )
-                    : null,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: completedSteps >= 3
-                    ? const Color(0xFF7F22FE)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(3.r),
-                border: completedSteps >= 3
-                    ? BorderDirectional(
-                        end: BorderSide(color: Colors.white, width: 0.76.w),
-                      )
-                    : null,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: completedSteps >= 4
-                    ? const Color(0xFF7F22FE)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(3.r),
-              ),
-            ),
-          ),
-        ],
+          );
+        }),
       ),
     );
   }
 
-  int _getCompletedSteps(String? status) {
+  int _getCompletedSteps(OrderStatus status) {
     switch (status) {
-      case 'pending_restaurant':
+      case OrderStatus.pendingRestaurant:
         return 0;
-      case 'confirmed':
+      case OrderStatus.confirmed:
         return 1;
-      case 'preparing':
+      case OrderStatus.preparing:
         return 2;
-      case 'on_the_way':
+      case OrderStatus.onTheWay:
         return 3;
-      case 'delivered':
+      case OrderStatus.awaitingDelivery:
         return 4;
+      case OrderStatus.delivered:
+        return 5;
+      case OrderStatus.cancelled:
+        return -1;
       default:
-        return 1;
+        return -1;
     }
   }
 
   Widget _buildOrderHeader() {
+    final status = OrderStatus.fromString(order.status);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,7 +180,7 @@ class CurrentOrderCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: _getStatusColor(
-                          order.status,
+                          status,
                         ).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10.r),
                       ),
@@ -223,16 +191,16 @@ class CurrentOrderCard extends StatelessWidget {
                             width: 8.w,
                             height: 8.h,
                             decoration: BoxDecoration(
-                              color: _getStatusColor(order.status),
+                              color: _getStatusColor(status),
                               shape: BoxShape.circle,
                             ),
                           ),
                           SizedBox(width: 6.w),
                           Text(
-                            _getStatusText(order.status),
+                            status.label,
                             style: const TextStyle().textColorBold(
                               fontSize: 12.sp,
-                              color: _getStatusColor(order.status),
+                              color: _getStatusColor(status),
                             ),
                           ),
                         ],
@@ -363,61 +331,44 @@ class CurrentOrderCard extends StatelessWidget {
         Expanded(
           flex: 2,
           child: Builder(
-            builder: (context) => CustomButtonApp(
-              text: 'تتبع الطلب',
-              onTap: () async {
-                // Get order status
-                final statusString = order.status;
-                OrderStatus status;
-                switch (statusString) {
-                  case 'pending_restaurant':
-                    status = OrderStatus.pendingAcceptance;
-                    break;
-                  case 'confirmed':
-                    status = OrderStatus.confirmed;
-                    break;
-                  case 'preparing':
-                    status = OrderStatus.preparing;
-                    break;
-                  case 'on_the_way':
-                    status = OrderStatus.onTheWay;
-                    break;
-                  case 'delivered':
-                    status = OrderStatus.delivered;
-                    break;
-                  default:
-                    status = OrderStatus.pendingAcceptance;
-                }
+            builder: (context) {
+              // cprint('Status: ${order.status}');
+              return CustomButtonApp(
+                text: 'تتبع الطلب',
+                onTap: () async {
+                  // Get order status
+                  final status = OrderStatus.fromString(order.status);
 
-                // Get user location
-                double? userLat = order.deliveryLat;
-                double? userLong = order.deliveryLong;
+                  // Get user location
+                  double? userLat = order.deliveryLat;
+                  double? userLong = order.deliveryLong;
 
-                // Get restaurant location
-                final restaurantLat = order.deliveryLat; // Fallback
-                final restaurantLong = order.deliveryLong; // Fallback
+                  // Get restaurant location
+                  final restaurantLat = order.deliveryLat; // Fallback
+                  final restaurantLong = order.deliveryLong; // Fallback
 
-                // Navigate to Google Maps page inside the app
-                Get.toNamed(
-                  AppRoutes.orderTrackingMap,
-                  arguments: {
-                    'userLat': userLat,
-                    'userLong': userLong,
-                    'restaurantLat': restaurantLat,
-                    'restaurantLong': restaurantLong,
-                    'orderId': order.id,
-                    'status': status,
-                  },
-                );
-              },
-              height: 48.h,
-              borderRadius: 14.r,
-              color: const Color(0xF07F22FE).withOpacity(0.94),
-              textStyle: const TextStyle().textColorBold(
-                fontSize: 14.sp,
-                color: Colors.white,
-              ),
-            ),
+                  // Navigate to Google Maps page inside the app
+                  Get.toNamed(
+                    AppRoutes.orderTrackingMap,
+                    arguments: {
+                      'userLat': userLat,
+                      'userLong': userLong,
+                      'restaurantLat': restaurantLat,
+                      'restaurantLong': restaurantLong,
+                      'orderId': order.id,
+                      'status': status,
+                    },
+                  );
+                },
+                height: 48.h,
+                borderRadius: 14.r,
+                color: const Color(0xF07F22FE).withOpacity(0.94),
+                textStyle: const TextStyle().textColorBold(
+                  fontSize: 14.sp,
+                  color: Colors.white,
+                ),
+              );
+            },
           ),
         ),
 
@@ -465,37 +416,37 @@ class CurrentOrderCard extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(String? status) {
+  Color _getStatusColor(OrderStatus status) {
     switch (status) {
-      case 'pending_restaurant':
+      case OrderStatus.pendingRestaurant:
         return const Color(0xFF7F22FE);
-      case 'confirmed':
+      case OrderStatus.confirmed:
         return const Color(0xFF00C950);
-      case 'preparing':
+      case OrderStatus.preparing:
         return const Color(0xFF7F22FE);
-      case 'on_the_way':
+      case OrderStatus.onTheWay:
         return const Color(0xFF7F22FE);
-      case 'delivered':
+      case OrderStatus.delivered:
         return const Color(0xFF00C950);
       default:
         return const Color(0xFF7F22FE);
     }
   }
 
-  String _getStatusText(String? status) {
-    switch (status) {
-      case 'pending_restaurant':
-        return 'بانتظار قبول المطعم';
-      case 'confirmed':
-        return 'تم تأكيد الطلب';
-      case 'preparing':
-        return 'جاري تحضير طلبك';
-      case 'on_the_way':
-        return 'في الطريق إليك';
-      case 'delivered':
-        return 'تم تسليم الطلب';
-      default:
-        return 'جاري تحضير طلبك';
-    }
-  }
+  // String _getStatusText(String? status) {
+  //   switch (status) {
+  //     case 'pending_restaurant':
+  //       return 'بانتظار قبول المطعم';
+  //     case 'confirmed':
+  //       return 'تم تأكيد الطلب';
+  //     case 'preparing':
+  //       return 'جاري تحضير طلبك';
+  //     case 'on_the_way':
+  //       return 'في الطريق إليك';
+  //     case 'delivered':
+  //       return 'تم تسليم الطلب';
+  //     default:
+  //       return 'جاري تحضير طلبك';
+  //   }
+  // }
 }

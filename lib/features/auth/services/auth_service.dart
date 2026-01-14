@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_response.dart';
 import '../../../core/network/dio_client.dart';
 import '../models/login_request_model.dart';
@@ -57,8 +58,13 @@ class AuthService {
         final errorCode = responseData['error'] as String? ?? responseData['code'] as String?;
         
         // Return error message from API with error data
+        String message = responseData['message'] as String? ?? 'فشل تسجيل الدخول';
+        if (message == 'Invalid credentials') {
+          message = AppConstants.invalidCredentialsErrorMessage;
+        }
+        
         return LoginResult.failure(
-          responseData['message'] as String? ?? 'فشل تسجيل الدخول',
+          message,
           errorCode: errorCode,
           errorData: errorData,
         );

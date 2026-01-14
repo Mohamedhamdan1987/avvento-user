@@ -3,14 +3,26 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../constants/app_colors.dart';
 import 'svg_icon.dart';
 
+class BottomNavItemModel {
+  final String iconName;
+  final String label;
+
+  BottomNavItemModel({
+    required this.iconName,
+    required this.label,
+  });
+}
+
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final List<BottomNavItemModel> navItems;
 
   const BottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    required this.navItems,
   });
 
   @override
@@ -32,32 +44,16 @@ class BottomNavBar extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(
-            iconName: 'assets/svg/nav/home.svg',
-            label: 'الرئيسية',
-            index: 0,
-            isActive: currentIndex == 0,
-          ),
-          _buildNavItem(
-            iconName: 'assets/svg/nav/list.svg',
-            label: 'طلباتي',
-            index: 1,
-            isActive: currentIndex == 1,
-          ),
-          _buildNavItem(
-            iconName: 'assets/svg/nav/cart.svg',
-            label: 'السلة',
-            index: 2,
-            isActive: currentIndex == 2,
-          ),
-          _buildNavItem(
-            iconName: 'assets/svg/nav/person.svg',
-            label: 'حسابي',
-            index: 3,
-            isActive: currentIndex == 3,
-          ),
-        ],
+        children: navItems.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          return _buildNavItem(
+            iconName: item.iconName,
+            label: item.label,
+            index: index,
+            isActive: currentIndex == index,
+          );
+        }).toList(),
       ),
     );
   }

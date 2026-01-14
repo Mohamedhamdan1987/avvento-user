@@ -42,6 +42,24 @@ class _ClientNavBarState extends State<ClientNavBar> {
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onTap,
+        navItems: [
+          BottomNavItemModel(
+            iconName: 'assets/svg/nav/home.svg',
+            label: 'الرئيسية',
+          ),
+          BottomNavItemModel(
+            iconName: 'assets/svg/nav/list.svg',
+            label: 'طلباتي',
+          ),
+          BottomNavItemModel(
+            iconName: 'assets/svg/nav/cart.svg',
+            label: 'السلة',
+          ),
+          BottomNavItemModel(
+            iconName: 'assets/svg/nav/person.svg',
+            label: 'حسابي',
+          ),
+        ],
       ),
     );
   }

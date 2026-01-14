@@ -30,7 +30,7 @@ class _LoginPageState extends State<LoginPage> {
     if(kDebugMode){
       // Pre-fill for testing purposes
       usernameController.text = 're1';
-      passwordController.text = '123456';
+      passwordController.text = '1234567';
     }
   }
 

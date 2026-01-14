@@ -355,11 +355,9 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                               }
                               final restaurant = controller.restaurants[index];
                               return SizedBox(
-                                width: 300.w,
+                                width: MediaQuery.of(context).size.width * 0.88,
                                 child: Padding(
-                                  padding: EdgeInsetsDirectional.only(
-                                    end: 12.w,
-                                  ),
+                                  padding: EdgeInsetsDirectional.only(end: 12.w),
                                   child: RestaurantCard(restaurant: restaurant),
                                 ),
                               );

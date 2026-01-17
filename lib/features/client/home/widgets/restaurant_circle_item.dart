@@ -26,7 +26,7 @@ class RestaurantCircleItem extends StatelessWidget {
             height: 70.h,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.borderGray, width: 1),
+              border: Border.all(color: Theme.of(context).dividerColor, width: 1),
             ),
             child: ClipOval(
               child: imageUrl.startsWith('http')
@@ -34,7 +34,7 @@ class RestaurantCircleItem extends StatelessWidget {
                       imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        color: AppColors.borderGray,
+                        color: Theme.of(context).dividerColor,
                         child: const Icon(Icons.restaurant),
                       ),
                     )
@@ -42,7 +42,7 @@ class RestaurantCircleItem extends StatelessWidget {
                       imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        color: AppColors.borderGray,
+                        color: Theme.of(context).dividerColor,
                         child: const Icon(Icons.restaurant),
                       ),
                     ),
@@ -57,7 +57,7 @@ class RestaurantCircleItem extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle().textColorMedium(
-                color: AppColors.textDark,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
                 fontSize: 12,
               ),
             ),

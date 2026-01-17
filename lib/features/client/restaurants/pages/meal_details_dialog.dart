@@ -61,7 +61,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: BoxDecoration(
-        color: Color(0xFFFDFDFD),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(40.r),
           topRight: Radius.circular(40.r),
@@ -153,8 +153,8 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
               end: Alignment.bottomCenter,
               colors: [
                 Colors.transparent,
-                Colors.white.withOpacity(0.2),
-                Colors.white,
+                Theme.of(context).cardColor.withOpacity(0.2),
+                Theme.of(context).cardColor,
               ],
               stops: [0.0, 0.5, 1.0],
             ),
@@ -245,7 +245,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                         widget.menuItem.price.toStringAsFixed(0),
                         style: TextStyle().textColorBold(
                           fontSize: 24.sp,
-                          color: Color(0xFF101828),
+                          color: Theme.of(context).textTheme.titleLarge?.color,
                         ),
                       ),
                       SizedBox(width: 4.w),
@@ -255,7 +255,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                           'د.ل',
                           style: TextStyle().textColorBold(
                             fontSize: 14.sp,
-                            color: Color(0xFF101828),
+                            color: Theme.of(context).textTheme.titleMedium?.color,
                           ),
                         ),
                       ),
@@ -302,7 +302,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                   widget.menuItem.name,
                   style: TextStyle().textColorBold(
                     fontSize: 25.sp,
-                    color: Color(0xFF101828),
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                   textAlign: TextAlign.right,
                 ),
@@ -317,7 +317,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
             widget.menuItem.description,
             style: TextStyle().textColorMedium(
               fontSize: 14.sp,
-              color: Color(0xFF6A7282),
+              color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
             textAlign: TextAlign.right,
           ),
@@ -331,7 +331,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: Color(0xFFF9FAFB),
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(100.r),
                 ),
                 child: Row(
@@ -340,14 +340,14 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                     Icon(
                       Icons.local_fire_department,
                       size: 12.w,
-                      color: Color(0xFF99A1AF),
+                      color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
                     SizedBox(width: 4.w),
                     Text(
                       '320 سعرة',
                       style: TextStyle().textColorBold(
                         fontSize: 12.sp,
-                        color: Color(0xFF99A1AF),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ),
                   ],
@@ -357,7 +357,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: Color(0xFFF9FAFB),
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(100.r),
                 ),
                 child: Row(
@@ -367,14 +367,14 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                       iconName: 'assets/svg/client/restaurant_details/clock.svg',
                       width: 12.w,
                       height: 12.h,
-                      color: Color(0xFF99A1AF),
+                      color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
                     SizedBox(width: 4.w),
                     Text(
                       '${widget.menuItem.preparationTime} دقيقة',
                       style: TextStyle().textColorBold(
                         fontSize: 12.sp,
-                        color: Color(0xFF99A1AF),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ),
                   ],
@@ -405,7 +405,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                 'أكتب ملاحظتك للشيف',
                 style: TextStyle().textColorBold(
                   fontSize: 15.sp,
-                  color: Color(0xFF101828),
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                 ),
               ),
             ],
@@ -416,7 +416,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
           Container(
             height: 56.h,
             decoration: BoxDecoration(
-              color: Color(0xFFF3F4F6),
+              color: Theme.of(context).inputDecorationTheme.fillColor ?? const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: TextField(
@@ -425,7 +425,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                 hintText: 'ملاحظات على الطلب',
                 hintStyle: TextStyle().textColorBold(
                   fontSize: 14.sp,
-                  color: Color(0xFF99A1AF),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(
@@ -435,7 +435,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
               ),
               style: TextStyle().textColorBold(
                 fontSize: 14.sp,
-                color: Color(0xFF101828),
+                color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
               textAlign: TextAlign.right,
             ),
@@ -463,7 +463,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                 'اختر الحجم',
                 style: TextStyle().textColorBold(
                   fontSize: 18.sp,
-                  color: Color(0xFF101828),
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                 ),
               ),
             ],
@@ -483,9 +483,9 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                   decoration: BoxDecoration(
-                    color: isSelected ? Color(0xFFF5F3FF) : Colors.white,
+                    color: isSelected ? const Color(0xFFF5F3FF) : Theme.of(context).cardColor,
                     border: Border.all(
-                      color: isSelected ? Color(0xFF8E51FF) : Color(0xFFF3F4F6),
+                      color: isSelected ? const Color(0xFF8E51FF) : Theme.of(context).dividerColor,
                       width: isSelected ? 1.5.w : 0.76.w,
                     ),
                     borderRadius: BorderRadius.circular(16.r),
@@ -497,7 +497,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                         variation.name,
                         style: TextStyle().textColorBold(
                           fontSize: 14.sp,
-                          color: Color(0xFF101828),
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                       ),
                       SizedBox(width: 8.w),
@@ -537,7 +537,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                 'إضافات لذيذة',
                 style: TextStyle().textColorBold(
                   fontSize: 18.sp,
-                  color: Color(0xFF101828),
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                 ),
               ),
             ],
@@ -560,9 +560,9 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                   decoration: BoxDecoration(
-                    color: isSelected ? Color(0xFFF5F3FF) : Colors.white,
+                    color: isSelected ? const Color(0xFFF5F3FF) : Theme.of(context).cardColor,
                     border: Border.all(
-                      color: isSelected ? Color(0xFF8E51FF) : Color(0xFFF3F4F6),
+                      color: isSelected ? const Color(0xFF8E51FF) : Theme.of(context).dividerColor,
                       width: isSelected ? 1.5.w : 0.76.w,
                     ),
                     borderRadius: BorderRadius.circular(16.r),
@@ -574,9 +574,9 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                         height: 24.h,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isSelected ? Color(0xFF7F22FE) : Colors.transparent,
+                          color: isSelected ? const Color(0xFF7F22FE) : Colors.transparent,
                           border: Border.all(
-                            color: isSelected ? Color(0xFF7F22FE) : Color(0xFFD1D5DC),
+                            color: isSelected ? const Color(0xFF7F22FE) : Theme.of(context).dividerColor,
                             width: 1.5.w,
                           ),
                         ),
@@ -593,7 +593,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                               addOn.name,
                               style: TextStyle().textColorBold(
                                 fontSize: 14.sp,
-                                color: Color(0xFF101828),
+                                color: Theme.of(context).textTheme.bodyMedium?.color,
                               ),
                             ),
                             SizedBox(height: 4.h),
@@ -622,7 +622,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -638,9 +638,9 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
             width: 120.w,
             height: 40.h,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               border: Border.all(
-                color: Color(0xFFE5E7EB),
+                color: Theme.of(context).dividerColor,
                 width: 0.76.w,
               ),
               borderRadius: BorderRadius.circular(20.r),
@@ -665,7 +665,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                     child: Icon(
                       Icons.remove,
                       size: 20.w,
-                      color: Color(0xFF101828),
+                      color: Theme.of(context).iconTheme.color,
                     ),
                   ),
                 ),
@@ -673,7 +673,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                   quantity.toString(),
                   style: TextStyle().textColorBold(
                     fontSize: 20.sp,
-                    color: Color(0xFF101828),
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
                 GestureDetector(
@@ -691,7 +691,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                     child: Icon(
                       Icons.add,
                       size: 20.w,
-                      color: Color(0xFF101828),
+                      color: Theme.of(context).iconTheme.color,
                     ),
                   ),
                 ),

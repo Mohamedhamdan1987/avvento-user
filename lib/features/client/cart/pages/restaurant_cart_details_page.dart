@@ -35,10 +35,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'السلة',
-        backgroundColor: const Color(0xFFF9FAFB),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
         actions: [
           CustomIconButtonApp(
             onTap: () {
@@ -125,10 +125,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
       padding: EdgeInsets.symmetric(horizontal: 16.76.w, vertical: 0.76.h),
       height: 73.51.h,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: const Color(0xFFF3F4F6),
+          color: Theme.of(context).dividerColor,
           width: 0.761,
         ),
       ),
@@ -139,10 +139,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
             width: 40.w,
             height: 40.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
+              color: Theme.of(context).scaffoldBackgroundColor,
               borderRadius: BorderRadius.circular(100.r),
               border: Border.all(
-                color: const Color(0xFFF3F4F6),
+                color: Theme.of(context).dividerColor,
                 width: 0.761,
               ),
             ),
@@ -165,9 +165,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
               children: [
                 Text(
                   currentCart.restaurant.name!,
-                  style: const TextStyle().textColorBold(
+                  style: TextStyle().textColorBold(
                     fontSize: 14.sp,
-                    color: Color(0xFF101828),
+                    color: Theme.of(context).textTheme.titleMedium?.color,
                   ),
                 ),
                 SizedBox(height: 4.h),
@@ -182,9 +182,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                     SizedBox(width: 3.w),
                     Text(
                       '(4808) 4.8',
-                      style: const TextStyle().textColorNormal(
+                      style: TextStyle().textColorNormal(
                         fontSize: 12.sp,
-                        color: Color(0xFF99A1AF),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ),
                   ],
@@ -204,7 +204,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 iconName: 'assets/svg/arrow-right.svg',
                 width: 16.w,
                 height: 16.h,
-                color: const Color(0xFFD1D5DC),
+                color: Theme.of(context).iconTheme.color,
               ),
             ),
           ),
@@ -217,10 +217,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
     return Container(
       height: 125.49.h,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: const Color(0xFFF3F4F6),
+          color: Theme.of(context).dividerColor,
           width: 0.761,
         ),
       ),
@@ -266,17 +266,17 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                     children: [
                       Text(
                         cartItem.item.name,
-                        style: const TextStyle().textColorBold(
+                        style: TextStyle().textColorBold(
                           fontSize: 14.sp,
-                          color: Color(0xFF101828),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       SizedBox(height: 4.h),
                       Text(
                         '${cartItem.totalPrice.toStringAsFixed(0)} د.ل',
-                        style: const TextStyle().textColorBold(
+                        style: TextStyle().textColorBold(
                           fontSize: 14.sp,
-                          color: Color(0xFF101828),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       SizedBox(height: 16.h),
@@ -302,10 +302,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                           width: 120.w,
                           height: 36.h,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(14.r),
                             border: Border.all(
-                              color: const Color(0xFFE5E7EB),
+                              color: Theme.of(context).dividerColor,
                               width: 0.761,
                             ),
                           ),
@@ -330,7 +330,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                                     iconName: 'assets/svg/client/restaurant_details/plus_icon.svg',
                                     width: 16.w,
                                     height: 16.h,
-                                    color: const Color(0xFF101828),
+                                    color: Theme.of(context).iconTheme.color,
                                   ),
                                 ),
                               ),
@@ -338,9 +338,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                               // Quantity
                               Text(
                                 '${cartItem.quantity}',
-                                style: const TextStyle().textColorBold(
+                                style: TextStyle().textColorBold(
                                   fontSize: 14.sp,
-                                  color: Color(0xFF101828),
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
                                 ),
                               ),
                               // Minus Button
@@ -379,7 +379,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                                         : 'assets/svg/cart/delete.svg',
                                     width: 16.w,
                                     height: 16.h,
-                                    color: const Color(0xFF101828),
+                                    color: Theme.of(context).iconTheme.color,
                                   ),
                                 ),
                               ),
@@ -399,7 +399,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                   width: 80.w,
                   height: 80.h,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
+                    color: Theme.of(context).scaffoldBackgroundColor,
                     borderRadius: BorderRadius.circular(14.r),
                   ),
                   child: ClipRRect(
@@ -476,9 +476,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
           if (controller.selectedDrinks.isNotEmpty) ...[
             Text(
               'المشروبات المختارة',
-              style: const TextStyle().textColorBold(
+              style: TextStyle().textColorBold(
                 fontSize: 14.sp,
-                color: Color(0xFF101828),
+                color: Theme.of(context).textTheme.titleSmall?.color,
               ),
             ),
             SizedBox(height: 12.h),
@@ -495,10 +495,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                     Container(
                       padding: EdgeInsets.all(12.w),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(16.r),
                         border: Border.all(
-                          color: const Color(0xFFF3F4F6),
+                          color: Theme.of(context).dividerColor,
                           width: 0.761,
                         ),
                       ),
@@ -508,7 +508,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                             width: 60.w,
                             height: 60.h,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF9FAFB),
+                              color: Theme.of(context).scaffoldBackgroundColor,
                               borderRadius: BorderRadius.circular(12.r),
                             ),
                             child: ClipRRect(
@@ -528,17 +528,17 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                               children: [
                                 Text(
                                   drink['name'],
-                                  style: const TextStyle().textColorBold(
+                                  style: TextStyle().textColorBold(
                                     fontSize: 14.sp,
-                                    color: Color(0xFF101828),
+                                    color: Theme.of(context).textTheme.bodyMedium?.color,
                                   ),
                                 ),
                                 SizedBox(height: 4.h),
                                 Text(
                                   '${(drink['price'] as num).toStringAsFixed(0)} د.ل × ${drink['quantity']}',
-                                  style: const TextStyle().textColorMedium(
+                                  style: TextStyle().textColorMedium(
                                     fontSize: 12.sp,
-                                    color: Color(0xFF6A7282),
+                                    color: Theme.of(context).textTheme.bodySmall?.color,
                                   ),
                                 ),
                                 if (drink['notes'] != null && drink['notes'].isNotEmpty)
@@ -582,9 +582,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
           
           Text(
             'أضف مشروبات',
-            style: const TextStyle().textColorBold(
+            style: TextStyle().textColorBold(
               fontSize: 14.sp,
-              color: Color(0xFF101828),
+              color: Theme.of(context).textTheme.titleSmall?.color,
             ),
           ),
           SizedBox(height: 12.h),
@@ -609,10 +609,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
       width: 140.w,
       height: 149.49.h,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: const Color(0xFFF3F4F6),
+          color: Theme.of(context).dividerColor,
           width: 0.761,
         ),
       ),
@@ -650,9 +650,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 padding: EdgeInsets.symmetric(horizontal: 8.w),
                 child: Text(
                   drink.name,
-                  style: const TextStyle().textColorBold(
+                  style: TextStyle().textColorBold(
                     fontSize: 12.sp,
-                    color: Color(0xFF101828),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
@@ -663,9 +663,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
               // Drink Price
               Text(
                 '${drink.price.toStringAsFixed(0)} د.ل',
-                style: const TextStyle().textColorNormal(
+                style: TextStyle().textColorNormal(
                   fontSize: 12.sp,
-                  color: Color(0xFF6A7282),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -684,7 +684,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 // height: 28.h,
                 padding: EdgeInsets.all(1.r),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   shape: BoxShape.circle,
                   // border: Border.all(
                   //   color: const Color(0xFFF3F4F6),
@@ -718,14 +718,14 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
     return Container(
       padding: EdgeInsets.only(top: 16.h, left: 24.w, right: 24.w, bottom: 24.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24.r),
           topRight: Radius.circular(24.r),
         ),
         border: Border(
           top: BorderSide(
-            color: const Color(0xFFF3F4F6),
+            color: Theme.of(context).dividerColor,
             width: 0.761,
           ),
         ),
@@ -755,15 +755,15 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                   iconName: 'assets/svg/cart/arrow-top.svg',
                   width: 20.w,
                   height: 20.h,
-                  color: const Color(0xFF101828),
+                  color: Theme.of(context).iconTheme.color,
                 ),
               ),
               // Invoice Text (Right in RTL)
               Text(
                 'الفاتورة',
-                style: const TextStyle().textColorBold(
+                style: TextStyle().textColorBold(
                   fontSize: 14.sp,
-                  color: Color(0xFF101828),
+                  color: Theme.of(context).textTheme.titleMedium?.color,
                 ),
               ),
             ],
@@ -831,7 +831,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
       Container(
         padding: EdgeInsets.all(24.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(Get.context!).scaffoldBackgroundColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
         child: StatefulBuilder(
@@ -845,7 +845,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                     width: 48.w,
                     height: 5.h,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: Theme.of(context).dividerColor,
                       borderRadius: BorderRadius.circular(2.5.r),
                     ),
                   ),
@@ -853,9 +853,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 SizedBox(height: 24.h),
                 Text(
                   drink.name,
-                  style: const TextStyle().textColorBold(
+                  style: TextStyle().textColorBold(
                     fontSize: 18.sp,
-                    color: const Color(0xFF101828),
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -873,18 +873,18 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                         width: 40.w,
                         height: 40.h,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(12.r),
                         ),
-                        child: Icon(Icons.remove, color: const Color(0xFF101828)),
+                        child: Icon(Icons.remove, color: Theme.of(context).iconTheme.color),
                       ),
                     ),
                     SizedBox(width: 24.w),
                     Text(
                       '$quantity',
-                      style: const TextStyle().textColorBold(
+                      style: TextStyle().textColorBold(
                         fontSize: 18.sp,
-                        color: const Color(0xFF101828),
+                        color: Theme.of(context).textTheme.titleLarge?.color,
                       ),
                     ),
                     SizedBox(width: 24.w),
@@ -896,10 +896,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                         width: 40.w,
                         height: 40.h,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(12.r),
                         ),
-                        child: Icon(Icons.add, color: const Color(0xFF101828)),
+                        child: Icon(Icons.add, color: Theme.of(context).iconTheme.color),
                       ),
                     ),
                   ],
@@ -907,10 +907,12 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 SizedBox(height: 24.h),
                 TextField(
                   controller: notesController,
+                  style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
                   decoration: InputDecoration(
                     hintText: 'ملاحظات (مثل: بدون سكر، ثلج زيادة...)',
+                    hintStyle: TextStyle(color: Theme.of(context).hintColor),
                     filled: true,
-                    fillColor: const Color(0xFFF9FAFB),
+                    fillColor: Theme.of(context).cardColor,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.r),
                       borderSide: BorderSide.none,

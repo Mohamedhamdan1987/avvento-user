@@ -26,7 +26,7 @@ class CategoryCard extends StatelessWidget {
             width: 76.w,
             height: 76.h,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(16.r),
               boxShadow: [
                 BoxShadow(
@@ -49,6 +49,7 @@ class CategoryCard extends StatelessWidget {
             title,
             style: const TextStyle().textColorMedium(
               fontSize: 13,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
           ),
         ],

@@ -19,10 +19,10 @@ class CartListPage extends StatelessWidget {
     final controller = Get.put(CartController());
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'السلة',
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
@@ -56,7 +56,7 @@ class CartListPage extends StatelessWidget {
                 children: [
                   SizedBox(height: 29.h),
                   // Header Section
-                  _buildHeaderSection(controller.carts.length),
+                  _buildHeaderSection(context, controller.carts.length),
                   SizedBox(height: 33.h),
                   // Cart Cards
                   ...controller.carts.map((cart) => Padding(
@@ -73,7 +73,7 @@ class CartListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderSection(int cartCount) {
+  Widget _buildHeaderSection(BuildContext context, int cartCount) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -83,17 +83,17 @@ class CartListPage extends StatelessWidget {
           children: [
             RichText(
               text: TextSpan(
-                style: const TextStyle().textColorBold(
+                style: TextStyle().textColorBold(
                   fontSize: 24.sp,
-                  color: Color(0xFF101828),
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                 ),
                 children: [
                   const TextSpan(text: 'من أين تريد أن '),
                   TextSpan(
                     text: "\n"+ 'تكمل طلبك اليوم؟',
-                    style: const TextStyle().textColorBold(
+                    style: TextStyle().textColorBold(
                       fontSize: 24.sp,
-                      color: Color(0xFF7F22FE),
+                      color: const Color(0xFF7F22FE),
                     ),
                   ),
                 ],
@@ -107,9 +107,9 @@ class CartListPage extends StatelessWidget {
         // Subtitle
         Text(
           'لديك طلبات غير مكتملة في $cartCount ${cartCount == 1 ? 'مطعم' : 'مطاعم'}',
-          style: const TextStyle().textColorMedium(
+          style: TextStyle().textColorMedium(
             fontSize: 14.sp,
-            color: Color(0xFF6A7282),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
       ],
@@ -124,7 +124,7 @@ class CartListPage extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(28.r),
           boxShadow: [
             BoxShadow(
@@ -134,7 +134,7 @@ class CartListPage extends StatelessWidget {
             ),
           ],
           border: Border.all(
-            color: const Color(0xFFF3F4F6),
+            color: Theme.of(context).dividerColor,
             width: 0.761,
           ),
         ),
@@ -154,7 +154,7 @@ class CartListPage extends StatelessWidget {
 
                 // Price Section (Left in RTL)
                 SizedBox(width: 12.w),
-                _buildPriceSection(cart.totalPrice),
+                _buildPriceSection(context, cart.totalPrice),
               ],
             ),
             SizedBox(height: 16.h),
@@ -198,7 +198,7 @@ class CartListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceSection(double totalPrice) {
+  Widget _buildPriceSection(BuildContext context, double totalPrice) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -208,9 +208,9 @@ class CartListPage extends StatelessWidget {
           children: [
             Text(
               totalPrice.toStringAsFixed(0),
-              style: const TextStyle().textColorBold(
+              style: TextStyle().textColorBold(
                 fontSize: 18.sp,
-                color: Color(0xFF7F22FE),
+                color: const Color(0xFF7F22FE),
               ),
             ),
             SizedBox(width: 4.w),
@@ -218,9 +218,9 @@ class CartListPage extends StatelessWidget {
               padding: EdgeInsets.only(top: 7.h),
               child: Text(
                 'د.ل',
-                style: const TextStyle().textColorBold(
+                style: TextStyle().textColorBold(
                   fontSize: 12.sp,
-                  color: Color(0xFF7F22FE),
+                  color: const Color(0xFF7F22FE),
                 ),
               ),
             ),
@@ -231,14 +231,14 @@ class CartListPage extends StatelessWidget {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
           decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Text(
             'منذ 20 دقيقة',
-            style: const TextStyle().textColorMedium(
+            style: TextStyle().textColorMedium(
               fontSize: 10.sp,
-              color: Color(0xFF99A1AF),
+              color: Theme.of(context).textTheme.bodySmall?.color,
             ),
           ),
         ),

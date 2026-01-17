@@ -30,9 +30,12 @@ class BottomNavBar extends StatelessWidget {
     return Container(
       height: 73.h,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         border: Border(
-          top: BorderSide(color: const Color(0xFFF3F4F6), width: 0.76.w),
+          top: BorderSide(
+            color: Theme.of(context).dividerColor,
+            width: 0.76.w,
+          ),
         ),
         boxShadow: [
           BoxShadow(
@@ -48,6 +51,7 @@ class BottomNavBar extends StatelessWidget {
           final index = entry.key;
           final item = entry.value;
           return _buildNavItem(
+            context,
             iconName: item.iconName,
             label: item.label,
             index: index,
@@ -58,12 +62,14 @@ class BottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem({
+  Widget _buildNavItem(
+    BuildContext context, {
     required String iconName,
     required String label,
     required int index,
     required bool isActive,
   }) {
+    final inactiveColor = Theme.of(context).unselectedWidgetColor ?? const Color(0xFF99A1AF);
     return GestureDetector(
       onTap: () => onTap(index),
       child: Container(
@@ -76,7 +82,7 @@ class BottomNavBar extends StatelessWidget {
               iconName: iconName,
               width: 24.w,
               height: 24.h,
-              color: isActive ? AppColors.primary : const Color(0xFF99A1AF),
+              color: isActive ? AppColors.primary : inactiveColor,
             ),
             SizedBox(height: 4.h),
             Container(
@@ -92,7 +98,7 @@ class BottomNavBar extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 10.sp,
-                color: isActive ? AppColors.primary : const Color(0xFF99A1AF),
+                color: isActive ? AppColors.primary : inactiveColor,
               ),
             ),
           ],

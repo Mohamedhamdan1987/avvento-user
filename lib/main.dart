@@ -7,6 +7,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/routes/app_pages.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_controller.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -48,10 +49,13 @@ class MyApp extends StatelessWidget {
       designSize: const Size(393, 852),
       minTextAdapt: true,
       builder: (context, child) {
+        final themeController = Get.put(ThemeController());
         return GetMaterialApp(
           title: 'We Pay',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeController.theme,
           initialRoute: AppPages.getInitialRoute(),
           getPages: AppPages.routes,
           defaultTransition: Transition.fade,

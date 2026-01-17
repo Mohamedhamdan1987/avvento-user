@@ -59,8 +59,7 @@ class CartRestaurant {
     // Try to find lat/long at top level
     double? lat = json['lat'] != null ? (json['lat'] as num).toDouble() : null;
     double? long = json['long'] != null ? (json['long'] as num).toDouble() : null;
-    print("json: ${json['lat']}");
-    print("json: ${lat}");
+
 
     // // Fallback to alternative names if still not found
     // lat ??= json['latitude'] != null ? (json['latitude'] as num).toDouble() : null;
@@ -99,10 +98,16 @@ class RestaurantCartResponse {
     return RestaurantCartResponse(
       id: json['_id'] as String,
       user: json['user'] as String,
-      restaurant: CartRestaurant.fromJson(json['restaurant'] as Map<String, dynamic>),
-      items: (json['items'] as List<dynamic>)
-          .map((i) => CartItem.fromJson(i as Map<String, dynamic>))
-          .toList(),
+      restaurant:
+          CartRestaurant.fromJson(json['restaurant'] as Map<String, dynamic>),
+      items: (json['items'] as List<dynamic>?)
+              ?.where((i) =>
+                  i != null &&
+                  i is Map<String, dynamic> &&
+                  i['item'] is Map<String, dynamic>)
+              .map((i) => CartItem.fromJson(i as Map<String, dynamic>))
+              .toList() ??
+          [],
       totalPrice: (json['totalPrice'] as num).toDouble(),
     );
   }

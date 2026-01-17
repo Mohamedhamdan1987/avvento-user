@@ -36,8 +36,8 @@ class DiscountCard extends StatelessWidget {
         textColor = Colors.white;
         break;
       case DiscountCardType.white:
-        bgColor = Colors.white;
-        textColor = AppColors.textDark;
+        bgColor = Theme.of(context).cardColor;
+        textColor = Theme.of(context).textTheme.titleMedium?.color ?? AppColors.textDark;
         break;
     }
 

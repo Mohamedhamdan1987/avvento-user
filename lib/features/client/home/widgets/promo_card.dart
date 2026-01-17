@@ -36,7 +36,7 @@ class PromoCard extends StatelessWidget {
         margin: EdgeInsets.symmetric(horizontal: 4.w),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.r),
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -79,8 +79,8 @@ class PromoCard extends StatelessWidget {
                       onTap: onFavoriteTap,
                       child: Container(
                         padding: EdgeInsets.all(8.w),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
                           shape: BoxShape.circle,
                         ),
                         child: SvgPicture.asset(
@@ -110,12 +110,12 @@ class PromoCard extends StatelessWidget {
                         children: [
                           Icon(Icons.star, color: Colors.amber, size: 16.sp),
                           SizedBox(width: 4.w),
-                          Text(rating.toString(), style: const TextStyle().textColorLight(fontSize: 12)),
+                          Text(rating.toString(), style: const TextStyle().textColorLight(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color)),
                         ],
                       ),
                       Text(
                         restaurantName,
-                        style: const TextStyle().textColorBold(fontSize: 14),
+                        style: const TextStyle().textColorBold(fontSize: 14, color: Theme.of(context).textTheme.titleMedium?.color),
                       ),
                     ],
                   ),
@@ -125,7 +125,7 @@ class PromoCard extends StatelessWidget {
                     children: [
                       Text(
                         '$distance • ${hasFreeDelivery ? "توصيل مجاني" : "توصيل $deliveryFee"}',
-                        style: const TextStyle().textColorLight(fontSize: 12),
+                        style: const TextStyle().textColorLight(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
                       ),
                       SizedBox(width: 4.w),
                       SvgPicture.asset(

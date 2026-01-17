@@ -10,6 +10,7 @@ import '../../../auth/controllers/auth_controller.dart';
 import '../../favorites/pages/favorites_page.dart';
 import '../../../profile/controllers/profile_controller.dart';
 import '../../../profile/pages/edit_profile_page.dart';
+import '../../../../core/theme/theme_controller.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
@@ -23,7 +24,7 @@ class AccountPage extends StatelessWidget {
     final profileController = Get.put(ProfileController());
     final user = authController.getCachedUser();
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           _buildHeader(profileController, user),
@@ -229,6 +230,24 @@ class AccountPage extends StatelessWidget {
               Get.toNamed(AppRoutes.changePassword);
             },
           ),
+
+
+          GetBuilder<ThemeController>(
+            builder: (controller) {
+              return _buildSettingsItem(
+                iconPath: 'assets/svg/client/home/more.svg', // Using a generic icon or we might need a specific one for theme
+                title: 'الوضع الليلي',
+                onTap: () {
+                  controller.changeTheme(!Get.isDarkMode);
+                },
+                trailingWidget: Switch(
+                  value: Get.isDarkMode,
+                  onChanged: (value) => controller.changeTheme(value),
+                  activeColor: AppColors.primary,
+                ),
+              );
+            },
+          ),
           _buildSettingsItem(
             iconPath: 'assets/svg/client/home/search.svg', // Placeholder for help
             title: 'الدعم والمساعدة',
@@ -264,11 +283,12 @@ class AccountPage extends StatelessWidget {
     required VoidCallback onTap,
     Color? titleColor,
     bool showChevron = true,
+    Widget? trailingWidget,
   }) {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(Get.context!).cardColor,
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
@@ -290,7 +310,7 @@ class AccountPage extends StatelessWidget {
           height: 40.h,
           padding: EdgeInsets.all(10.w),
           decoration: BoxDecoration(
-            color: AppColors.lightBackground,
+            color: Theme.of(Get.context!).scaffoldBackgroundColor,
             borderRadius: BorderRadius.circular(12.r),
           ),
           child: SvgPicture.asset(
@@ -305,7 +325,7 @@ class AccountPage extends StatelessWidget {
           title,
           style: const TextStyle().textColorMedium(
             fontSize: 15,
-            color: titleColor ?? AppColors.textDark,
+            color: titleColor ?? Theme.of(Get.context!).textTheme.bodyLarge?.color,
           ),
         ),
         subtitle: subtitle != null
@@ -313,17 +333,17 @@ class AccountPage extends StatelessWidget {
                 subtitle,
                 style: const TextStyle().textColorNormal(
                   fontSize: 12,
-                  color: AppColors.textLight,
+                  color: Theme.of(Get.context!).textTheme.bodySmall?.color,
                 ),
               )
             : null,
-        trailing: showChevron
+        trailing: trailingWidget ?? (showChevron
             ? Icon(
                 Icons.chevron_right,
                 color: AppColors.textPlaceholder,
                 size: 20.r,
               )
-            : null,
+            : null),
       ),
     );
   }
@@ -331,21 +351,22 @@ class AccountPage extends StatelessWidget {
   void _showLogoutDialog() {
     Get.dialog(
       AlertDialog(
+        backgroundColor: Theme.of(Get.context!).cardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
         ),
         title: Text(
           'تسجيل الخروج',
-          style: const TextStyle().textColorBold(
+          style: TextStyle().textColorBold(
             fontSize: 18,
-            color: AppColors.textDark,
+            color: Theme.of(Get.context!).textTheme.titleLarge?.color,
           ),
         ),
         content: Text(
           'هل أنت متأكد من رغبتك في تسجيل الخروج؟',
           style: TextStyle(
             fontSize: 16.sp,
-            color: AppColors.textMedium,
+            color: Theme.of(Get.context!).textTheme.bodyMedium?.color,
           ),
         ),
         actions: [
@@ -355,7 +376,7 @@ class AccountPage extends StatelessWidget {
               'إلغاء',
               style: TextStyle(
                 fontSize: 16.sp,
-                color: AppColors.textMedium,
+                color: Theme.of(Get.context!).textTheme.bodyMedium?.color,
               ),
             ),
           ),

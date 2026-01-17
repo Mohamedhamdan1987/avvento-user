@@ -31,7 +31,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Obx(() {
@@ -52,19 +52,19 @@ class RestaurantDetailsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Restaurant Stats Row
-                      _buildStatsRow(),
+                      _buildStatsRow(context),
 
                       SizedBox(height: 14.h),
 
                       // Today's Offers Section (Hidden if empty, or keep placeholder for now)
                       // For now, let's keep it but maybe it should be dynamic too.
                       // The request didn't specify offers, but categories and items.
-                      // _buildTodaysOffersSection(),
+                      // _buildTodaysOffersSection(context),
 
                       // SizedBox(height: 32.h),
 
                       // Browse Menu Section
-                      _buildBrowseMenuSection(),
+                      _buildBrowseMenuSection(context),
 
                       SizedBox(height: 32.h),
 
@@ -258,7 +258,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsRow() {
+  Widget _buildStatsRow(BuildContext context) {
     String distanceText = '--';
     String priceText = '--';
     final restaurantsController = Get.find<RestaurantsController>();
@@ -278,32 +278,36 @@ class RestaurantDetailsScreen extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: 34.w),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Color(0x12D9D9D9),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(21.r),
-        border: Border.all(color: Color(0x33E3E3E3), width: 1),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildStatItem(
+            context,
             icon: 'assets/svg/client/restaurant_details/clock.svg',
             value: '25 دقيقة', // This could be dynamic if restaurant has preparation time
             label: 'التحضير',
           ),
           Container(width: 1.w, height: 32.h, color: Color(0xFFF3F4F6)),
           _buildStatItem(
+            context,
             icon: 'assets/svg/client/restaurant_details/location.svg',
             value: distanceText,
             label: 'المسافة',
           ),
           Container(width: 1.w, height: 32.h, color: Color(0xFFF3F4F6)),
           _buildStatItem(
+            context,
             icon: 'assets/svg/client/restaurant_details/bike.svg',
             value: priceText,
             label: 'التوصيل',
           ),
           Container(width: 1.w, height: 32.h, color: Color(0xFFF3F4F6)),
           _buildStatItem(
+            context,
             icon: 'assets/svg/client/restaurant_details/inactive_star_icon.svg',
             value: '4.8',
             label: 'التقييم',
@@ -313,7 +317,8 @@ class RestaurantDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem({
+  Widget _buildStatItem(
+    BuildContext context, {
     required String icon,
     required String value,
     required String label,
@@ -324,14 +329,14 @@ class RestaurantDetailsScreen extends StatelessWidget {
           iconName: icon,
           width: 16.w,
           height: 16.h,
-          color: Color(0xFF101828),
+          color: Theme.of(context).iconTheme.color,
         ),
         SizedBox(height: 4.h),
         Text(
           value,
           style: TextStyle().textColorBold(
             fontSize: 8.sp,
-            color: Color(0xFF101828),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
         SizedBox(height: 2.h),
@@ -339,14 +344,14 @@ class RestaurantDetailsScreen extends StatelessWidget {
           label,
           style: TextStyle().textColorBold(
             fontSize: 8.sp,
-            color: Color(0xFF99A1AF),
+            color: Theme.of(context).textTheme.bodySmall?.color,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTodaysOffersSection() {
+  Widget _buildTodaysOffersSection(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
@@ -366,7 +371,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                 'عروضنا لهذا اليوم',
                 style: TextStyle().textColorBold(
                   fontSize: 18.sp,
-                  color: Color(0xFF101828),
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                 ),
               ),
             ],
@@ -383,9 +388,9 @@ class RestaurantDetailsScreen extends StatelessWidget {
               bottom: 24.h,
             ),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(24.r),
-              border: Border.all(color: Color(0xFFF3F4F6), width: 0.76.w),
+              border: Border.all(color: Theme.of(context).dividerColor, width: 0.76.w),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -407,7 +412,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                         width: 96.w,
                         height: 96.h,
                         decoration: BoxDecoration(
-                          color: Color(0xFFF9FAFB),
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(20.r),
                         ),
                         child: CachedNetworkImage(
@@ -426,7 +431,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                         width: 32.w,
                         height: 32.h,
                         radius: 100.r,
-                        color: Color(0xFF101828),
+                        color: Color(0xFF101828), // This button color might need check, maybe dark compliant or kept as brand
                         onTap: () {},
                         childWidget: SvgIcon(
                           iconName: 'assets/svg/plus-solid.svg',
@@ -450,7 +455,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                         'عرض وجبة عائلية',
                         style: TextStyle().textColorBold(
                           fontSize: 16.sp,
-                          color: Color(0xFF101828),
+                          color: Theme.of(context).textTheme.titleMedium?.color,
                         ),
                       ),
                       SizedBox(height: 4.h),
@@ -461,7 +466,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                               'شريحة لحم بقري، جبنة شيدر، خس، طماطم، صوص خاص',
                               style: TextStyle().textColorNormal(
                                 fontSize: 12.sp,
-                                color: Color(0xFF99A1AF),
+                                color: Theme.of(context).textTheme.bodySmall?.color,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -481,7 +486,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                                 'د.ل',
                                 style: TextStyle().textColorNormal(
                                   fontSize: 12.sp,
-                                  color: Color(0xFF99A1AF),
+                                  color: Theme.of(context).textTheme.bodySmall?.color,
                                 ),
                               ),
                             ],
@@ -499,7 +504,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBrowseMenuSection() {
+  Widget _buildBrowseMenuSection(BuildContext context) {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,7 +515,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
             'تصفح المنيو',
             style: const TextStyle().textColorBold(
               fontSize: 18.sp,
-              color: Color(0xFF101828),
+              color: Theme.of(context).textTheme.titleLarge?.color,
             ),
           ),
         ),
@@ -639,7 +644,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                 'جميع الأصناف',
                 style: const TextStyle().textColorBold(
                   fontSize: 18.sp,
-                  color: Color(0xFF101828),
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                 ),
               ),
             ],
@@ -725,7 +730,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                               item.name,
                               style: const TextStyle().textColorBold(
                                 fontSize: 14.sp,
-                                color: const Color(0xFF0A191E),
+                                color: Theme.of(context).textTheme.titleMedium?.color,
                               ),
                             ),
                             // const Spacer(),
@@ -749,7 +754,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle().textColorMedium(
                             fontSize: 12.sp,
-                            color: const Color(0xFF0A191E).withOpacity(0.6),
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
 
@@ -778,7 +783,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                         '${item.price} د.ل',
                         style: const TextStyle().textColorMedium(
                           fontSize: 12.sp,
-                          color: const Color(0xFF0A191E),
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                       ),
                       // _buildQuantitySelector(),

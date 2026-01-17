@@ -42,10 +42,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'إتمام الطلب',
-        backgroundColor: const Color(0xFFF9FAFB),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
@@ -125,7 +125,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         Text(
           'العناصر',
           style: TextStyle(
-            color: const Color(0xFF697282),
+            color: Theme.of(context).textTheme.titleSmall?.color,
             fontSize: 14,
             fontFamily: 'IBM Plex Sans Arabic',
             fontWeight: FontWeight.w700,
@@ -135,9 +135,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
         Container(
           padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFFF3F4F6), width: 0.761),
+            border: Border.all(color: Theme.of(context).dividerColor, width: 0.761),
           ),
           child: Column(
             // crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,30 +160,30 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         color: const Color(0x197F22FE),
                         borderRadius: BorderRadius.circular(8.r),
                         border: Border.all(
-                          color: const Color(0xFFF3F4F6),
+                          color: Theme.of(context).dividerColor,
                           width: 0.761,
                         ),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12.r),
-                        child: Text("${item.quantity}x"),
+                        child: Text("${item.quantity}x", style: TextStyle(color: Theme.of(context).colorScheme.primary)),
                       ),
                     ),
                     SizedBox(width: 8.w),
                     Expanded(
                       child:  Text(
                         '${item.item.name}',
-                        style: const TextStyle().textColorMedium(
+                        style: TextStyle().textColorMedium(
                           fontSize: 14.sp,
-                          color: Color(0xFF101828),
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                       ),
                     ),
                     Text(
                       '${item.totalPrice.toStringAsFixed(0)} د.ل',
-                      style: const TextStyle().textColorBold(
+                      style: TextStyle().textColorBold(
                         fontSize: 14.sp,
-                        color: Color(0xFF101828),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                   ],
@@ -195,13 +195,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
               // Drinks List
               if (cartController.selectedDrinks.isNotEmpty) ...[
                  Container( height: 10, ),
-                 const Divider(color: Color(0xFFF3F4F6)),
+                 Divider(color: Theme.of(context).dividerColor),
                  Container( height: 10, ),
                  Text(
                   'المشروبات',
-                  style: const TextStyle().textColorBold(
+                  style: TextStyle().textColorBold(
                     fontSize: 12.sp,
-                    color: Color(0xFF697282),
+                    color: Theme.of(context).textTheme.titleSmall?.color,
                   ),
                 ),
                 SizedBox(height: 8.h),
@@ -221,13 +221,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               color: const Color(0x197F22FE),
                               borderRadius: BorderRadius.circular(8.r),
                               border: Border.all(
-                                color: const Color(0xFFF3F4F6),
+                                color: Theme.of(context).dividerColor,
                                 width: 0.761,
                               ),
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12.r),
-                              child: Text("${drink['quantity']}x"),
+                              child: Text("${drink['quantity']}x", style: TextStyle(color: Theme.of(context).colorScheme.primary)),
                             ),
                           ),
                           SizedBox(width: 8.w),
@@ -237,17 +237,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               children: [
                                 Text(
                                   '${drink['name']}',
-                                  style: const TextStyle().textColorMedium(
+                                  style: TextStyle().textColorMedium(
                                     fontSize: 14.sp,
-                                    color: Color(0xFF101828),
+                                    color: Theme.of(context).textTheme.bodyMedium?.color,
                                   ),
                                 ),
                                 if (drink['notes'] != null && drink['notes'].toString().isNotEmpty)
                                   Text(
                                     '${drink['notes']}',
-                                    style: const TextStyle().textColorNormal(
+                                    style: TextStyle().textColorNormal(
                                       fontSize: 12.sp,
-                                      color: Color(0xFF9CA3AF),
+                                      color: Theme.of(context).hintColor,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -257,9 +257,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           ),
                           Text(
                             '${((drink['price'] as num) * (drink['quantity'] as int)).toStringAsFixed(0)} د.ل',
-                            style: const TextStyle().textColorBold(
+                            style: TextStyle().textColorBold(
                               fontSize: 14.sp,
-                              color: Color(0xFF101828),
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
                             ),
                           ),
                         ],
@@ -289,9 +289,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
           child: Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+              border: Border.all(color: Theme.of(context).dividerColor, width: 1),
             ),
             child: Row(
               children: [
@@ -304,9 +304,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 Expanded(
                   child: Text(
                     'إضافة عنوان جديد',
-                    style: const TextStyle().textColorMedium(
+                    style: TextStyle().textColorMedium(
                       fontSize: 14.sp,
-                      color: Color(0xFF7F22FE),
+                      color: const Color(0xFF7F22FE),
                     ),
                   ),
                 ),
@@ -319,9 +319,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
       return Container(
         padding: EdgeInsets.all(12.w),
         decoration: ShapeDecoration(
-          color: Colors.white.withValues(alpha: 0.95),
+          color: Theme.of(context).cardColor.withValues(alpha: 0.95),
           shape: RoundedRectangleBorder(
-            side: BorderSide(width: 0.76, color: const Color(0xFFF2F4F6)),
+            side: BorderSide(width: 0.76, color: Theme.of(context).dividerColor),
             borderRadius: BorderRadius.circular(16),
           ),
           shadows: [
@@ -341,7 +341,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               width: 40.w,
               height: 40.h,
               decoration: BoxDecoration(
-                color: const Color(0xFFF9FAFB),
+                color: Theme.of(context).scaffoldBackgroundColor,
                 shape: BoxShape.circle,
               ),
               padding: EdgeInsets.all(10.r),
@@ -355,17 +355,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 children: [
                   Text(
                     _getDeliveryTimeText(activeAddress),
-                    style: const TextStyle().textColorBold(
+                    style: TextStyle().textColorBold(
                       fontSize: 16.sp,
-                      color: Color(0xFF101828),
+                      color: Theme.of(context).textTheme.titleMedium?.color,
                     ),
                   ),
                   // SizedBox(height: 4.h),
                   Text(
                     activeAddress.address,
-                    style: const TextStyle().textColorNormal(
+                    style: TextStyle().textColorNormal(
                       fontSize: 14.sp,
-                      color: Color(0xFF6A7282),
+                      color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -418,9 +418,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: ShapeDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         shape: RoundedRectangleBorder(
-          side: BorderSide(width: 0.76, color: const Color(0xFFE5E7EB)),
+          side: BorderSide(width: 0.76, color: Theme.of(context).dividerColor),
           borderRadius: BorderRadius.circular(16),
         ),
       ),
@@ -432,9 +432,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
             children: [
               Text(
                 'طريقة الدفع',
-                style: const TextStyle().textColorBold(
+                style: TextStyle().textColorBold(
                   fontSize: 16.sp,
-                  color: Color(0xFF101828),
+                  color: Theme.of(context).textTheme.titleMedium?.color,
                 ),
               ),
               CustomButtonApp(
@@ -465,7 +465,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 width: 40.w,
                 height: 40.h,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   shape: BoxShape.circle,
                 ),
                 padding: EdgeInsets.all(8.r),
@@ -474,9 +474,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
               SizedBox(width: 12.w),
               Text(
                 _getPaymentMethodName(selectedPaymentMethod),
-                style: const TextStyle().textColorBold(
+                style: TextStyle().textColorBold(
                   fontSize: 14.sp,
-                  color: Color(0xFF101828),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ],
@@ -489,14 +489,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Widget _getPaymentIcon(PaymentMethod method) {
     switch (method) {
       case PaymentMethod.cash:
-        return Icon(Icons.money, color: const Color(0xFF101828), size: 20.r);
+        return Icon(Icons.money, color: Theme.of(context).iconTheme.color, size: 20.r);
         // return SvgPicture.asset("assets/svg/client/delivery-bike.svg", color: const Color(0xFF101828)); 
       case PaymentMethod.card: // Making 'card' represent 'banking' for now or generic card
-        return SvgPicture.asset("assets/svg/wallet/bank_card_outline.svg", color: const Color(0xFF101828));
+        return SvgPicture.asset("assets/svg/wallet/bank_card_outline.svg", color: Theme.of(context).iconTheme.color);
       case PaymentMethod.wallet:
-        return SvgPicture.asset("assets/svg/nav/wallet.svg", color: const Color(0xFF101828));
+        return SvgPicture.asset("assets/svg/nav/wallet.svg", color: Theme.of(context).iconTheme.color);
       default:
-        return Icon(Icons.payment, color: const Color(0xFF101828), size: 20.r);
+        return Icon(Icons.payment, color: Theme.of(context).iconTheme.color, size: 20.r);
     }
   }
 
@@ -518,7 +518,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       Container(
         padding: EdgeInsets.all(24.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(Get.context!).scaffoldBackgroundColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
         child: Obx(() {
@@ -537,7 +537,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         width: 48.w,
                         height: 5.h,
                         decoration: BoxDecoration(
-                          color: Colors.grey[300],
+                          color: Theme.of(context).dividerColor,
                           borderRadius: BorderRadius.circular(2.5.r),
                         ),
                       ),
@@ -545,9 +545,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     SizedBox(height: 24.h),
                     Text(
                       'اختر طريقة الدفع',
-                      style: const TextStyle().textColorBold(
+                      style: TextStyle().textColorBold(
                         fontSize: 18.sp,
-                        color: Color(0xFF101828),
+                        color: Theme.of(context).textTheme.titleLarge?.color,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -579,7 +579,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                     "assets/svg/nav/wallet.svg",
                                     width: 20.w,
                                     height: 20.h,
-                                    color: selectedPaymentMethod == PaymentMethod.wallet ? const Color(0xFF7F22FE) : const Color(0xFF6A7282),
+                                    color: selectedPaymentMethod == PaymentMethod.wallet ? const Color(0xFF7F22FE) : Theme.of(context).iconTheme.color,
                                   ),
                                 ),
                                 Center(
@@ -589,17 +589,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       SizedBox(height: 16.h),
                                       Text(
                                         '${walletBalance.toStringAsFixed(1)} د.ل',
-                                        style: const TextStyle().textColorBold(
+                                        style: TextStyle().textColorBold(
                                           fontSize: 16.sp,
-                                          color: Color(0xFF101828),
+                                          color: Theme.of(context).textTheme.bodyLarge?.color,
                                         ),
                                       ),
                                       SizedBox(height: 4.h),
                                       Text(
                                         'الرصيد المتاح',
-                                        style: const TextStyle().textColorNormal(
+                                        style: TextStyle().textColorNormal(
                                           fontSize: 12.sp,
-                                          color: Color(0xFF6A7282),
+                                          color: Theme.of(context).hintColor,
                                         ),
                                       ),
                                     ],
@@ -612,9 +612,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                   child: Text(
                                     'المحفظة',
                                     textAlign: TextAlign.center,
-                                    style: const TextStyle().textColorBold(
+                                    style: TextStyle().textColorBold(
                                       fontSize: 14.sp,
-                                      color: selectedPaymentMethod == PaymentMethod.wallet ? const Color(0xFF7F22FE) : const Color(0xFF101828),
+                                      color: selectedPaymentMethod == PaymentMethod.wallet ? const Color(0xFF7F22FE) : Theme.of(context).textTheme.bodyMedium?.color,
                                     ),
                                   ),
                                 ),
@@ -634,14 +634,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.money, size: 40.r, color: selectedPaymentMethod == PaymentMethod.cash ? const Color(0xFF7F22FE) : const Color(0xFF6A7282)),
+                                Icon(Icons.money, size: 40.r, color: selectedPaymentMethod == PaymentMethod.cash ? const Color(0xFF7F22FE) : Theme.of(context).iconTheme.color),
                                 SizedBox(height: 12.h),
                                 Text(
                                   'الدفع عند الاستلام',
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle().textColorBold(
+                                  style: TextStyle().textColorBold(
                                     fontSize: 14.sp,
-                                    color: selectedPaymentMethod == PaymentMethod.cash ? const Color(0xFF7F22FE) : const Color(0xFF101828),
+                                    color: selectedPaymentMethod == PaymentMethod.cash ? const Color(0xFF7F22FE) : Theme.of(context).textTheme.bodyMedium?.color,
                                   ),
                                 ),
                               ],
@@ -664,15 +664,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                   "assets/svg/wallet/bank_card_outline.svg",
                                    width: 40.w,
                                    height: 40.h,
-                                   color: selectedPaymentMethod == PaymentMethod.card ? const Color(0xFF7F22FE) : const Color(0xFF6A7282)
+                                   color: selectedPaymentMethod == PaymentMethod.card ? const Color(0xFF7F22FE) : Theme.of(context).iconTheme.color
                                 ),
                                 SizedBox(height: 12.h),
                                 Text(
                                   'الخدمات المصرفية',
                                   textAlign: TextAlign.center,
-                                   style: const TextStyle().textColorBold(
+                                   style: TextStyle().textColorBold(
                                     fontSize: 14.sp,
-                                    color: selectedPaymentMethod == PaymentMethod.card ? const Color(0xFF7F22FE) : const Color(0xFF101828),
+                                    color: selectedPaymentMethod == PaymentMethod.card ? const Color(0xFF7F22FE) : Theme.of(context).textTheme.bodyMedium?.color,
                                   ),
                                 ),
                               ],
@@ -719,10 +719,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
       child: Container(
         // width: 140.w, // Remove fixed width for GridView
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF7F22FE).withOpacity(0.05) : Colors.white,
+          color: isSelected ? const Color(0xFF7F22FE).withOpacity(0.05) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: isSelected ? const Color(0xFF7F22FE) : const Color(0xFFF3F4F6),
+            color: isSelected ? const Color(0xFF7F22FE) : Theme.of(context).dividerColor,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -735,7 +735,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return Container(
       padding: EdgeInsets.all(24.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),

@@ -22,7 +22,7 @@ class _OrdersPageState extends State<OrdersPage> {
     final controller = Get.put(OrdersController());
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
@@ -32,7 +32,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: _buildTabSwitcher(),
+              child: _buildTabSwitcher(context),
             ),
 
             // Content Section
@@ -110,7 +110,7 @@ class _OrdersPageState extends State<OrdersPage> {
     return Container(
       height: 82.h,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -129,7 +129,7 @@ class _OrdersPageState extends State<OrdersPage> {
             'طلباتي',
             style: TextStyle().textColorBold(
               fontSize: 18.sp,
-              color: Color(0xFF101828),
+              color: Theme.of(context).textTheme.titleLarge?.color,
             ),
           ),
         ),
@@ -137,12 +137,12 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
-  Widget _buildTabSwitcher() {
+  Widget _buildTabSwitcher(BuildContext context) {
     final controller = Get.find<OrdersController>();
     return Container(
       height: 48.h,
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6).withOpacity(0.8),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Stack(
@@ -157,7 +157,7 @@ class _OrdersPageState extends State<OrdersPage> {
               width: 168.w,
               height: 40.h,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(14.r),
                 boxShadow: [
                   BoxShadow(
@@ -190,8 +190,8 @@ class _OrdersPageState extends State<OrdersPage> {
                           style: const TextStyle().textColorBold(
                             fontSize: 14.sp,
                             color: _selectedTab == 0
-                                ? const Color(0xFF101828)
-                                : const Color(0xFF6A7282),
+                                ? Theme.of(context).textTheme.bodyLarge?.color
+                                : Theme.of(context).textTheme.bodyMedium?.color,
                           ),
                         ),
                         if (controller.activeOrders.isNotEmpty) ...[
@@ -233,8 +233,8 @@ class _OrdersPageState extends State<OrdersPage> {
                       style: const TextStyle().textColorBold(
                         fontSize: 14.sp,
                         color: _selectedTab == 1
-                            ? const Color(0xFF101828)
-                            : const Color(0xFF6A7282),
+                            ? Theme.of(context).textTheme.bodyLarge?.color
+                            : Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                   ),

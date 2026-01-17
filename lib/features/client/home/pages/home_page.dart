@@ -34,7 +34,7 @@ class HomePage extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Obx(() {
         // Ensure controller is registered before accessing it
         if (!Get.isRegistered<HomeController>()) {
@@ -93,7 +93,7 @@ class _HomePageContentState extends State<_HomePageContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           // Header with gradient background
@@ -314,7 +314,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                     ),
                     child: CustomTextField(
                       hint: 'ابحث عن وجبتك المفضلة...',
-                      fillColor: AppColors.white,
+                      fillColor: Theme.of(context).cardColor,
                       borderRadius: 16,
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 16.w,
@@ -432,7 +432,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                       decoration: BoxDecoration(
                         color: index == widget.controller.currentPromoPage
                             ? AppColors.purple
-                            : AppColors.borderGray,
+                            : Theme.of(context).dividerColor,
                         borderRadius: BorderRadius.circular(10.r),
                       ),
                     );
@@ -453,7 +453,10 @@ class _HomePageContentState extends State<_HomePageContent> {
               return Center(
                 child: Text(
                   'لا توجد مطاعم مفضلة حالياً',
-                  style: const TextStyle().textColorLight(fontSize: 12),
+                  style: const TextStyle().textColorLight(
+                    fontSize: 12,
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
                 ),
               );
             }
@@ -540,7 +543,7 @@ class _HomePageContentState extends State<_HomePageContent> {
           title,
           style: const TextStyle().textColorBold(
             fontSize: 15,
-            color: AppColors.textDark,
+            color: Theme.of(context).textTheme.titleMedium?.color,
           ),
         ),
       ],

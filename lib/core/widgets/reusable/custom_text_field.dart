@@ -59,7 +59,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
     } else if (widget.prefixIcon != null) {
       prefixIconWidget = Icon(
         widget.prefixIcon,
-        color: const Color(0xFF9CA3AF),
+        color: Theme.of(context).hintColor,
         size: 20.sp,
       );
     }
@@ -69,7 +69,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       suffixIconWidget = IconButton(
         icon: Icon(
           _obscureText ? Icons.visibility_off : Icons.visibility,
-          color: const Color(0xFF9CA3AF),
+          color: Theme.of(context).hintColor,
         ),
         onPressed: () {
           setState(() {
@@ -86,17 +86,22 @@ class _CustomTextFieldState extends State<CustomTextField> {
       validator: widget.validator,
       inputFormatters: widget.inputFormatters,
       maxLines: widget.maxLines,
+      style: TextStyle(
+        fontSize: 14.sp,
+        color: Theme.of(context).textTheme.bodyMedium?.color,
+        fontFamily: 'IBMPlexSansArabic',
+      ),
       decoration: InputDecoration(
         hintText: widget.hint,
         hintStyle: TextStyle(
           fontSize: 14.sp,
-          color: const Color(0xFF9CA3AF),
+          color: Theme.of(context).hintColor,
           fontFamily: 'IBMPlexSansArabic',
         ),
         prefixIcon: prefixIconWidget,
         suffixIcon: suffixIconWidget,
         filled: true,
-        fillColor: widget.fillColor ?? const Color(0xFFF9FAFB),
+        fillColor: widget.fillColor ?? Theme.of(context).cardColor,
         contentPadding: widget.contentPadding ??
             EdgeInsets.symmetric(
               horizontal: 16.w,
@@ -117,7 +122,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(widget.borderRadius.r),
           borderSide: BorderSide(
-              color: widget.borderColor ?? AppColors.drawerPurple, width: 2),
+              color: widget.borderColor ?? AppColors.purple, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(widget.borderRadius.r),
@@ -139,7 +144,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             style: TextStyle(
               fontSize: 14.sp,
               fontWeight: FontWeight.w500,
-              color: AppColors.textDark,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           SizedBox(height: 8.h),

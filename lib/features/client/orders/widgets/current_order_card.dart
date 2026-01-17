@@ -9,6 +9,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../models/order_model.dart';
 import 'order_tracking_dialog.dart';
 
@@ -25,9 +26,9 @@ class CurrentOrderCard extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(24.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(32.r),
-          border: Border.all(color: const Color(0xFFF3F4F6), width: 0.76.w),
+          border: Border.all(color: Theme.of(context).dividerColor, width: 0.76.w),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
@@ -40,34 +41,34 @@ class CurrentOrderCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Progress Bar
-            _buildProgressBar(),
+            _buildProgressBar(context),
 
             SizedBox(height: 40.h),
 
             // Order Header
-            _buildOrderHeader(),
+            _buildOrderHeader(context),
 
             SizedBox(height: 24.h),
 
             // Estimated Time Section
-            _buildEstimatedTimeSection(),
+            _buildEstimatedTimeSection(context),
 
             SizedBox(height: 24.h),
 
             // Order Items
-            _buildOrderItems(),
+            _buildOrderItems(context),
 
             SizedBox(height: 24.h),
 
             // Action Buttons
-            _buildActionButtons(),
+            _buildActionButtons(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProgressBar() {
+  Widget _buildProgressBar(BuildContext context) {
     final status = OrderStatus.fromString(order.status);
     int completedSteps = _getCompletedSteps(status);
     // Total steps excluding 'cancelled'
@@ -76,7 +77,7 @@ class CurrentOrderCard extends StatelessWidget {
     return Container(
       height: 6.h,
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
+        color: Theme.of(context).dividerColor,
         borderRadius: BorderRadius.circular(3.r),
       ),
       child: Row(
@@ -85,11 +86,11 @@ class CurrentOrderCard extends StatelessWidget {
           return Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: isCompleted ? const Color(0xFF7F22FE) : Colors.transparent,
+                color: isCompleted ? AppColors.primary : Colors.transparent,
                 borderRadius: BorderRadius.circular(3.r),
                 border: isCompleted && index < totalSteps - 1
                     ? BorderDirectional(
-                        end: BorderSide(color: Colors.white, width: 0.76.w),
+                        end: BorderSide(color: Theme.of(context).cardColor, width: 0.76.w),
                       )
                     : null,
               ),
@@ -121,7 +122,7 @@ class CurrentOrderCard extends StatelessWidget {
     }
   }
 
-  Widget _buildOrderHeader() {
+  Widget _buildOrderHeader(BuildContext context) {
     final status = OrderStatus.fromString(order.status);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -136,9 +137,9 @@ class CurrentOrderCard extends StatelessWidget {
                 width: 56.w,
                 height: 56.h,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: const Color(0xFFF3F4F6), width: 0.76.w),
+                  border: Border.all(color: Theme.of(context).dividerColor, width: 0.76.w),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
@@ -155,7 +156,7 @@ class CurrentOrderCard extends StatelessWidget {
                     height: 56.h,
                     fit: BoxFit.cover,
                     errorWidget: (context, url, error) =>
-                        Container(color: const Color(0xFFF9FAFB)),
+                        Container(color: Theme.of(context).scaffoldBackgroundColor),
                   ),
                 ),
               ),
@@ -169,7 +170,7 @@ class CurrentOrderCard extends StatelessWidget {
                       order.restaurant.name,
                       style: const TextStyle().textColorBold(
                         fontSize: 18.sp,
-                        color: const Color(0xFF101828),
+                        color: Theme.of(context).textTheme.titleLarge?.color,
                       ),
                     ),
                     SizedBox(height: 4.h),
@@ -216,14 +217,14 @@ class CurrentOrderCard extends StatelessWidget {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
           decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
+            color: Theme.of(context).scaffoldBackgroundColor,
             borderRadius: BorderRadius.circular(10.r),
           ),
           child: Text(
             '#${order.id.substring(order.id.length - 4)}',
             style: const TextStyle().textColorBold(
               fontSize: 12.sp,
-              color: const Color(0xFF99A1AF),
+              color: Theme.of(context).textTheme.bodySmall?.color,
             ),
           ),
         ),
@@ -231,11 +232,11 @@ class CurrentOrderCard extends StatelessWidget {
     );
   }
 
-  Widget _buildEstimatedTimeSection() {
+  Widget _buildEstimatedTimeSection(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Row(
@@ -249,7 +250,7 @@ class CurrentOrderCard extends StatelessWidget {
                   'وقت الوصول المتوقع',
                   style: const TextStyle().textColorNormal(
                     fontSize: 12.sp,
-                    color: const Color(0xFF99A1AF),
+                    color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
                 ),
                 SizedBox(height: 4.h),
@@ -257,7 +258,7 @@ class CurrentOrderCard extends StatelessWidget {
                   '12:45 م', // Generic since API doesn't provide it
                   style: const TextStyle().textColorBold(
                     fontSize: 20.sp,
-                    color: const Color(0xFF101828),
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
                 SizedBox(height: 4.h),
@@ -277,7 +278,7 @@ class CurrentOrderCard extends StatelessWidget {
             width: 48.w,
             height: 48.h,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -292,7 +293,7 @@ class CurrentOrderCard extends StatelessWidget {
                 iconName: 'assets/svg/client/orders/clock_icon.svg',
                 width: 24.w,
                 height: 24.h,
-                color: Color(0xFF101828),
+                color: Theme.of(context).iconTheme.color,
               ),
             ),
           ),
@@ -301,7 +302,7 @@ class CurrentOrderCard extends StatelessWidget {
     );
   }
 
-  Widget _buildOrderItems() {
+  Widget _buildOrderItems(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -309,7 +310,7 @@ class CurrentOrderCard extends StatelessWidget {
           'طلب يحتوي على ${order.items.length} عناصر',
           style: const TextStyle().textColorNormal(
             fontSize: 14.sp,
-            color: const Color(0xFF4A5565),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
         SizedBox(height: 4.h),
@@ -317,14 +318,14 @@ class CurrentOrderCard extends StatelessWidget {
           'الإجمالي: ${order.totalPrice} د.ل',
           style: const TextStyle().textColorNormal(
             fontSize: 12.sp,
-            color: const Color(0xFF99A1AF),
+            color: Theme.of(context).textTheme.bodySmall?.color,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(BuildContext context) {
     return Row(
       children: [
         // Track Order Button
@@ -362,7 +363,7 @@ class CurrentOrderCard extends StatelessWidget {
                 },
                 height: 48.h,
                 borderRadius: 14.r,
-                color: const Color(0xF07F22FE).withOpacity(0.94),
+                color: AppColors.primary,
                 textStyle: const TextStyle().textColorBold(
                   fontSize: 14.sp,
                   color: Colors.white,
@@ -384,12 +385,12 @@ class CurrentOrderCard extends StatelessWidget {
             height: 48.h,
             borderRadius: 14.r,
             isFill: false,
-            borderColor: const Color(0xFFE5E7EB),
+            borderColor: Theme.of(context).dividerColor,
             borderWidth: 0.76.w,
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             textStyle: const TextStyle().textColorBold(
               fontSize: 14.sp,
-              color: Color(0xFF101828),
+              color: Theme.of(context).textTheme.titleLarge?.color,
             ),
             childWidget: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -398,7 +399,7 @@ class CurrentOrderCard extends StatelessWidget {
                   'الدعم',
                   style: const TextStyle().textColorBold(
                     fontSize: 14.sp,
-                    color: const Color(0xFF101828),
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
                 SizedBox(width: 8.w),
@@ -406,7 +407,7 @@ class CurrentOrderCard extends StatelessWidget {
                   iconName: 'assets/svg/client/orders/support_icon.svg',
                   width: 16.w,
                   height: 16.h,
-                  color: Color(0xFF101828),
+                  color: Theme.of(context).iconTheme.color,
                 ),
               ],
             ),
@@ -419,17 +420,17 @@ class CurrentOrderCard extends StatelessWidget {
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.pendingRestaurant:
-        return const Color(0xFF7F22FE);
+        return AppColors.primary;
       case OrderStatus.confirmed:
         return const Color(0xFF00C950);
       case OrderStatus.preparing:
-        return const Color(0xFF7F22FE);
+        return AppColors.primary;
       case OrderStatus.onTheWay:
-        return const Color(0xFF7F22FE);
+        return AppColors.primary;
       case OrderStatus.delivered:
         return const Color(0xFF00C950);
       default:
-        return const Color(0xFF7F22FE);
+        return AppColors.primary;
     }
   }
 

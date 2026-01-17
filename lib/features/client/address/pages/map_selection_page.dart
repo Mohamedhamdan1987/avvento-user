@@ -28,10 +28,10 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
     final controller = Get.find<AddressController>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'اختر موقع التوصيل',
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
@@ -94,7 +94,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
               child: Container(
                 padding: EdgeInsets.all(24.w),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
                   boxShadow: [
                     BoxShadow(
@@ -112,21 +112,21 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                       'تفاصيل العنوان',
                       style: const TextStyle().textColorBold(
                         fontSize: 18,
-                        color: AppColors.textDark,
+                        color: Theme.of(context).textTheme.titleLarge?.color,
                       ),
                     ),
                     SizedBox(height: 16.h),
                     CustomTextField(
                       controller: _labelController,
                       hint: 'اسم العنوان (مثلاً: المنزل، العمل)',
-                      fillColor: AppColors.lightBackground,
+                      fillColor: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: 12,
                     ),
                     SizedBox(height: 12.h),
                     CustomTextField(
                       controller: _addressController,
                       hint: 'وصف العنوان (الشارع، رقم المبنى...)',
-                      fillColor: AppColors.lightBackground,
+                      fillColor: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: 12,
                       maxLines: 2,
                     ),

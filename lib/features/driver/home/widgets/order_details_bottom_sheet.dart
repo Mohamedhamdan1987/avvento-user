@@ -21,7 +21,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       child: SingleChildScrollView(
@@ -37,7 +37,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
                   width: 40.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: AppColors.borderGray,
+                    color: Theme.of(context).dividerColor,
                     borderRadius: BorderRadius.circular(2.r),
                   ),
                 ),
@@ -49,7 +49,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
                 'طلب #${order.orderNumber}',
                 style: const TextStyle().textColorBold(
                   fontSize: 20,
-                  color: AppColors.textDark,
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                 ),
               ),
               SizedBox(height: 8.h),
@@ -74,40 +74,44 @@ class OrderDetailsBottomSheet extends StatelessWidget {
               
               // Customer info
               _buildInfoSection(
+                context,
                 icon: Icons.person_outline,
                 title: 'معلومات العميل',
                 children: [
-                  _buildInfoRow('الاسم', order.customerName),
-                  _buildInfoRow('الهاتف', order.customerPhone),
+                  _buildInfoRow(context, 'الاسم', order.customerName),
+                  _buildInfoRow(context, 'الهاتف', order.customerPhone),
                 ],
               ),
               SizedBox(height: 16.h),
               
               // Restaurant info
               _buildInfoSection(
+                context,
                 icon: Icons.restaurant_outlined,
                 title: 'المطعم',
                 children: [
-                  _buildInfoRow('الاسم', order.restaurantName),
-                  _buildInfoRow('العنوان', order.pickupLocation.address),
+                  _buildInfoRow(context, 'الاسم', order.restaurantName),
+                  _buildInfoRow(context, 'العنوان', order.pickupLocation.address),
                 ],
               ),
               SizedBox(height: 16.h),
               
               // Delivery address
               _buildInfoSection(
+                context,
                 icon: Icons.location_on_outlined,
                 title: 'عنوان التوصيل',
                 children: [
-                  _buildInfoRow('العنوان', order.deliveryLocation.address),
+                  _buildInfoRow(context, 'العنوان', order.deliveryLocation.address),
                   if (order.deliveryLocation.label != null)
-                    _buildInfoRow('التسمية', order.deliveryLocation.label!),
+                    _buildInfoRow(context, 'التسمية', order.deliveryLocation.label!),
                 ],
               ),
               SizedBox(height: 16.h),
               
               // Order items
               _buildInfoSection(
+                context,
                 icon: Icons.shopping_bag_outlined,
                 title: 'تفاصيل الطلب',
                 children: [
@@ -121,7 +125,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
                             '${item.quantity}x ${item.name}',
                             style: TextStyle(
                               fontSize: 14.sp,
-                              color: AppColors.textMedium,
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
                             ),
                           ),
                         ),
@@ -129,7 +133,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
                           '${item.price.toStringAsFixed(2)} د.ل',
                           style: TextStyle(
                             fontSize: 14.sp,
-                            color: AppColors.textDark,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -144,7 +148,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: AppColors.lightBackground,
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Column(
@@ -156,14 +160,14 @@ class OrderDetailsBottomSheet extends StatelessWidget {
                           'المجموع',
                           style: TextStyle(
                             fontSize: 14.sp,
-                            color: AppColors.textMedium,
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
                           ),
                         ),
                         Text(
                           '${order.totalAmount.toStringAsFixed(2)} د.ل',
                           style: TextStyle(
                             fontSize: 16.sp,
-                            color: AppColors.textDark,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -178,7 +182,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
                             'رسوم التوصيل',
                             style: TextStyle(
                               fontSize: 14.sp,
-                              color: AppColors.textMedium,
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
                             ),
                           ),
                           Text(
@@ -200,14 +204,14 @@ class OrderDetailsBottomSheet extends StatelessWidget {
                           'طريقة الدفع',
                           style: TextStyle(
                             fontSize: 14.sp,
-                            color: AppColors.textMedium,
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
                           ),
                         ),
                         Text(
                           _getPaymentMethodText(order.paymentMethod),
                           style: TextStyle(
                             fontSize: 14.sp,
-                            color: AppColors.textDark,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -220,6 +224,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
               if (order.notes != null) ...[
                 SizedBox(height: 16.h),
                 _buildInfoSection(
+                  context,
                   icon: Icons.note_outlined,
                   title: 'ملاحظات',
                   children: [
@@ -227,7 +232,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
                       order.notes!,
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: AppColors.textMedium,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                   ],
@@ -268,7 +273,8 @@ class OrderDetailsBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoSection({
+  Widget _buildInfoSection(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required List<Widget> children,
@@ -285,7 +291,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
+                color: Theme.of(context).textTheme.titleLarge?.color,
               ),
             ),
           ],
@@ -296,7 +302,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
     return Padding(
       padding: EdgeInsets.only(bottom: 8.h),
       child: Row(
@@ -308,7 +314,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 14.sp,
-                color: AppColors.textMedium,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
           ),
@@ -317,7 +323,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
               value,
               style: TextStyle(
                 fontSize: 14.sp,
-                color: AppColors.textDark,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
                 fontWeight: FontWeight.w500,
               ),
             ),

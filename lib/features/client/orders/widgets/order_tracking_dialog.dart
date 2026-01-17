@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:avvento/core/enums/order_status.dart';
+import '../../../../core/constants/app_colors.dart';
 
 class OrderTrackingDialog extends StatelessWidget {
   final String orderId;
@@ -21,7 +22,7 @@ class OrderTrackingDialog extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(32.r),
           topRight: Radius.circular(32.r),
@@ -38,7 +39,7 @@ class OrderTrackingDialog extends StatelessWidget {
                 width: 48.w,
                 height: 6.h,
                 decoration: BoxDecoration(
-                  color: Color(0xFFE5E7EB),
+                  color: Theme.of(context).dividerColor,
                   borderRadius: BorderRadius.circular(3.r),
                 ),
               ),
@@ -61,7 +62,7 @@ class OrderTrackingDialog extends StatelessWidget {
                               _getStatusTitle(),
                               style: TextStyle().textColorBold(
                                 fontSize: 20.sp,
-                                color: Color(0xFF101828),
+                                color: Theme.of(context).textTheme.titleLarge?.color,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -70,7 +71,7 @@ class OrderTrackingDialog extends StatelessWidget {
                               'طلبك رقم #$orderId',
                               style: TextStyle().textColorNormal(
                                 fontSize: 12.sp,
-                                color: Color(0xFF6A7282),
+                                color: Theme.of(context).textTheme.bodySmall?.color,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -83,7 +84,7 @@ class OrderTrackingDialog extends StatelessWidget {
                       // Animation Section
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 24.w),
-                        child: _buildAnimationSection(),
+                        child: _buildAnimationSection(context),
                       ),
 
                       SizedBox(height: 24.h),
@@ -91,7 +92,7 @@ class OrderTrackingDialog extends StatelessWidget {
                       // Timeline
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 24.w),
-                        child: _buildTimeline(),
+                        child: _buildTimeline(context),
                       ),
 
                       SizedBox(height: 24.h),
@@ -101,7 +102,7 @@ class OrderTrackingDialog extends StatelessWidget {
                           status == OrderStatus.awaitingDelivery)
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 24.w),
-                          child: _buildDriverInfo(),
+                          child: _buildDriverInfo(context),
                         ),
 
                       SizedBox(height: 24.h),
@@ -120,7 +121,7 @@ class OrderTrackingDialog extends StatelessWidget {
     return status.label;
   }
 
-  Widget _buildAnimationSection() {
+  Widget _buildAnimationSection(BuildContext context) {
     return Container(
       height: 160.h,
       decoration: BoxDecoration(
@@ -128,21 +129,25 @@ class OrderTrackingDialog extends StatelessWidget {
             ? DecorationImage(
                 image: AssetImage('assets/images/orders/order_tracking_bg.png'),
                 fit: BoxFit.cover,
+                opacity: Theme.of(context).brightness == Brightness.dark ? 0.3 : 1.0,
               )
             : null,
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFF9FAFB), Colors.white],
+          colors: [
+            Theme.of(context).scaffoldBackgroundColor,
+            Theme.of(context).cardColor,
+          ],
         ),
         borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: Color(0xFFF3F4F6), width: 0.76.w),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 0.76.w),
       ),
-      child: _getAnimationWidget(),
+      child: _getAnimationWidget(context),
     );
   }
 
-  Widget _getAnimationWidget() {
+  Widget _getAnimationWidget(BuildContext context) {
     switch (status) {
       case OrderStatus.pendingRestaurant:
         return Center(
@@ -153,14 +158,14 @@ class OrderTrackingDialog extends StatelessWidget {
                 width: 64.w,
                 height: 64.h,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Color(0xFF7F22FE), width: 3.w),
+                  border: Border.all(color: AppColors.primary, width: 3.w),
                 ),
                 child: Center(
                   child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFF7F22FE),
+                      AppColors.primary,
                     ),
                   ),
                 ),
@@ -170,7 +175,7 @@ class OrderTrackingDialog extends StatelessWidget {
                 'ننتظر رد المطعم...',
                 style: TextStyle().textColorBold(
                   fontSize: 12.sp,
-                  color: Color(0xFF99A1AF),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
               ),
             ],
@@ -204,14 +209,14 @@ class OrderTrackingDialog extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: Color(0xFF7F22FE).withOpacity(0.1),
+                  color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
                   'تم القبول!',
                   style: TextStyle().textColorBold(
                     fontSize: 14.sp,
-                    color: Color(0xFF7F22FE),
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -235,7 +240,7 @@ class OrderTrackingDialog extends StatelessWidget {
                 width: double.infinity,
                 height: 40.h,
                 decoration: ShapeDecoration(
-                  color: Color(0xFFF3F4F6).withOpacity(0.7),
+                  color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.7),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(24.r),
@@ -243,7 +248,7 @@ class OrderTrackingDialog extends StatelessWidget {
                     ),
                     side: BorderSide(
                       width: 0.76,
-                      color: const Color(0xFFE5E7EB),
+                      color: Theme.of(context).dividerColor,
                     ),
                   ),
                 ),
@@ -262,14 +267,14 @@ class OrderTrackingDialog extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: Color(0xFF7F22FE).withOpacity(0.1),
+                  color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
                   'الكابتن أفينتو بالخارج...',
                   style: TextStyle().textColorBold(
                     fontSize: 12.sp,
-                    color: Color(0xFF7F22FE),
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -288,7 +293,7 @@ class OrderTrackingDialog extends StatelessWidget {
                 'بالهناء والشفاء!',
                 style: TextStyle().textColorBold(
                   fontSize: 18.sp,
-                  color: Color(0xFF101828),
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                 ),
               ),
               SizedBox(height: 4.h),
@@ -296,7 +301,7 @@ class OrderTrackingDialog extends StatelessWidget {
                 'نتمنى لك وجبة لذيذة',
                 style: TextStyle().textColorNormal(
                   fontSize: 12.sp,
-                  color: Color(0xFF6A7282),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
               ),
             ],
@@ -310,7 +315,7 @@ class OrderTrackingDialog extends StatelessWidget {
     }
   }
 
-  Widget _buildTimeline() {
+  Widget _buildTimeline(BuildContext context) {
     return Container(
       // height: 360.h,
       child: Stack(
@@ -322,7 +327,7 @@ class OrderTrackingDialog extends StatelessWidget {
             child: Container(
               width: 2.w,
               height: 312.h,
-              color: Color(0xFFF3F4F6),
+              color: Theme.of(context).dividerColor,
             ),
           ),
 
@@ -330,6 +335,7 @@ class OrderTrackingDialog extends StatelessWidget {
           Column(
             children: [
               _buildTimelineItem(
+                context,
                 time: '12:30',
                 title: 'بانتظار قبول المطعم',
                 isActive: status.index >= 0,
@@ -339,6 +345,7 @@ class OrderTrackingDialog extends StatelessWidget {
 
               SizedBox(height: 24.h),
               _buildTimelineItem(
+                context,
                 time: '12:31',
                 title: 'تم تأكيد الطلب',
                 isActive: status.index >= 1,
@@ -347,6 +354,7 @@ class OrderTrackingDialog extends StatelessWidget {
               ),
               SizedBox(height: 24.h),
               _buildTimelineItem(
+                context,
                 time: '12:35',
                 title: 'جاري التحضير',
                 isActive: status.index >= 2,
@@ -355,6 +363,7 @@ class OrderTrackingDialog extends StatelessWidget {
               ),
               SizedBox(height: 24.h),
               _buildTimelineItem(
+                context,
                 time: '12:50',
                 title: 'في الطريق إليك',
                 isActive: status.index >= 3,
@@ -363,6 +372,7 @@ class OrderTrackingDialog extends StatelessWidget {
               ),
               SizedBox(height: 24.h),
               _buildTimelineItem(
+                context,
                 time: '01:05',
                 title: 'في انتظار الاستلام',
                 isActive: status.index >= 4,
@@ -371,6 +381,7 @@ class OrderTrackingDialog extends StatelessWidget {
               ),
               SizedBox(height: 24.h),
               _buildTimelineItem(
+                context,
                 time: '01:10',
                 title: 'تم تسليم الطلب',
                 isActive: status.index >= 5,
@@ -384,7 +395,8 @@ class OrderTrackingDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildTimelineItem({
+  Widget _buildTimelineItem(
+    BuildContext context, {
     required String time,
     required String title,
     required bool isActive,
@@ -399,14 +411,14 @@ class OrderTrackingDialog extends StatelessWidget {
           height: isCurrent ? 44.h : 40.h,
           decoration: BoxDecoration(
             color: isCurrent
-                ? Color(0xFF7F22FE)
-                : (isActive ? Color(0xFF00C950) : Colors.white),
+                ? AppColors.primary
+                : (isActive ? Color(0xFF00C950) : Theme.of(context).cardColor),
             shape: BoxShape.circle,
             border: isActive && !isCurrent
                 ? Border.all(color: Color(0xFF00C950), width: 1.5.w)
                 : (isCurrent
-                      ? Border.all(color: Color(0xFFD1D5DC), width: 1.5.w)
-                      : Border.all(color: Color(0xFFF3F4F6), width: 1.5.w)),
+                      ? Border.all(color: Theme.of(context).dividerColor, width: 1.5.w)
+                      : Border.all(color: Theme.of(context).dividerColor, width: 1.5.w)),
             boxShadow: isCurrent
                 ? [
                     BoxShadow(
@@ -422,7 +434,7 @@ class OrderTrackingDialog extends StatelessWidget {
               iconName: icon,
               color: isCurrent
                   ? Colors.white
-                  : (isActive ? Colors.white : Color(0xFFF3F4F6)),
+                  : (isActive ? Colors.white : Theme.of(context).dividerColor),
               height: isCurrent ? 18.sp : 16.sp,
             ),
           ),
@@ -435,10 +447,10 @@ class OrderTrackingDialog extends StatelessWidget {
             style: TextStyle().textColorBold(
               fontSize: 14.sp,
               color: isCurrent
-                  ? Color(0xFF101828)
+                  ? Theme.of(context).textTheme.titleLarge?.color
                   : (isActive
-                        ? Color(0xFF6A7282)
-                        : Color(0xFF6A7282).withOpacity(0.3)),
+                        ? Theme.of(context).textTheme.bodySmall?.color
+                        : Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.3)),
             ),
           ),
         ),
@@ -446,14 +458,14 @@ class OrderTrackingDialog extends StatelessWidget {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
           decoration: BoxDecoration(
-            color: Color(0xFFF9FAFB),
+            color: Theme.of(context).scaffoldBackgroundColor,
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Text(
             time,
             style: TextStyle().textColorBold(
               fontSize: 10.sp,
-              color: Color(0xFF99A1AF),
+              color: Theme.of(context).textTheme.bodySmall?.color,
             ),
           ),
         ),
@@ -462,13 +474,13 @@ class OrderTrackingDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildDriverInfo() {
+  Widget _buildDriverInfo(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Color(0xFFF3F4F6), width: 0.76.w),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 0.76.w),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -496,12 +508,12 @@ class OrderTrackingDialog extends StatelessWidget {
                 width: 36.w,
                 height: 36.h,
                 decoration: BoxDecoration(
-                  color: Color(0xFFF9FAFB),
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.chat_bubble_outline,
-                  color: Color(0xFF101828),
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                   size: 16.sp,
                 ),
               ),
@@ -516,9 +528,9 @@ class OrderTrackingDialog extends StatelessWidget {
                   width: 40.w,
                   height: 40.h,
                   decoration: BoxDecoration(
-                    color: Color(0xFFF3F4F6),
+                    color: Theme.of(context).scaffoldBackgroundColor,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Color(0xFFE5E7EB), width: 0.76.w),
+                    border: Border.all(color: Theme.of(context).dividerColor, width: 0.76.w),
                   ),
                 ),
                 SizedBox(width: 12.w),
@@ -530,7 +542,7 @@ class OrderTrackingDialog extends StatelessWidget {
                         'محمد علي',
                         style: TextStyle().textColorBold(
                           fontSize: 14.sp,
-                          color: Color(0xFF101828),
+                          color: Theme.of(context).textTheme.titleLarge?.color,
                         ),
                       ),
                       SizedBox(height: 2.h),
@@ -538,7 +550,7 @@ class OrderTrackingDialog extends StatelessWidget {
                         'كيا سيراتو • أبيض',
                         style: TextStyle().textColorNormal(
                           fontSize: 10.sp,
-                          color: Color(0xFF6A7282),
+                          color: Theme.of(context).textTheme.bodySmall?.color,
                         ),
                       ),
                     ],

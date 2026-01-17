@@ -42,7 +42,7 @@ class _RegisterPageState extends State<RegisterPage> {
     final controller = Get.find<AuthController>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // appBar: AppBar(
       //   backgroundColor: Colors.transparent,
       //   elevation: 0,
@@ -52,7 +52,7 @@ class _RegisterPageState extends State<RegisterPage> {
       //     style: TextStyle(
       //       fontSize: 20.sp,
       //       fontWeight: FontWeight.bold,
-      //       color: AppColors.textDark,
+      //       color: Theme.of(context).textTheme.titleLarge?.color,
       //     ),
       //   ),
       //   centerTitle: true,
@@ -71,7 +71,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   style: TextStyle(
                     fontSize: 28.sp,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -80,7 +80,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   'املأ البيانات التالية للتسجيل',
                   style: TextStyle(
                     fontSize: 16.sp,
-                    color: AppColors.textMedium,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -244,7 +244,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       'لديك حساب بالفعل؟ ',
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: AppColors.textMedium,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                     TextButton(

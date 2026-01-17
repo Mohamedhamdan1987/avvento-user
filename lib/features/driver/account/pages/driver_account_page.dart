@@ -8,6 +8,8 @@ import '../../../../core/widgets/reusable/custom_app_bar.dart';
 import '../../../auth/controllers/auth_controller.dart';
 import '../../../profile/controllers/profile_controller.dart';
 import '../../../profile/pages/edit_profile_page.dart';
+import '../../../../core/theme/theme_controller.dart';
+
 
 class DriverAccountPage extends StatelessWidget {
   const DriverAccountPage({super.key});
@@ -22,10 +24,10 @@ class DriverAccountPage extends StatelessWidget {
     final user = authController.getCachedUser();
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'حسابي',
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).cardColor,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -38,7 +40,7 @@ class DriverAccountPage extends StatelessWidget {
                 margin: EdgeInsets.all(16.w),
                 padding: EdgeInsets.all(24.w),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20.r),
                   boxShadow: [
                     BoxShadow(
@@ -78,7 +80,7 @@ class DriverAccountPage extends StatelessWidget {
                       profile?.name ?? user?.username ?? 'السائق',
                       style: const TextStyle().textColorBold(
                         fontSize: 20,
-                        color: AppColors.textDark,
+                        color: Theme.of(context).textTheme.titleLarge?.color,
                       ),
                     ),
                     SizedBox(height: 4.h),
@@ -87,7 +89,7 @@ class DriverAccountPage extends StatelessWidget {
                       profile?.phone ?? user?.phone ?? '',
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: AppColors.textMedium,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                     if (profile?.email != null || user?.email != null) ...[
@@ -96,7 +98,7 @@ class DriverAccountPage extends StatelessWidget {
                         profile?.email ?? user!.email!,
                         style: TextStyle(
                           fontSize: 14.sp,
-                          color: AppColors.textMedium,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                       ),
                     ],
@@ -140,7 +142,7 @@ class DriverAccountPage extends StatelessWidget {
             Container(
               margin: EdgeInsets.symmetric(horizontal: 16.w),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
@@ -153,30 +155,52 @@ class DriverAccountPage extends StatelessWidget {
               child: Column(
                 children: [
                   _buildMenuItem(
+                    context,
                     icon: Icons.person_outline,
                     title: 'تعديل الملف الشخصي',
                     onTap: () {
                       Get.to(() => const EditProfilePage());
                     },
                   ),
-                  _buildDivider(),
+                  _buildDivider(context),
                   _buildMenuItem(
+                    context,
                     icon: Icons.lock_outline,
                     title: 'تغيير كلمة المرور',
                     onTap: () {
                       Get.toNamed(AppRoutes.changePassword);
                     },
                   ),
-                  _buildDivider(),
+                  _buildDivider(context),
                   _buildMenuItem(
+                    context,
                     icon: Icons.notifications_outlined,
                     title: 'الإشعارات',
                     onTap: () {
                       Get.toNamed(AppRoutes.notifications);
                     },
                   ),
-                  // _buildDivider(),
+                  _buildDivider(context),
+                  GetBuilder<ThemeController>(
+                    builder: (controller) {
+                      return _buildMenuItem(
+                        context,
+                        icon: Icons.dark_mode_outlined,
+                        title: 'الوضع الليلي',
+                        onTap: () {
+                          controller.changeTheme(!Get.isDarkMode);
+                        },
+                        trailing: Switch(
+                          value: Get.isDarkMode,
+                          onChanged: (value) => controller.changeTheme(value),
+                          activeColor: AppColors.primary,
+                        ),
+                      );
+                    },
+                  ),
+                  // _buildDivider(context),
                   // _buildMenuItem(
+                  //   context,
                   //   icon: Icons.language_outlined,
                   //   title: 'اللغة',
                   //   subtitle: 'العربية',
@@ -193,7 +217,7 @@ class DriverAccountPage extends StatelessWidget {
             Container(
               margin: EdgeInsets.symmetric(horizontal: 16.w),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
@@ -206,6 +230,7 @@ class DriverAccountPage extends StatelessWidget {
               child: Column(
                 children: [
                   _buildMenuItem(
+                    context,
                     icon: Icons.help_outline,
                     title: 'المساعدة والدعم',
                     onTap: () {
@@ -213,16 +238,18 @@ class DriverAccountPage extends StatelessWidget {
 
                     },
                   ),
-                  _buildDivider(),
+                  _buildDivider(context),
                   _buildMenuItem(
+                    context,
                     icon: Icons.info_outline,
                     title: 'حول التطبيق',
                     onTap: () {
                       // TODO: Show about dialog
                     },
                   ),
-                  _buildDivider(),
+                  _buildDivider(context),
                   _buildMenuItem(
+                    context,
                     icon: Icons.privacy_tip_outlined,
                     title: 'سياسة الخصوصية',
                     onTap: () {
@@ -238,7 +265,7 @@ class DriverAccountPage extends StatelessWidget {
             Container(
               margin: EdgeInsets.symmetric(horizontal: 16.w),
               child: Material(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16.r),
                 child: InkWell(
                   onTap: () {
@@ -287,11 +314,13 @@ class DriverAccountPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem({
+  Widget _buildMenuItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     String? subtitle,
     required VoidCallback onTap,
+    Widget? trailing,
   }) {
     return Material(
       color: Colors.transparent,
@@ -303,7 +332,7 @@ class DriverAccountPage extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: AppColors.textMedium,
+                color: Theme.of(context).iconTheme.color,
                 size: 24.r,
               ),
               SizedBox(width: 16.w),
@@ -315,7 +344,7 @@ class DriverAccountPage extends StatelessWidget {
                       title,
                       style: TextStyle(
                         fontSize: 16.sp,
-                        color: AppColors.textDark,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -325,18 +354,19 @@ class DriverAccountPage extends StatelessWidget {
                         subtitle,
                         style: TextStyle(
                           fontSize: 14.sp,
-                          color: AppColors.textMedium,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
-              Icon(
-                Icons.arrow_forward_ios,
-                color: AppColors.textMedium,
-                size: 16.r,
-              ),
+              trailing ??
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: Theme.of(context).disabledColor,
+                    size: 16.r,
+                  ),
             ],
           ),
         ),
@@ -344,11 +374,11 @@ class DriverAccountPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
     return Divider(
       height: 1,
       thickness: 1,
-      color: AppColors.borderGray.withOpacity(0.3),
+      color: Theme.of(context).dividerColor.withOpacity(0.3),
       indent: 60.w,
     );
   }
@@ -357,6 +387,7 @@ class DriverAccountPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
         ),
@@ -364,14 +395,14 @@ class DriverAccountPage extends StatelessWidget {
           'تسجيل الخروج',
           style: const TextStyle().textColorBold(
             fontSize: 18,
-            color: AppColors.textDark,
+            color: Theme.of(context).textTheme.titleLarge?.color,
           ),
         ),
         content: Text(
           'هل أنت متأكد من رغبتك في تسجيل الخروج؟',
           style: TextStyle(
             fontSize: 16.sp,
-            color: AppColors.textMedium,
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
         actions: [
@@ -381,7 +412,7 @@ class DriverAccountPage extends StatelessWidget {
               'إلغاء',
               style: TextStyle(
                 fontSize: 16.sp,
-                color: AppColors.textMedium,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
           ),

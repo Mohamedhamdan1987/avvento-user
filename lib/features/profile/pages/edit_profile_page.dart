@@ -15,10 +15,10 @@ class EditProfilePage extends StatelessWidget {
     final controller = Get.put(ProfileController());
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'تعديل الملف الشخصي',
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -30,7 +30,7 @@ class EditProfilePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildImagePickers(controller),
+              _buildImagePickers(context, controller),
               SizedBox(height: 24.h),
               CustomTextField(
                 label: 'الاسم',
@@ -91,7 +91,7 @@ class EditProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildImagePickers(ProfileController controller) {
+  Widget _buildImagePickers(BuildContext context, ProfileController controller) {
     return Column(
       children: [
         // Background Image Picker
@@ -101,7 +101,7 @@ class EditProfilePage extends StatelessWidget {
             width: double.infinity,
             height: 150.h,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12.r),
               image: controller.selectedBackground.value != null
                   ? DecorationImage(
@@ -120,9 +120,9 @@ class EditProfilePage extends StatelessWidget {
                 ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add_photo_alternate_outlined, size: 40.r, color: Colors.grey),
+                      Icon(Icons.add_photo_alternate_outlined, size: 40.r, color: Theme.of(context).iconTheme.color),
                       SizedBox(height: 8.h),
-                      Text('إضافة صورة الغلاف', style: TextStyle(color: Colors.grey, fontSize: 14.sp)),
+                      Text('إضافة صورة الغلاف', style: TextStyle(color: Theme.of(context).hintColor, fontSize: 14.sp)),
                     ],
                   )
                 : Align(
@@ -150,9 +150,9 @@ class EditProfilePage extends StatelessWidget {
                   width: 100.w,
                   height: 100.w,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Theme.of(context).cardColor,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 4),
+                    border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 4),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
@@ -174,7 +174,7 @@ class EditProfilePage extends StatelessWidget {
                   ),
                   child: controller.selectedLogo.value == null &&
                          controller.userProfile.value?.logo == null
-                      ? Icon(Icons.person, size: 50.r, color: Colors.grey)
+                      ? Icon(Icons.person, size: 50.r, color: Theme.of(context).iconTheme.color)
                       : null,
                 ),
                 Positioned(
@@ -185,7 +185,7 @@ class EditProfilePage extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                      border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 2),
                     ),
                     child: Icon(Icons.camera_alt, color: Colors.white, size: 16.r),
                   ),

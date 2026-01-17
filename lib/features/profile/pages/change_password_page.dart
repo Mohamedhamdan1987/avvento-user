@@ -13,10 +13,10 @@ class ChangePasswordPage extends StatelessWidget {
     final controller = Get.put(ChangePasswordController());
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'تغيير كلمة المرور',
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(24.w),
@@ -27,13 +27,14 @@ class ChangePasswordPage extends StatelessWidget {
               'قم بتحديث كلمة المرور الخاصة بك لتأمين حسابك.',
               style: TextStyle(
                 fontSize: 14.sp,
-                color: AppColors.textMedium,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
             SizedBox(height: 32.h),
             
             // Current Password
             _buildPasswordField(
+              context,
               label: 'كلمة المرور الحالية',
               hint: 'أدخل كلمة المرور الحالية',
               controller: controller.currentPasswordController,
@@ -44,6 +45,7 @@ class ChangePasswordPage extends StatelessWidget {
 
             // New Password
             _buildPasswordField(
+              context,
               label: 'كلمة المرور الجديدة',
               hint: 'أدخل كلمة المرور الجديدة',
               controller: controller.newPasswordController,
@@ -54,6 +56,7 @@ class ChangePasswordPage extends StatelessWidget {
 
             // Confirm New Password
             _buildPasswordField(
+              context,
               label: 'تأكيد كلمة المرور الجديدة',
               hint: 'أعد إدخال كلمة المرور الجديدة',
               controller: controller.confirmPasswordController,
@@ -93,7 +96,8 @@ class ChangePasswordPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPasswordField({
+  Widget _buildPasswordField(
+    BuildContext context, {
     required String label,
     required String hint,
     required TextEditingController controller,
@@ -108,29 +112,30 @@ class ChangePasswordPage extends StatelessWidget {
           style: TextStyle(
             fontSize: 14.sp,
             fontWeight: FontWeight.w600,
-            color: AppColors.textDark,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         SizedBox(height: 8.h),
         Obx(() => TextField(
           controller: controller,
           obscureText: !obscureText.value,
+          style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
               fontSize: 14.sp,
-              color: AppColors.textPlaceholder,
+              color: Theme.of(context).hintColor,
             ),
             contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Theme.of(context).cardColor,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.borderGray),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.borderGray),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
@@ -139,7 +144,7 @@ class ChangePasswordPage extends StatelessWidget {
             suffixIcon: IconButton(
               icon: Icon(
                 obscureText.value ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                color: AppColors.textLight,
+                color: Theme.of(context).iconTheme.color,
                 size: 20.r,
               ),
               onPressed: onToggle,

@@ -37,7 +37,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Obx(() {
@@ -125,7 +125,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
             'المحفظة المالية',
             style: const TextStyle().textColorBold(
               fontSize: 24.sp,
-              color: AppColors.textDark,
+              color: Theme.of(context).textTheme.titleLarge?.color,
             ),
           ),
 
@@ -133,7 +133,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
             width: 36.w,
             height: 36.h,
             radius: 100.r,
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             onTap: () => controller.refreshWallet(),
             childWidget: controller.isLoading.value
                 ? SizedBox(
@@ -145,7 +145,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
                     iconName: 'assets/svg/driver/wallet/redresh_icon.svg',
                     width: 20.w,
                     height: 20.h,
-                    color: AppColors.textDark,
+                    color: Theme.of(context).iconTheme.color,
                     fallbackIcon: Icons.refresh,
                   ),
           ),
@@ -269,10 +269,15 @@ class _DriverWalletPageState extends State<DriverWalletPage>
     final amountController = TextEditingController();
     Get.dialog(
       AlertDialog(
-        title: const Text('إيداع رصيد'),
+        backgroundColor: Theme.of(context).cardColor,
+        title: Text(
+          'إيداع رصيد',
+          style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color),
+        ),
         content: TextField(
           controller: amountController,
           keyboardType: TextInputType.number,
+          style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: const InputDecoration(
             hintText: 'أدخل المبلغ',
             suffixText: 'د.ل',
@@ -379,14 +384,14 @@ class _DriverWalletPageState extends State<DriverWalletPage>
       width: double.infinity,
       padding: EdgeInsets.all(2.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFE5E7EB).withOpacity(0.5),
+        color: Theme.of(context).dividerColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(14.r),
       ),
       child: TabBar(
         controller: _tabController,
         tabAlignment: TabAlignment.fill,
         indicator: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(10.r),
           boxShadow: [
             BoxShadow(
@@ -396,11 +401,11 @@ class _DriverWalletPageState extends State<DriverWalletPage>
             ),
           ],
         ),
-        labelColor: AppColors.textDark,
-        unselectedLabelColor: AppColors.textDark,
+        labelColor: Theme.of(context).textTheme.bodyLarge?.color,
+        unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color,
         labelStyle: const TextStyle().textColorBold(
           fontSize: 14.sp,
-          color: AppColors.textDark,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
@@ -421,7 +426,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
           'لا توجد عمليات حالياً',
           style: const TextStyle().textColorMedium(
             fontSize: 16.sp,
-            color: AppColors.textLight,
+            color: Theme.of(context).hintColor,
           ),
         ),
       );
@@ -451,9 +456,9 @@ class _DriverWalletPageState extends State<DriverWalletPage>
   Widget _buildSettlementsTab() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         border: Border.all(
-          color: AppColors.borderLightGray,
+          color: Theme.of(context).dividerColor,
           width: 0.76.w,
         ),
         borderRadius: BorderRadius.circular(14.r),
@@ -466,14 +471,14 @@ class _DriverWalletPageState extends State<DriverWalletPage>
               width: 64.w,
               height: 64.h,
               decoration: BoxDecoration(
-                color: AppColors.lightBackground,
+                color: Theme.of(context).scaffoldBackgroundColor,
                 shape: BoxShape.circle,
               ),
               child: SafeSvgIcon(
                 iconName: 'assets/svg/driver/wallet/wallet_empty_icon.svg',
                 width: 32.r,
                 height: 32.r,
-                color: AppColors.textLight,
+                color: Theme.of(context).hintColor,
                 fallbackIcon: Icons.account_balance_wallet_outlined,
               ),
             ),
@@ -482,7 +487,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
               'لا توجد تسويات معلقة',
               style: const TextStyle().textColorBold(
                 fontSize: 18.sp,
-                color: AppColors.textDark,
+                color: Theme.of(context).textTheme.titleLarge?.color,
               ),
             ),
             SizedBox(height: 12.h),
@@ -490,7 +495,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
               'يتم تصفية الحسابات بشكل تلقائي كل يوم أحد',
               style: const TextStyle().textColorNormal(
                 fontSize: 14.sp,
-                color: AppColors.textLight,
+                color: Theme.of(context).hintColor,
               ),
               textAlign: TextAlign.center,
             ),

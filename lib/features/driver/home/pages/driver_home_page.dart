@@ -108,7 +108,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Google Map
@@ -119,7 +119,13 @@ class _DriverHomePageState extends State<DriverHomePage> {
                   target: _currentLocation,
                   zoom: 14,
                 ),
-                onMapCreated: (c) => _mapController = c,
+                onMapCreated: (c) {
+                  _mapController = c;
+                  // TODO: Set map style for dark mode if needed
+                  // if (Theme.of(context).brightness == Brightness.dark) {
+                  //   c.setMapStyle(darkMapStyle);
+                  // }
+                },
                 myLocationEnabled: true,
                 myLocationButtonEnabled: true,
                 zoomControlsEnabled: false,
@@ -140,8 +146,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.white.withOpacity(0.9),
-                  Colors.black.withOpacity(0.0),
+                  Theme.of(context).scaffoldBackgroundColor.withOpacity(0.9),
+                  Theme.of(context).scaffoldBackgroundColor.withOpacity(0.0),
                 ],
               ),
             ),
@@ -169,9 +175,9 @@ class _DriverHomePageState extends State<DriverHomePage> {
                           bottom: 0.76.h,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           border: Border.all(
-                            color: AppColors.borderLightGray,
+                            color: Theme.of(context).dividerColor,
                             width: 0.76.w,
                           ),
                           borderRadius: BorderRadius.circular(100.r),
@@ -200,7 +206,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                                   border: Border.all(
                                     color: controller.isAvailable
                                         ? AppColors.primary
-                                        : AppColors.borderGray,
+                                        : Theme.of(context).dividerColor,
                                     width: 0.76.w,
                                   ),
                                 ),
@@ -228,7 +234,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                               controller.isAvailable ? 'متاح' : 'غير متاح',
                               style: const TextStyle().textColorBold(
                                 fontSize: 12,
-                                color: AppColors.textPlaceholder,
+                                color: Theme.of(context).textTheme.bodyMedium?.color ?? AppColors.textPlaceholder,
                               ),
                             ),
                           ],
@@ -244,9 +250,9 @@ class _DriverHomePageState extends State<DriverHomePage> {
                           vertical: 8.h,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           border: Border.all(
-                            color: AppColors.borderLightGray,
+                            color: Theme.of(context).dividerColor,
                             width: 0.76.w,
                           ),
                           borderRadius: BorderRadius.circular(100.r),
@@ -266,7 +272,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                               'أرباح اليوم',
                               style: const TextStyle().textColorNormal(
                                 fontSize: 10,
-                                color: AppColors.textPlaceholder,
+                                color: AppColors.textPlaceholder, // Keep placeholder color or use hintColor
                               ),
                             ),
                             SizedBox(height: 2.h),
@@ -274,7 +280,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                               '${controller.todayEarnings.toStringAsFixed(2)} د.ل',
                               style: const TextStyle().textColorBold(
                                 fontSize: 14,
-                                color: AppColors.textDark,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                               ),
                             ),
                           ],
@@ -289,8 +295,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
                   width: 40.w,
                   height: 40.h,
                   radius: 100.r,
-                  color: Colors.white,
-                  borderColor: AppColors.borderLightGray,
+                  color: Theme.of(context).cardColor,
+                  borderColor: Theme.of(context).dividerColor,
                   onTap: () {
                     Get.toNamed(AppRoutes.notifications);
 
@@ -298,7 +304,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                   childWidget: Icon(
                     Icons.notifications_outlined,
                     size: 20.r,
-                    color: AppColors.textDark,
+                    color: Theme.of(context).iconTheme.color,
                   ),
                 ),
               ],
@@ -384,7 +390,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                   margin: EdgeInsets.all(16.w),
                   padding: EdgeInsets.all(20.w),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16.r),
                     boxShadow: [
                       BoxShadow(
@@ -399,7 +405,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                     children: [
                       Icon(
                         Icons.info_outline,
-                        color: AppColors.textMedium,
+                        color: Theme.of(context).hintColor,
                         size: 24.r,
                       ),
                       SizedBox(width: 12.w),
@@ -407,7 +413,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                         'لا توجد طلبات قريبة حالياً',
                         style: TextStyle(
                           fontSize: 16.sp,
-                          color: AppColors.textMedium,
+                          color: Theme.of(context).hintColor,
                         ),
                       ),
                     ],
@@ -427,7 +433,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                 child: Container(
                   padding: EdgeInsets.all(24.w),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16.r),
                   ),
                   child: Column(
@@ -443,7 +449,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                         'جاري تحديد موقعك...',
                         style: TextStyle(
                           fontSize: 16.sp,
-                          color: AppColors.textDark,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                     ],

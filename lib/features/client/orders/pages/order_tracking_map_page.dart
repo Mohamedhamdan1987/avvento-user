@@ -5,6 +5,7 @@ import 'package:avvento/core/theme/app_text_styles.dart';
 import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:avvento/core/utils/polyline_utils.dart';
 import 'package:avvento/core/enums/order_status.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../widgets/order_tracking_dialog.dart';
 
 class OrderTrackingMapPage extends StatefulWidget {
@@ -126,7 +127,7 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
             Polyline(
               polylineId: const PolylineId('route'),
               points: routePoints,
-              color: const Color(0xFF7F22FE),
+              color: AppColors.primary,
               width: 5,
               geodesic: false, // Set to false when using actual route
               jointType: JointType.round,
@@ -153,7 +154,7 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
                 LatLng(testUserLat, testUserLong),
                 LatLng(testRestaurantLat, testRestaurantLong),
               ],
-              color: const Color(0xFF7F22FE),
+              color: AppColors.primary,
               width: 5,
               geodesic: true,
               jointType: JointType.round,
@@ -210,10 +211,19 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: const Text('تتبع الطلب', style: TextStyle(color: Colors.black)),
+        backgroundColor: Theme.of(context).cardColor,
+        elevation: 0,
+        title: Text(
+          'تتبع الطلب',
+          style: TextStyle(
+            color: Theme.of(context).textTheme.titleLarge?.color,
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).iconTheme.color,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -246,7 +256,7 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
             child: Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
@@ -262,7 +272,7 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
                     width: 48.w,
                     height: 48.h,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF7F22FE).withOpacity(0.1),
+                      color: AppColors.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Center(
@@ -270,7 +280,7 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
                         iconName: 'assets/svg/client/orders/on_the_way.svg',
                         width: 24.w,
                         height: 24.h,
-                        color: const Color(0xFF7F22FE),
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -283,7 +293,7 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
                           'مسار التوصيل',
                           style: TextStyle().textColorBold(
                             fontSize: 14.sp,
-                            color: const Color(0xFF101828),
+                            color: Theme.of(context).textTheme.titleLarge?.color,
                           ),
                         ),
                         SizedBox(height: 4.h),
@@ -291,7 +301,7 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
                           'الخط الأرجواني يوضح المسار بين موقعك والمطعم',
                           style: TextStyle().textColorNormal(
                             fontSize: 12.sp,
-                            color: const Color(0xFF6A7282),
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
                           ),
                         ),
                       ],

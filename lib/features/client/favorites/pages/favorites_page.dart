@@ -18,14 +18,14 @@ class FavoritesPage extends GetView<FavoritesController> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: AppColors.lightBackground,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: CustomAppBar(
           title: 'المفضلة',
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
           bottom: TabBar(
             indicatorColor: AppColors.purple,
             labelColor: AppColors.purple,
-            unselectedLabelColor: AppColors.textLight,
+            unselectedLabelColor: Theme.of(context).unselectedWidgetColor,
             labelStyle: const TextStyle().textColorBold(fontSize: 14),
             unselectedLabelStyle: const TextStyle().textColorMedium(fontSize: 14),
             tabs: const [
@@ -40,19 +40,19 @@ class FavoritesPage extends GetView<FavoritesController> {
             // Restaurants Tab
             KeyedSubtree(
               key: const ValueKey('restaurants_tab'),
-              child: _buildRestaurantsTab(),
+              child: _buildRestaurantsTab(context),
             ),
             
             // Pharmacies Tab
             KeyedSubtree(
               key: const ValueKey('pharmacies_tab'),
-              child: _buildPlaceholderTab('لا توجد صيدليات مفضلة'),
+              child: _buildPlaceholderTab(context, 'لا توجد صيدليات مفضلة'),
             ),
             
             // Supermarkets Tab
             KeyedSubtree(
               key: const ValueKey('supermarkets_tab'),
-              child: _buildPlaceholderTab('لا توجد سوبر ماركت مفضلة'),
+              child: _buildPlaceholderTab(context, 'لا توجد سوبر ماركت مفضلة'),
             ),
           ],
         ),
@@ -60,7 +60,7 @@ class FavoritesPage extends GetView<FavoritesController> {
     );
   }
 
-  Widget _buildRestaurantsTab() {
+  Widget _buildRestaurantsTab(BuildContext context) {
     return Obx(() {
       if (controller.isLoading) {
         return const Center(child: CircularProgressIndicator());
@@ -83,7 +83,7 @@ class FavoritesPage extends GetView<FavoritesController> {
       }
 
       if (controller.favoriteRestaurants.isEmpty) {
-        return _buildEmptyState('لا توجد مطاعم مفضلة');
+        return _buildEmptyState(context, 'لا توجد مطاعم مفضلة');
       }
 
       return ListView.builder(
@@ -100,18 +100,18 @@ class FavoritesPage extends GetView<FavoritesController> {
     });
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(BuildContext context, String message) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.favorite_border, size: 64, color: AppColors.textPlaceholder),
+          Icon(Icons.favorite_border, size: 64, color: Theme.of(context).disabledColor),
           const SizedBox(height: 16),
           Text(
             message,
             style: const TextStyle().textColorMedium(
               fontSize: 16,
-              color: AppColors.textLight,
+              color: Theme.of(context).hintColor,
             ),
           ),
         ],
@@ -119,7 +119,7 @@ class FavoritesPage extends GetView<FavoritesController> {
     );
   }
 
-  Widget _buildPlaceholderTab(String message) {
-    return _buildEmptyState(message);
+  Widget _buildPlaceholderTab(BuildContext context, String message) {
+    return _buildEmptyState(context, message);
   }
 }

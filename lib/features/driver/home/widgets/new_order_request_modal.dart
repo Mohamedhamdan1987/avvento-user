@@ -55,7 +55,7 @@ class NewOrderRequestModal extends StatelessWidget {
         maxHeight: MediaQuery.of(context).size.height * 0.55,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(32.r),
         ),
@@ -106,7 +106,7 @@ class NewOrderRequestModal extends StatelessWidget {
                           'طلب جديد',
                           style: const TextStyle().textColorBold(
                             fontSize: 20,
-                            color: AppColors.textDark,
+                            color: Theme.of(context).textTheme.titleLarge?.color,
                           ),
                         ),
                         SizedBox(height: 4.h),
@@ -114,7 +114,7 @@ class NewOrderRequestModal extends StatelessWidget {
                           'لديك 30 ثانية للقبول',
                           style: const TextStyle().textColorNormal(
                             fontSize: 14,
-                            color: AppColors.textLight,
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
                           ),
                         ),
                       ],
@@ -147,9 +147,9 @@ class NewOrderRequestModal extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: AppColors.lightBackground,
+                    color: Theme.of(context).scaffoldBackgroundColor,
                     border: Border.all(
-                      color: AppColors.borderLightGray,
+                      color: Theme.of(context).dividerColor,
                       width: 0.76.w,
                     ),
                     borderRadius: BorderRadius.circular(16.r),
@@ -161,7 +161,7 @@ class NewOrderRequestModal extends StatelessWidget {
                         width: 48.w,
                         height: 48.h,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(100.r),
                           boxShadow: [
                             BoxShadow(
@@ -223,7 +223,7 @@ class NewOrderRequestModal extends StatelessWidget {
                                   order.restaurantName,
                                   style: const TextStyle().textColorBold(
                                     fontSize: 18,
-                                    color: AppColors.textDark,
+                                    color: Theme.of(context).textTheme.bodyLarge?.color,
                                   ),
                                 ),
                               ],
@@ -233,7 +233,7 @@ class NewOrderRequestModal extends StatelessWidget {
                               order.pickupLocation.address,
                               style: const TextStyle().textColorNormal(
                                 fontSize: 12,
-                                color: AppColors.textLight,
+                                color: Theme.of(context).textTheme.bodyMedium?.color,
                               ),
                             ),
                           ],
@@ -250,6 +250,7 @@ class NewOrderRequestModal extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _buildMetricCard(
+                        context,
                         icon: Icons.location_on_outlined,
                         label: 'المسافة',
                         value: distance,
@@ -258,6 +259,7 @@ class NewOrderRequestModal extends StatelessWidget {
                     SizedBox(width: 16.w),
                     Expanded(
                       child: _buildMetricCard(
+                        context,
                         icon: Icons.access_time_outlined,
                         label: 'الوقت المقدر',
                         value: estimatedTime,
@@ -279,13 +281,13 @@ class NewOrderRequestModal extends StatelessWidget {
                           Get.back(); // Close bottom sheet
                         },
                         isFill: false,
-                        borderColor: AppColors.borderGray,
+                        borderColor: Theme.of(context).dividerColor,
                         borderWidth: 1.5.w,
                         height: 56.h,
                         borderRadius: 16.r,
                         textStyle: const TextStyle().textColorBold(
                           fontSize: 18,
-                          color: AppColors.textMedium,
+                          color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7) ?? AppColors.textMedium,
                         ),
                       ),
                     ),
@@ -317,7 +319,8 @@ class NewOrderRequestModal extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricCard({
+  Widget _buildMetricCard(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required String value,
@@ -325,9 +328,9 @@ class NewOrderRequestModal extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 12.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         border: Border.all(
-          color: AppColors.borderLightGray,
+          color: Theme.of(context).dividerColor,
           width: 0.76.w,
         ),
         borderRadius: BorderRadius.circular(14.r),
@@ -344,14 +347,14 @@ class NewOrderRequestModal extends StatelessWidget {
           Icon(
             icon,
             size: 18.r,
-            color: AppColors.textDark,
+            color: Theme.of(context).iconTheme.color,
           ),
           SizedBox(height: 4.h),
           Text(
             label,
             style: const TextStyle().textColorNormal(
               fontSize: 12,
-              color: AppColors.textLight,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
           ),
           SizedBox(height: 4.h),
@@ -359,7 +362,7 @@ class NewOrderRequestModal extends StatelessWidget {
             value,
             style: const TextStyle().textColorBold(
               fontSize: 16,
-              color: AppColors.textDark,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
         ],

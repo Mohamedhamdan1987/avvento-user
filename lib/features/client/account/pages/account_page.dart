@@ -27,7 +27,7 @@ class AccountPage extends StatelessWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
-          _buildHeader(profileController, user),
+          _buildHeader(context, profileController, user),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
@@ -44,7 +44,7 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(ProfileController profileController, dynamic user) {
+  Widget _buildHeader(BuildContext context, ProfileController profileController, dynamic user) {
     return Obx(() {
       final profile = profileController.userProfile.value;
       return Container(
@@ -119,9 +119,9 @@ class AccountPage extends StatelessWidget {
                           width: 80.w,
                           height: 80.h,
                           decoration: BoxDecoration(
-                            color: AppColors.white,
+                            color: Theme.of(context).cardColor,
                             shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.white, width: 3),
+                            border: Border.all(color: Theme.of(context).cardColor, width: 3),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.1),

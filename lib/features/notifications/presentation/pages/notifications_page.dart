@@ -13,13 +13,13 @@ class NotificationsPage extends StatelessWidget {
     final controller = Get.find<NotificationsController>();
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Get.back(),
         ),
-        backgroundColor: AppColors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         iconTheme: IconThemeData(color: AppColors.drawerPurple),
         title: Text(
@@ -27,17 +27,17 @@ class NotificationsPage extends StatelessWidget {
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
-            color: AppColors.textDark,
+            color: Theme.of(context).textTheme.titleLarge?.color,
           ),
         ),
       ),
       body: Column(
         children: [
           // Header with unread count and actions
-          _buildHeader(controller),
+          _buildHeader(context, controller),
           
           // Filter tabs
-          _buildFilterTabs(controller),
+          _buildFilterTabs(context, controller),
           
           // Notifications list
           Expanded(
@@ -75,14 +75,14 @@ class NotificationsPage extends StatelessWidget {
                       Icon(
                         Icons.notifications_none,
                         size: 64.sp,
-                        color: AppColors.borderGray,
+                        color: Theme.of(context).disabledColor,
                       ),
                       SizedBox(height: 16.h),
                       Text(
                         'لا توجد إشعارات',
                         style: TextStyle(
                           fontSize: 18.sp,
-                          color: AppColors.textLight,
+                          color: Theme.of(context).hintColor,
                         ),
                       ),
                     ],
@@ -118,7 +118,7 @@ class NotificationsPage extends StatelessWidget {
                       }
 
                       final notification = controller.notifications[index];
-                      return _buildNotificationCard(controller, notification);
+                      return _buildNotificationCard(context, controller, notification);
                     },
                   ),
                 ),
@@ -130,10 +130,10 @@ class NotificationsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(NotificationsController controller) {
+  Widget _buildHeader(BuildContext context, NotificationsController controller) {
     return Container(
       padding: EdgeInsets.all(16.w),
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       child: Row(
         children: [
           Expanded(
@@ -145,7 +145,7 @@ class NotificationsPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 24.sp,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF18181B),
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
                 SizedBox(height: 4.h),
@@ -153,7 +153,7 @@ class NotificationsPage extends StatelessWidget {
                       '${controller.unreadCount.value} غير مقروء',
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: Colors.grey,
+                        color: Theme.of(context).hintColor,
                       ),
                     )),
               ],
@@ -171,25 +171,28 @@ class NotificationsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterTabs(NotificationsController controller) {
+  Widget _buildFilterTabs(BuildContext context, NotificationsController controller) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       child: Row(
         children: [
           _buildFilterChip(
+            context,
             label: 'الكل',
             isSelected: controller.selectedStatus == null,
             onTap: () => controller.filterByStatus(null),
           ),
           SizedBox(width: 8.w),
           _buildFilterChip(
+            context,
             label: 'غير مقروء',
             isSelected: controller.selectedStatus == 'unread',
             onTap: () => controller.filterByStatus('unread'),
           ),
           SizedBox(width: 8.w),
           _buildFilterChip(
+            context,
             label: 'مقروء',
             isSelected: controller.selectedStatus == 'read',
             onTap: () => controller.filterByStatus('read'),
@@ -199,7 +202,8 @@ class NotificationsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterChip({
+  Widget _buildFilterChip(
+    BuildContext context, {
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
@@ -209,13 +213,14 @@ class NotificationsPage extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.drawerPurple : AppColors.borderGray.withOpacity(0.2),
+          color: isSelected ? AppColors.drawerPurple : Colors.transparent,
           borderRadius: BorderRadius.circular(20.r),
+          border: isSelected ? null : Border.all(color: Theme.of(context).dividerColor),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? AppColors.white : AppColors.textDark,
+            color: isSelected ? AppColors.white : Theme.of(context).textTheme.bodyMedium?.color,
             fontSize: 14.sp,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -225,6 +230,7 @@ class NotificationsPage extends StatelessWidget {
   }
 
   Widget _buildNotificationCard(
+    BuildContext context,
     NotificationsController controller,
     NotificationEntity notification,
   ) {
@@ -236,7 +242,7 @@ class NotificationsPage extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.r),
         side: BorderSide(
-          color: isUnread ? AppColors.drawerPurple : AppColors.borderGray,
+          color: isUnread ? AppColors.drawerPurple : Theme.of(context).dividerColor,
           width: isUnread ? 2 : 1,
         ),
       ),
@@ -281,7 +287,7 @@ class NotificationsPage extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 16.sp,
                               fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
-                              color: const Color(0xFF18181B),
+                              color: Theme.of(context).textTheme.titleMedium?.color,
                             ),
                           ),
                         ),
@@ -301,7 +307,7 @@ class NotificationsPage extends StatelessWidget {
                         notification.body,
                         style: TextStyle(
                           fontSize: 14.sp,
-                          color: AppColors.textMedium,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -313,7 +319,7 @@ class NotificationsPage extends StatelessWidget {
                           controller.getNotificationTypeLabel(notification.type),
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: AppColors.textLight,
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
                         SizedBox(width: 8.w),
@@ -321,7 +327,7 @@ class NotificationsPage extends StatelessWidget {
                           '•',
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: AppColors.textLight,
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
                         SizedBox(width: 8.w),

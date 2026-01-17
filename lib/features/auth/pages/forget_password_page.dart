@@ -29,7 +29,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
     final controller = Get.find<AuthController>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -39,7 +39,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
-            color: AppColors.textDark,
+            color: Theme.of(context).textTheme.titleLarge?.color,
           ),
         ),
         centerTitle: true,
@@ -58,7 +58,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                   style: TextStyle(
                     fontSize: 28.sp,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -67,41 +67,24 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                   'أدخل اسم المستخدم لإرسال رمز التحقق',
                   style: TextStyle(
                     fontSize: 16.sp,
-                    color: AppColors.textMedium,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 40.h),
                 // Username Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: AppColors.drawerPurple.withOpacity(0.2),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.drawerPurple.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: CustomTextField(
-                    controller: usernameController,
-                    label: 'اسم المستخدم',
-                    hint: 'أدخل اسم المستخدم',
-                    prefixIcon: Icons.person,
-                    borderRadius: 16,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'يرجى إدخال اسم المستخدم';
-                      }
-                      return null;
-                    },
-                  ),
+                CustomTextField(
+                  controller: usernameController,
+                  // label: 'اسم المستخدم',
+                  hint: 'أدخل اسم المستخدم',
+                  prefixIcon: Icons.person,
+                  borderRadius: 16,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال اسم المستخدم';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: 24.h),
                 // Send Button
@@ -133,7 +116,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                                 'سيتم إرسال رمز التحقق قريباً',
                                 snackPosition: SnackPosition.BOTTOM,
                                 backgroundColor: AppColors.drawerPurple.withOpacity(0.1),
-                                colorText: AppColors.textDark,
+                                colorText: Theme.of(context).textTheme.bodyLarge?.color,
                               );
                             },
                       isLoading: controller.isLoading,

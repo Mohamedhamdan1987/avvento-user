@@ -33,9 +33,9 @@ class DriverRecentActivityItem extends StatelessWidget {
     return Container(
       padding: EdgeInsetsDirectional.all(16.76.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         border: Border.all(
-          color: AppColors.borderLightGray,
+          color: Theme.of(context).dividerColor,
           width: 0.76.w,
         ),
         borderRadius: BorderRadius.circular(14.r),
@@ -94,7 +94,7 @@ class DriverRecentActivityItem extends StatelessWidget {
                         order.restaurantName,
                         style: const TextStyle().textColorBold(
                           fontSize: 14.sp,
-                          color: AppColors.textDark,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       SizedBox(height: 4.h),
@@ -102,7 +102,7 @@ class DriverRecentActivityItem extends StatelessWidget {
                         '${_getTimeAgo(order.createdAt)} • مكتمل',
                         style: const TextStyle().textColorNormal(
                           fontSize: 12.sp,
-                          color: const Color(0xFF99A1AF),
+                          color: Theme.of(context).textTheme.bodyMedium?.color ?? const Color(0xFF99A1AF),
                         ),
                       ),
                     ],
@@ -122,7 +122,7 @@ class DriverRecentActivityItem extends StatelessWidget {
                 '${order.totalAmount.toStringAsFixed(2)} د.ل',
                 style: const TextStyle().textColorBold(
                   fontSize: 14.sp,
-                  color: AppColors.textDark,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
               SizedBox(height: 4.h),
@@ -132,7 +132,7 @@ class DriverRecentActivityItem extends StatelessWidget {
                   vertical: 2.h,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0FDF4),
+                  color: const Color(0xFFF0FDF4), // Status specific, maybe keep or use theme success color light
                   borderRadius: BorderRadius.circular(100.r),
                 ),
                 child: Text(

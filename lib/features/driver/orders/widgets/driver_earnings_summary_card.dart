@@ -19,10 +19,10 @@ class DriverEarningsSummaryCard extends StatelessWidget {
     return Container(
       padding: EdgeInsetsDirectional.all(20.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: AppColors.borderLightGray.withOpacity(0.1),
+          color: Theme.of(context).dividerColor.withOpacity(0.1),
           width: 0.76.w,
         ),
       ),
@@ -40,7 +40,7 @@ class DriverEarningsSummaryCard extends StatelessWidget {
                     'ملخص الأرباح',
                     style: const TextStyle().textColorBold(
                       fontSize: 18.sp,
-                      color: AppColors.textDark,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                     ),
                   ),
                   SizedBox(width: 8.w),
@@ -58,15 +58,15 @@ class DriverEarningsSummaryCard extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(2.w),
                 decoration: BoxDecoration(
-                  color: AppColors.borderLightGray,
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   borderRadius: BorderRadius.circular(14.r),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildPeriodButton('يومي', 'يومي'),
-                    _buildPeriodButton('أسبوعي', 'أسبوعي'),
-                    _buildPeriodButton('شهري', 'شهري'),
+                    _buildPeriodButton(context, 'يومي', 'يومي'),
+                    _buildPeriodButton(context, 'أسبوعي', 'أسبوعي'),
+                    _buildPeriodButton(context, 'شهري', 'شهري'),
                   ],
                 ),
               ),
@@ -77,7 +77,7 @@ class DriverEarningsSummaryCard extends StatelessWidget {
           // Bar Chart
           SizedBox(
             height: 200.h,
-            child: _buildBarChart(),
+            child: _buildBarChart(context),
           ),
           SizedBox(height: 16.h),
 
@@ -87,7 +87,7 @@ class DriverEarningsSummaryCard extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                 top: BorderSide(
-                  color: AppColors.borderGray,
+                  color: Theme.of(context).dividerColor,
                   width: 0.76.w,
                 ),
               ),
@@ -100,7 +100,7 @@ class DriverEarningsSummaryCard extends StatelessWidget {
                   '1,640 د.ل',
                   style: const TextStyle().textColorBold(
                     fontSize: 18.sp,
-                    color: AppColors.textDark,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
 
@@ -109,7 +109,7 @@ class DriverEarningsSummaryCard extends StatelessWidget {
                   'إجمالي أرباح هذا الأسبوع',
                   style: const TextStyle().textColorMedium(
                     fontSize: 14.sp,
-                    color: AppColors.textLight,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                 ),
               ],
@@ -120,7 +120,7 @@ class DriverEarningsSummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPeriodButton(String period, String label) {
+  Widget _buildPeriodButton(BuildContext context, String period, String label) {
     final isSelected = selectedPeriod == period;
     return GestureDetector(
       onTap: () => onPeriodChanged(period),
@@ -130,7 +130,7 @@ class DriverEarningsSummaryCard extends StatelessWidget {
           vertical: 4.76.h,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
+          color: isSelected ? Theme.of(context).cardColor : Colors.transparent,
           borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
             color: Colors.transparent,
@@ -141,14 +141,16 @@ class DriverEarningsSummaryCard extends StatelessWidget {
           label,
           style: const TextStyle().textColorMedium(
             fontSize: 12.sp,
-            color: AppColors.textDark,
+            color: isSelected
+                ? Theme.of(context).textTheme.bodyLarge?.color
+                : Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildBarChart() {
+  Widget _buildBarChart(BuildContext context) {
     // Mock data for the week
     final weeklyData = [
       {'day': 'السبت', 'value': 0.65},
@@ -182,7 +184,7 @@ class DriverEarningsSummaryCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: isHighest
                               ? AppColors.primary
-                              : AppColors.borderLightGray,
+                              : Theme.of(context).dividerColor.withOpacity(0.3),
                           borderRadius: BorderRadiusDirectional.only(
                             topStart: Radius.circular(4.r),
                             topEnd: Radius.circular(4.r),
@@ -207,7 +209,7 @@ class DriverEarningsSummaryCard extends StatelessWidget {
                 data['day'] as String,
                 style: const TextStyle().textColorNormal(
                   fontSize: 10.sp,
-                  color: const Color(0xFF9CA3AF),
+                  color: Theme.of(context).textTheme.bodySmall?.color ?? const Color(0xFF9CA3AF),
                 ),
                 textAlign: TextAlign.center,
               ),

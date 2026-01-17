@@ -19,10 +19,10 @@ class AddressListPage extends StatelessWidget {
     final controller = Get.put(AddressController());
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'عناوين التوصيل',
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
@@ -35,7 +35,7 @@ class AddressListPage extends StatelessWidget {
                 }
 
                 if (controller.addresses.isEmpty) {
-                  return _buildEmptyState();
+                  return _buildEmptyState(context);
                 }
 
                 return RefreshIndicator(
@@ -45,7 +45,7 @@ class AddressListPage extends StatelessWidget {
                     itemCount: controller.addresses.length,
                     itemBuilder: (context, index) {
                       final address = controller.addresses[index];
-                      return _buildAddressCard(address, controller);
+                      return _buildAddressCard(context, address, controller);
                     },
                   ),
                 );
@@ -58,7 +58,7 @@ class AddressListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -67,8 +67,8 @@ class AddressListPage extends StatelessWidget {
             'assets/svg/client/location.svg',
             width: 80.w,
             height: 80.h,
-            colorFilter: const ColorFilter.mode(
-              AppColors.textPlaceholder,
+            colorFilter: ColorFilter.mode(
+              Theme.of(context).disabledColor,
               BlendMode.srcIn,
             ),
           ),
@@ -77,7 +77,7 @@ class AddressListPage extends StatelessWidget {
             'لا توجد عناوين مسجلة',
             style: const TextStyle().textColorBold(
               fontSize: 18,
-              color: AppColors.textDark,
+              color: Theme.of(context).textTheme.titleLarge?.color,
             ),
           ),
           SizedBox(height: 8.h),
@@ -85,7 +85,7 @@ class AddressListPage extends StatelessWidget {
             'قم بإضافة عنوان جديد لتسهيل عملية التوصيل',
             style: const TextStyle().textColorNormal(
               fontSize: 14,
-              color: AppColors.textLight,
+              color: Theme.of(context).hintColor,
             ),
           ),
         ],
@@ -93,7 +93,7 @@ class AddressListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAddressCard(AddressModel address, AddressController controller) {
+  Widget _buildAddressCard(BuildContext context, AddressModel address, AddressController controller) {
     // Check if this page was opened for selection (from checkout)
     final isSelectionMode = Get.arguments == true;
     
@@ -108,10 +108,10 @@ class AddressListPage extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 16.h),
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
-            color: address.isActive ? AppColors.purple : AppColors.borderLightGray,
+            color: address.isActive ? AppColors.purple : Theme.of(context).dividerColor,
             width: address.isActive ? 2 : 1,
           ),
           boxShadow: [
@@ -150,7 +150,7 @@ class AddressListPage extends StatelessWidget {
                         address.label,
                         style: const TextStyle().textColorBold(
                           fontSize: 16,
-                          color: AppColors.textDark,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       if (address.isActive) ...[
@@ -177,7 +177,7 @@ class AddressListPage extends StatelessWidget {
                     address.address,
                     style: const TextStyle().textColorNormal(
                       fontSize: 13,
-                      color: AppColors.textLight,
+                      color: Theme.of(context).hintColor,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

@@ -8,13 +8,14 @@ class DriverPerformanceCard extends StatelessWidget {
   const DriverPerformanceCard({super.key});
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: AppColors.borderLightGray.withOpacity(0.1),
+          color: Theme.of(context).dividerColor.withOpacity(0.1),
           width: 0.76.w,
         ),
       ),
@@ -29,7 +30,7 @@ class DriverPerformanceCard extends StatelessWidget {
             child: Container(
               height: 4.h,
               decoration: BoxDecoration(
-                color: AppColors.borderLightGray,
+                color: Theme.of(context).dividerColor,
                 borderRadius: BorderRadiusDirectional.only(
                   topStart: Radius.circular(16.r),
                   topEnd: Radius.circular(16.r),
@@ -99,7 +100,7 @@ class DriverPerformanceCard extends StatelessWidget {
                                       'سائق ذهبي',
                                       style: const TextStyle().textColorBold(
                                         fontSize: 18.sp,
-                                        color: AppColors.textDark,
+                                        color: Theme.of(context).textTheme.titleLarge?.color,
                                       ),
                                     ),
                                     SizedBox(width: 8.w),
@@ -118,7 +119,7 @@ class DriverPerformanceCard extends StatelessWidget {
                                   'أكمل 25 طلب للوصول للمستوى البلاتيني',
                                   style: const TextStyle().textColorNormal(
                                     fontSize: 12.sp,
-                                    color: AppColors.textLight,
+                                    color: Theme.of(context).textTheme.bodyMedium?.color,
                                   ),
                                 ),
                               ],
@@ -160,6 +161,7 @@ class DriverPerformanceCard extends StatelessWidget {
                     // Completed Orders (on the right in RTL)
                     Expanded(
                       child: _buildStatCard(
+                        context,
                         value: '342',
                         label: 'طلب مكتمل',
                       ),
@@ -168,6 +170,7 @@ class DriverPerformanceCard extends StatelessWidget {
                     // Rating (middle)
                     Expanded(
                       child: _buildStatCard(
+                        context,
                         value: '4.9',
                         label: 'التقييم العام',
                       ),
@@ -176,6 +179,7 @@ class DriverPerformanceCard extends StatelessWidget {
                     // Acceptance Rate (on the left in RTL)
                     Expanded(
                       child: _buildStatCard(
+                        context,
                         value: '98%',
                         label: 'نسبة القبول',
                       ),
@@ -190,16 +194,17 @@ class DriverPerformanceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard({
+  Widget _buildStatCard(
+    BuildContext context, {
     required String value,
     required String label,
   }) {
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: AppColors.lightBackground,
+        color: Theme.of(context).scaffoldBackgroundColor,
         border: Border.all(
-          color: AppColors.borderLightGray,
+          color: Theme.of(context).dividerColor,
           width: 0.76.w,
         ),
         borderRadius: BorderRadius.circular(14.r),
@@ -211,7 +216,7 @@ class DriverPerformanceCard extends StatelessWidget {
             value,
             style: const TextStyle().textColorBold(
               fontSize: 20.sp,
-              color: AppColors.textDark,
+              color: Theme.of(context).textTheme.titleLarge?.color,
             ),
           ),
           SizedBox(height: 4.h),
@@ -219,7 +224,7 @@ class DriverPerformanceCard extends StatelessWidget {
             label,
             style: const TextStyle().textColorNormal(
               fontSize: 10.sp,
-              color: AppColors.textLight,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
             textAlign: TextAlign.center,
           ),

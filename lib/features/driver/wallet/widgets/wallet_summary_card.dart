@@ -29,9 +29,9 @@ class WalletSummaryCard extends StatelessWidget {
       height: 133.5.h,
       padding: EdgeInsetsDirectional.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         border: Border.all(
-          color: AppColors.borderLightGray.withOpacity(0.1),
+          color: Theme.of(context).dividerColor.withOpacity(0.1),
           width: 0.76.w,
         ),
         borderRadius: BorderRadius.circular(16.r),
@@ -49,7 +49,7 @@ class WalletSummaryCard extends StatelessWidget {
                 width: 40.w,
                 height: 40.h,
                 decoration: BoxDecoration(
-                  color: iconColor,
+                  color: iconColor, // Use as is, potentially specific branding
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -57,7 +57,7 @@ class WalletSummaryCard extends StatelessWidget {
                     iconName: iconName,
                     width: 20.w,
                     height: 20.h,
-                    color: AppColors.textDark,
+                    color: AppColors.textDark, // Maybe keep dark as icon bg is light, or Theme.of(context).primaryColorDark or black depending on icon background
                     fallbackIcon: fallbackIcon,
                   ),
                 ),
@@ -69,7 +69,7 @@ class WalletSummaryCard extends StatelessWidget {
                 title,
                 style: const TextStyle().textColorBold(
                   fontSize: 12.sp,
-                  color: AppColors.textLight,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -82,7 +82,7 @@ class WalletSummaryCard extends StatelessWidget {
             '${isNegative ? '-' : ''}${displayAmount.toStringAsFixed(2)}',
             style: const TextStyle().textColorBold(
               fontSize: 20.sp,
-              color: isNegative ? AppColors.notificationRed : AppColors.textDark,
+              color: isNegative ? AppColors.notificationRed : Theme.of(context).textTheme.titleLarge?.color,
             ),
           ),
         ],

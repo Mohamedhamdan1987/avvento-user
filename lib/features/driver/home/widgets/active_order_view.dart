@@ -57,9 +57,9 @@ class ActiveOrderView extends StatelessWidget {
       margin: EdgeInsets.all(16.w),
       padding: EdgeInsets.all(24.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         border: Border.all(
-          color: AppColors.borderLightGray,
+          color: Theme.of(context).dividerColor,
           width: 0.76.w,
         ),
         borderRadius: BorderRadius.circular(32.r),
@@ -118,7 +118,7 @@ class ActiveOrderView extends StatelessWidget {
                     'الذهاب للمطعم',
                     style: const TextStyle().textColorBold(
                       fontSize: 20,
-                      color: AppColors.textDark,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                     ),
                   ),
                   SizedBox(height: 4.h),
@@ -126,7 +126,7 @@ class ActiveOrderView extends StatelessWidget {
                     'توجه إلى نقطة الاستلام',
                     style: const TextStyle().textColorMedium(
                       fontSize: 14,
-                      color: AppColors.textLight,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                   ),
                 ],
@@ -140,9 +140,9 @@ class ActiveOrderView extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: AppColors.lightBackground,
+              color: Theme.of(context).scaffoldBackgroundColor,
               border: Border.all(
-                color: AppColors.borderLightGray,
+                color: Theme.of(context).dividerColor,
                 width: 0.76.w,
               ),
               borderRadius: BorderRadius.circular(16.r),
@@ -173,8 +173,8 @@ class ActiveOrderView extends StatelessWidget {
                       width: 44.w,
                       height: 44.h,
                       radius: 100.r,
-                      color: Colors.white,
-                      borderColor: AppColors.borderLightGray,
+                      color: Theme.of(context).cardColor,
+                      borderColor: Theme.of(context).dividerColor,
                       onTap: () async {
                         final uri = Uri.parse('tel:${order.pickupLocation.address}');
                         if (await canLaunchUrl(uri)) {
@@ -201,7 +201,7 @@ class ActiveOrderView extends StatelessWidget {
                         order.restaurantName,
                         style: const TextStyle().textColorBold(
                           fontSize: 16,
-                          color: AppColors.textDark,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       SizedBox(height: 2.h),
@@ -209,7 +209,7 @@ class ActiveOrderView extends StatelessWidget {
                         order.pickupLocation.address,
                         style: const TextStyle().textColorNormal(
                           fontSize: 12,
-                          color: AppColors.textLight,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                       ),
                     ],
@@ -223,7 +223,7 @@ class ActiveOrderView extends StatelessWidget {
                   width: 48.w,
                   height: 48.h,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(100.r),
                     boxShadow: [
                       BoxShadow(
@@ -285,9 +285,9 @@ class ActiveOrderView extends StatelessWidget {
       margin: EdgeInsets.all(16.w),
       padding: EdgeInsets.all(24.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         border: Border.all(
-          color: AppColors.borderLightGray,
+          color: Theme.of(context).dividerColor,
           width: 0.76.w,
         ),
         borderRadius: BorderRadius.circular(32.r),
@@ -346,7 +346,7 @@ class ActiveOrderView extends StatelessWidget {
                     'في المطعم',
                     style: const TextStyle().textColorBold(
                       fontSize: 20,
-                      color: AppColors.textDark,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                     ),
                   ),
                   SizedBox(height: 4.h),
@@ -354,7 +354,7 @@ class ActiveOrderView extends StatelessWidget {
                     'تأكيد استلام الطلب رقم #${order.orderNumber}',
                     style: const TextStyle().textColorMedium(
                       fontSize: 14,
-                      color: AppColors.textLight,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                   ),
                 ],
@@ -368,9 +368,9 @@ class ActiveOrderView extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: AppColors.lightBackground,
+              color: Theme.of(context).scaffoldBackgroundColor,
               border: Border.all(
-                color: AppColors.borderLightGray,
+                color: Theme.of(context).dividerColor,
                 width: 0.76.w,
               ),
               borderRadius: BorderRadius.circular(16.r),
@@ -401,8 +401,8 @@ class ActiveOrderView extends StatelessWidget {
                       width: 44.w,
                       height: 44.h,
                       radius: 100.r,
-                      color: Colors.white,
-                      borderColor: AppColors.borderLightGray,
+                      color: Theme.of(context).cardColor,
+                      borderColor: Theme.of(context).dividerColor,
                       onTap: () async {
                         final uri = Uri.parse('tel:${order.pickupLocation.address}');
                         if (await canLaunchUrl(uri)) {
@@ -429,7 +429,7 @@ class ActiveOrderView extends StatelessWidget {
                         order.restaurantName,
                         style: const TextStyle().textColorBold(
                           fontSize: 16,
-                          color: AppColors.textDark,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       SizedBox(height: 2.h),
@@ -437,7 +437,7 @@ class ActiveOrderView extends StatelessWidget {
                         order.pickupLocation.address,
                         style: const TextStyle().textColorNormal(
                           fontSize: 12,
-                          color: AppColors.textLight,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                       ),
                     ],
@@ -451,7 +451,7 @@ class ActiveOrderView extends StatelessWidget {
                   width: 48.w,
                   height: 48.h,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(100.r),
                     boxShadow: [
                       BoxShadow(
@@ -477,9 +477,9 @@ class ActiveOrderView extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: AppColors.lightBackground.withOpacity(0.5),
+              color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.5),
               border: Border.all(
-                color: AppColors.borderGray,
+                color: Theme.of(context).dividerColor,
                 width: 0.76.w,
               ),
               borderRadius: BorderRadius.circular(16.r),
@@ -495,9 +495,9 @@ class ActiveOrderView extends StatelessWidget {
                         vertical: 4.h,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         border: Border.all(
-                          color: AppColors.borderLightGray,
+                          color: Theme.of(context).dividerColor,
                           width: 0.76.w,
                         ),
                         borderRadius: BorderRadius.circular(4.r),
@@ -510,7 +510,7 @@ class ActiveOrderView extends StatelessWidget {
                           fontFamily: 'Inter',
                         ).textColorBold(
                           fontSize: 16,
-                          color: AppColors.textDark,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                     ),
@@ -518,7 +518,7 @@ class ActiveOrderView extends StatelessWidget {
                       'رقم الطلب',
                       style: const TextStyle().textColorMedium(
                         fontSize: 14,
-                        color: AppColors.textLight,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                   ],
@@ -538,7 +538,7 @@ class ActiveOrderView extends StatelessWidget {
                       'المبلغ المطلوب',
                       style: const TextStyle().textColorMedium(
                         fontSize: 14,
-                        color: AppColors.textLight,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                   ],
@@ -586,9 +586,9 @@ class ActiveOrderView extends StatelessWidget {
       margin: EdgeInsets.all(16.w),
       padding: EdgeInsets.all(24.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         border: Border.all(
-          color: AppColors.borderLightGray,
+          color: Theme.of(context).dividerColor,
           width: 0.76.w,
         ),
         borderRadius: BorderRadius.circular(32.r),
@@ -647,7 +647,7 @@ class ActiveOrderView extends StatelessWidget {
                     'الذهاب للعميل',
                     style: const TextStyle().textColorBold(
                       fontSize: 20,
-                      color: AppColors.textDark,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                     ),
                   ),
                   SizedBox(height: 4.h),
@@ -655,7 +655,7 @@ class ActiveOrderView extends StatelessWidget {
                     'توجه إلى موقع التسليم',
                     style: const TextStyle().textColorMedium(
                       fontSize: 14,
-                      color: AppColors.textLight,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                   ),
                 ],
@@ -669,9 +669,9 @@ class ActiveOrderView extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: AppColors.lightBackground,
+              color: Theme.of(context).scaffoldBackgroundColor,
               border: Border.all(
-                color: AppColors.borderLightGray,
+                color: Theme.of(context).dividerColor,
                 width: 0.76.w,
               ),
               borderRadius: BorderRadius.circular(16.r),
@@ -702,8 +702,8 @@ class ActiveOrderView extends StatelessWidget {
                       width: 44.w,
                       height: 44.h,
                       radius: 100.r,
-                      color: Colors.white,
-                      borderColor: AppColors.borderLightGray,
+                      color: Theme.of(context).cardColor,
+                      borderColor: Theme.of(context).dividerColor,
                       onTap: () async {
                         final uri = Uri.parse('tel:${order.customerPhone}');
                         if (await canLaunchUrl(uri)) {
@@ -730,7 +730,7 @@ class ActiveOrderView extends StatelessWidget {
                         order.customerName,
                         style: const TextStyle().textColorBold(
                           fontSize: 16,
-                          color: AppColors.textDark,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       SizedBox(height: 2.h),
@@ -738,7 +738,7 @@ class ActiveOrderView extends StatelessWidget {
                         '${order.customerName} - ${order.deliveryLocation.address}',
                         style: const TextStyle().textColorNormal(
                           fontSize: 12,
-                          color: AppColors.textLight,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -754,7 +754,7 @@ class ActiveOrderView extends StatelessWidget {
                   width: 48.w,
                   height: 48.h,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(100.r),
                     boxShadow: [
                       BoxShadow(
@@ -816,9 +816,9 @@ class ActiveOrderView extends StatelessWidget {
       margin: EdgeInsets.all(16.w),
       padding: EdgeInsets.all(24.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         border: Border.all(
-          color: AppColors.borderLightGray,
+          color: Theme.of(context).dividerColor.withOpacity(0.5),
           width: 0.76.w,
         ),
         borderRadius: BorderRadius.circular(32.r),
@@ -851,8 +851,8 @@ class ActiveOrderView extends StatelessWidget {
                     width: 44.w,
                     height: 44.h,
                     radius: 100.r,
-                    color: Colors.white,
-                    borderColor: AppColors.borderLightGray,
+                    color: Theme.of(context).cardColor,
+                    borderColor: Theme.of(context).dividerColor.withOpacity(0.5),
                     onTap: () {
                       // TODO: Open chat
                     },
@@ -871,7 +871,7 @@ class ActiveOrderView extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.notificationRed,
                         border: Border.all(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           width: 0.76.w,
                         ),
                         shape: BoxShape.circle,
@@ -899,7 +899,7 @@ class ActiveOrderView extends StatelessWidget {
                     'عند العميل',
                     style: const TextStyle().textColorBold(
                       fontSize: 20,
-                      color: AppColors.textDark,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                     ),
                   ),
                   SizedBox(height: 4.h),
@@ -907,7 +907,7 @@ class ActiveOrderView extends StatelessWidget {
                     'تسليم الطلب',
                     style: const TextStyle().textColorMedium(
                       fontSize: 14,
-                      color: AppColors.textLight,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                   ),
                 ],
@@ -921,9 +921,9 @@ class ActiveOrderView extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: AppColors.lightBackground,
+              color: Theme.of(context).scaffoldBackgroundColor,
               border: Border.all(
-                color: AppColors.borderLightGray,
+                color: Theme.of(context).dividerColor.withOpacity(0.5),
                 width: 0.76.w,
               ),
               borderRadius: BorderRadius.circular(16.r),
@@ -954,8 +954,8 @@ class ActiveOrderView extends StatelessWidget {
                       width: 44.w,
                       height: 44.h,
                       radius: 100.r,
-                      color: Colors.white,
-                      borderColor: AppColors.borderLightGray,
+                      color: Theme.of(context).cardColor,
+                      borderColor: Theme.of(context).dividerColor.withOpacity(0.5),
                       onTap: () async {
                         final uri = Uri.parse('tel:${order.customerPhone}');
                         if (await canLaunchUrl(uri)) {
@@ -982,7 +982,7 @@ class ActiveOrderView extends StatelessWidget {
                         order.customerName,
                         style: const TextStyle().textColorBold(
                           fontSize: 16,
-                          color: AppColors.textDark,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       SizedBox(height: 2.h),
@@ -990,7 +990,7 @@ class ActiveOrderView extends StatelessWidget {
                         '${order.customerName} - ${order.deliveryLocation.address}',
                         style: const TextStyle().textColorNormal(
                           fontSize: 12,
-                          color: AppColors.textLight,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1006,7 +1006,7 @@ class ActiveOrderView extends StatelessWidget {
                   width: 48.w,
                   height: 48.h,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(100.r),
                     boxShadow: [
                       BoxShadow(
@@ -1032,9 +1032,9 @@ class ActiveOrderView extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: AppColors.lightBackground.withOpacity(0.5),
+              color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.5),
               border: Border.all(
-                color: AppColors.borderGray,
+                color: Theme.of(context).dividerColor.withOpacity(0.5),
                 width: 0.76.w,
               ),
               borderRadius: BorderRadius.circular(16.r),
@@ -1050,9 +1050,9 @@ class ActiveOrderView extends StatelessWidget {
                         vertical: 4.h,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         border: Border.all(
-                          color: AppColors.borderLightGray,
+                          color: Theme.of(context).dividerColor.withOpacity(0.5),
                           width: 0.76.w,
                         ),
                         borderRadius: BorderRadius.circular(4.r),
@@ -1065,7 +1065,7 @@ class ActiveOrderView extends StatelessWidget {
                           fontFamily: 'Inter',
                         ).textColorBold(
                           fontSize: 16,
-                          color: AppColors.textDark,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                     ),
@@ -1073,7 +1073,7 @@ class ActiveOrderView extends StatelessWidget {
                       'رقم الطلب',
                       style: const TextStyle().textColorMedium(
                         fontSize: 14,
-                        color: AppColors.textLight,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                   ],
@@ -1093,7 +1093,7 @@ class ActiveOrderView extends StatelessWidget {
                       'المبلغ المطلوب',
                       style: const TextStyle().textColorMedium(
                         fontSize: 14,
-                        color: AppColors.textLight,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                   ],
@@ -1134,7 +1134,7 @@ class ActiveOrderView extends StatelessWidget {
               Container(
                 height: 48.h,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.05),
+                  color: Theme.of(context).dividerColor.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(14.r),
                 ),
                 child: Material(

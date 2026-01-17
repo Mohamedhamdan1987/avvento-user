@@ -12,7 +12,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showBackButton;
   final VoidCallback? onLeadingPressed;
   final Color backgroundColor;
-  final Color contentColor;
+  final Color? contentColor;
   final bool centerTitle;
   final double elevation;
   final PreferredSizeWidget? bottom;
@@ -25,8 +25,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leading,
     this.showBackButton = true,
     this.onLeadingPressed,
-    this.backgroundColor = AppColors.white,
-    this.contentColor = AppColors.textDark,
+    this.backgroundColor = Colors.transparent,
+    this.contentColor,
     this.centerTitle = true,
     this.elevation = 0,
     this.bottom,
@@ -34,17 +34,21 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveContentColor = contentColor ?? Theme.of(context).textTheme.titleLarge?.color ?? AppColors.textDark;
+    
     return AppBar(
-      backgroundColor: backgroundColor,
+      backgroundColor: backgroundColor == Colors.transparent 
+          ? (Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor)
+          : backgroundColor,
       elevation: elevation,
       centerTitle: centerTitle,
-      leading: _buildLeading(context),
+      leading: _buildLeading(context, effectiveContentColor),
       title: titleWidget ??
           (title != null
               ? Text(
                   title!,
                   style: TextStyle(
-                    color: contentColor,
+                    color: effectiveContentColor,
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'IBMPlexSansArabic',
@@ -52,13 +56,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 )
               : null),
       actions: actions,
-      iconTheme: IconThemeData(color: contentColor),
-      actionsIconTheme: IconThemeData(color: contentColor),
+      iconTheme: IconThemeData(color: effectiveContentColor),
+      actionsIconTheme: IconThemeData(color: effectiveContentColor),
       bottom: bottom,
     );
   }
 
-  Widget? _buildLeading(BuildContext context) {
+  Widget? _buildLeading(BuildContext context, Color color) {
     if (leading != null) return leading;
     if (!showBackButton) return null;
 
@@ -76,7 +80,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           iconName: 'assets/svg/arrow-right.svg',
           width: 20.w,
           height: 20.h,
-          color: contentColor,
+          color: color,
         ),
       ),
     );

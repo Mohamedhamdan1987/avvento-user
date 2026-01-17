@@ -34,21 +34,20 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
     final controller = Get.find<SupportController>();
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
           onPressed: () => Get.back(),
         ),
-        backgroundColor: AppColors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.drawerPurple),
         title: Text(
           'الدعم الفني',
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
-            color: AppColors.textDark,
+            color: Theme.of(context).textTheme.titleLarge?.color,
           ),
         ),
         centerTitle: true,
@@ -56,7 +55,7 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
       body: Obx(() {
         if (controller.isLoading.value && controller.messages.isEmpty) {
           return const Center(
-            child: CircularProgressIndicator(color: AppColors.drawerPurple),
+            child: CircularProgressIndicator(color: AppColors.purple),
           );
         }
 
@@ -68,12 +67,12 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
                 Icon(
                   Icons.error_outline,
                   size: 64.sp,
-                  color: AppColors.error,
+                  color: Theme.of(context).colorScheme.error,
                 ),
                 SizedBox(height: 16.h),
                 Text(
                   controller.errorMessage.value,
-                  style: TextStyle(fontSize: 16.sp, color: AppColors.error),
+                  style: TextStyle(fontSize: 16.sp, color: Theme.of(context).colorScheme.error),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 16.h),
@@ -81,6 +80,10 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
                   onPressed: () {
                     controller.initializeConversation();
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.purple,
+                    foregroundColor: Colors.white,
+                  ),
                   child: const Text('إعادة المحاولة'),
                 ),
               ],
@@ -93,19 +96,19 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
           // Header Info
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             child: Row(
               children: [
                 Container(
                   width: 40.w,
                   height: 40.h,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF6A2C91).withOpacity(0.1),
+                    color: AppColors.purple.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.support_agent,
-                    color: const Color(0xFF6A2C91),
+                    color: AppColors.purple,
                     size: 20.sp,
                   ),
                 ),
@@ -119,7 +122,7 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
                         style: TextStyle(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF18181B),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       SizedBox(height: 2.h),
@@ -138,7 +141,7 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
                             'متصل الآن',
                             style: TextStyle(
                               fontSize: 11.sp,
-                              color: const Color(0xFF71717B),
+                              color: Theme.of(context).hintColor,
                             ),
                           ),
                         ],
@@ -154,6 +157,7 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: () => controller.refreshMessages(),
+              color: AppColors.purple,
               child: ListView.builder(
                 controller: scrollController,
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
@@ -169,7 +173,7 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
                           Container(
                             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                             decoration: BoxDecoration(
-                              color: AppColors.white,
+                              color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(12.r),
                               boxShadow: [
                                 BoxShadow(
@@ -220,7 +224,7 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -235,20 +239,20 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF4F4F5),
+                        color: Theme.of(context).scaffoldBackgroundColor,
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: TextField(
                         controller: textController,
                         style: TextStyle(
                           fontSize: 13.sp,
-                          color: const Color(0xFF18181B),
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                         decoration: InputDecoration(
                           hintText: 'اكتب رسالتك...',
                           hintStyle: TextStyle(
                             fontSize: 13.sp,
-                            color: const Color(0xFF71717B),
+                            color: Theme.of(context).hintColor,
                           ),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(
@@ -273,8 +277,8 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
                     height: 40.h,
                     decoration: BoxDecoration(
                       color: controller.isLoading.value
-                          ? AppColors.borderGray
-                          : AppColors.drawerPurple,
+                          ? Theme.of(context).disabledColor
+                          : AppColors.purple,
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
@@ -293,12 +297,12 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
                               height: 18.h,
                               child: const CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
                           : Icon(
                               Icons.send,
-                              color: AppColors.white,
+                              color: Colors.white,
                               size: 18.sp,
                             ),
                     ),
@@ -323,7 +327,7 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
           width: 6.w,
           height: 6.h,
           decoration: BoxDecoration(
-            color: const Color(0xFF6A2C91).withOpacity(0.3 + (value * 0.7)),
+            color: AppColors.purple.withOpacity(0.3 + (value * 0.7)),
             shape: BoxShape.circle,
           ),
         );

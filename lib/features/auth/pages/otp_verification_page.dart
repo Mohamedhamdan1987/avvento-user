@@ -34,7 +34,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     final controller = Get.find<AuthController>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -44,7 +44,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
-            color: AppColors.textDark,
+            color: Theme.of(context).textTheme.titleLarge?.color,
           ),
         ),
         centerTitle: true,
@@ -82,7 +82,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                 style: TextStyle(
                   fontSize: 28.sp,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -91,7 +91,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                 'تم إرسال رمز التحقق إلى ${widget.phone}',
                 style: TextStyle(
                   fontSize: 16.sp,
-                  color: AppColors.textMedium,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -99,7 +99,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
               // OTP Field
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(16.r),
                   border: Border.all(
                     color: AppColors.drawerPurple.withOpacity(0.2),
@@ -125,14 +125,14 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                     fontSize: 24.sp,
                     letterSpacing: 8,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
+                    color: Theme.of(context).textTheme.headlineMedium?.color,
                   ),
                   decoration: InputDecoration(
                     hintText: '000000',
                     hintStyle: TextStyle(
                       fontSize: 24.sp,
                       letterSpacing: 8,
-                      color: const Color(0xFF9CA3AF),
+                      color: Theme.of(context).hintColor,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.r),
@@ -147,7 +147,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: const Color(0xFFF9FAFB),
+                    fillColor: Theme.of(context).cardColor, // Or specific light/dark sensitive color
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 16.w,
                       vertical: 20.h,
@@ -192,7 +192,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                               'تم التحقق بنجاح',
                               snackPosition: SnackPosition.BOTTOM,
                               backgroundColor: AppColors.drawerPurple.withOpacity(0.1),
-                              colorText: AppColors.textDark,
+                              colorText: Theme.of(context).textTheme.bodyLarge?.color,
                             );
                           },
                     isLoading: controller.isLoading,
@@ -210,7 +210,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                     'تم إعادة إرسال الرمز',
                     snackPosition: SnackPosition.BOTTOM,
                     backgroundColor: AppColors.drawerPurple.withOpacity(0.1),
-                    colorText: AppColors.textDark,
+                    colorText: Theme.of(context).textTheme.bodyLarge?.color,
                   );
                 },
                 child: Text(

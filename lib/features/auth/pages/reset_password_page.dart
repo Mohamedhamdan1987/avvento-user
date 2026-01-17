@@ -130,7 +130,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -140,7 +140,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
-            color: AppColors.textDark,
+            color: Theme.of(context).textTheme.titleLarge?.color,
           ),
         ),
         centerTitle: true,
@@ -181,7 +181,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                   style: TextStyle(
                     fontSize: 28.sp,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -190,7 +190,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                   'أدخل رمز التحقق المرسل إلى',
                   style: TextStyle(
                     fontSize: 16.sp,
-                    color: AppColors.textMedium,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -200,7 +200,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textDark,
+                    color: Theme.of(context).textTheme.titleMedium?.color,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -217,7 +217,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                 // New Password Field
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16.r),
                     border: Border.all(
                       color: AppColors.drawerPurple.withOpacity(0.2),
@@ -253,7 +253,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                 // Confirm Password Field
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16.r),
                     border: Border.all(
                       color: AppColors.drawerPurple.withOpacity(0.2),
@@ -352,23 +352,23 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
         style: TextStyle(
           fontSize: 24.sp,
           fontWeight: FontWeight.w600,
-          color: AppColors.textDark,
+          color: Theme.of(context).textTheme.headlineMedium?.color,
         ),
         decoration: InputDecoration(
           counterText: '',
           filled: true,
-          fillColor: const Color(0xFFF9FAFB),
+          fillColor: Theme.of(context).cardColor,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.r),
             borderSide: BorderSide(
-              color: const Color(0xFFE5E7EB),
+              color: Theme.of(context).dividerColor,
               width: 1.w,
             ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.r),
             borderSide: BorderSide(
-              color: const Color(0xFFE5E7EB),
+              color: Theme.of(context).dividerColor,
               width: 1.w,
             ),
           ),

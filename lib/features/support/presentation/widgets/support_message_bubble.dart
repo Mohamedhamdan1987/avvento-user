@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../core/constants/app_colors.dart';
+
 class SupportMessageBubble extends StatelessWidget {
   final String text;
   final bool isFromSupport;
@@ -26,13 +28,13 @@ class SupportMessageBubble extends StatelessWidget {
             width: 28.w,
             height: 28.h,
             decoration: BoxDecoration(
-              color: const Color(0xFF6A2C91).withOpacity(0.1),
+              color: AppColors.purple.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.support_agent,
               size: 16.sp,
-              color: const Color(0xFF6A2C91),
+              color: AppColors.purple,
             ),
           ),
           SizedBox(width: 6.w),
@@ -40,7 +42,7 @@ class SupportMessageBubble extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.only(
                   topRight: Radius.circular(12.r),
                   topLeft: Radius.circular(12.r),
@@ -63,7 +65,7 @@ class SupportMessageBubble extends StatelessWidget {
                     text,
                     style: TextStyle(
                       fontSize: 12.5.sp,
-                      color: const Color(0xFF18181B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                       height: 1.3,
                     ),
                   ),
@@ -72,7 +74,7 @@ class SupportMessageBubble extends StatelessWidget {
                     onTimeFormat(timestamp),
                     style: TextStyle(
                       fontSize: 9.sp,
-                      color: const Color(0xFF71717B),
+                      color: Theme.of(context).hintColor,
                     ),
                   ),
                 ],
@@ -91,7 +93,7 @@ class SupportMessageBubble extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: const Color(0xFF6A2C91),
+                color: AppColors.purple,
                 borderRadius: BorderRadius.only(
                   topRight: Radius.circular(12.r),
                   topLeft: Radius.circular(12.r),
@@ -128,13 +130,13 @@ class SupportMessageBubble extends StatelessWidget {
             width: 28.w,
             height: 28.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFF4F4F5),
+              color: Theme.of(context).scaffoldBackgroundColor, // Or better, slightly different shade
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.person,
               size: 16.sp,
-              color: const Color(0xFF71717B),
+              color: Theme.of(context).iconTheme.color,
             ),
           ),
         ],

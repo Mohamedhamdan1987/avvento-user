@@ -58,7 +58,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       body: SafeArea(
         child: SingleChildScrollView(
@@ -97,7 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(
                       fontSize: 32.sp,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textDark,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                       height: 1.2,
                     ),
                     textAlign: TextAlign.center,
@@ -107,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                     'سجل دخولك للاستمرار',
                     style: TextStyle(
                       fontSize: 16.sp,
-                      color: AppColors.textMedium,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,
@@ -287,7 +287,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Expanded(
                         child: Divider(
-                          color: AppColors.borderGray,
+                          color: Theme.of(context).dividerColor,
                           thickness: 1,
                         ),
                       ),
@@ -297,13 +297,13 @@ class _LoginPageState extends State<LoginPage> {
                           'أو',
                           style: TextStyle(
                             fontSize: 14.sp,
-                            color: AppColors.textMedium,
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
                       ),
                       Expanded(
                         child: Divider(
-                          color: AppColors.borderGray,
+                          color: Theme.of(context).dividerColor,
                           thickness: 1,
                         ),
                       ),
@@ -318,7 +318,7 @@ class _LoginPageState extends State<LoginPage> {
                         'ليس لديك حساب؟ ',
                         style: TextStyle(
                           fontSize: 14.sp,
-                          color: AppColors.textMedium,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                       ),
                       TextButton(

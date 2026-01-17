@@ -23,7 +23,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
     return Scaffold(
       appBar: CustomAppBar(
         title: 'المطاعم',
-        backgroundColor: Colors.white,
+        // backgroundColor: Colors.white,
       ),
       body: Column(
         children: [
@@ -40,7 +40,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
               },
               decoration: InputDecoration(
                 filled: true,
-                fillColor: Colors.white,
+                // fillColor: Colors.white,
                 hintText: 'ابحث عن مطعم...',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: CustomIconButtonApp(

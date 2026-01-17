@@ -42,7 +42,7 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
@@ -102,7 +102,7 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
         top: 48.h,
         bottom: 0,
       ),
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       child: Column(
         children: [
           SizedBox(height: 4.h),
@@ -114,7 +114,7 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
                 'أداء التوصيل',
                 style: const TextStyle().textColorBold(
                   fontSize: 24.sp,
-                  color: AppColors.textDark,
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                 ),
               ),
 
@@ -128,7 +128,7 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         width: 1.5.w,
                       ),
                       boxShadow: [
@@ -173,7 +173,7 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
                         color: const Color(0xFF00C950),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           width: 1.5.w,
                         ),
                       ),
@@ -205,7 +205,7 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
               'آخر النشاطات',
               style: const TextStyle().textColorBold(
                 fontSize: 18.sp,
-                color: AppColors.textDark,
+                color: Theme.of(context).textTheme.titleLarge?.color,
               ),
             ),
             SizedBox(height: 16.h),

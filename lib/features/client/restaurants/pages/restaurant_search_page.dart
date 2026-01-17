@@ -1,10 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
 import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:avvento/core/constants/app_colors.dart';
 import '../models/menu_category_model.dart';
 import '../models/menu_item_model.dart';
 import '../models/restaurant_model.dart';
@@ -79,9 +80,9 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: _buildSearchBar(),
@@ -92,7 +93,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
               'إلغاء',
               style: const TextStyle().textColorMedium(
                 fontSize: 14.sp,
-                color: const Color(0xFF7F22FE),
+                color: AppColors.purple,
               ),
             ),
           ),
@@ -118,7 +119,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
     return Container(
       height: 48.h,
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: TextField(
@@ -126,11 +127,12 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
         autofocus: true,
         textInputAction: TextInputAction.search,
         onSubmitted: _onQuerySubmitted,
+        style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
         decoration: InputDecoration(
           hintText: 'ابحث عن قسم أو عنصر...',
           hintStyle: const TextStyle().textColorNormal(
             fontSize: 14.sp,
-            color: const Color(0xFF99A1AF),
+            color: Theme.of(context).hintColor,
           ),
           prefixIcon: Padding(
             padding: EdgeInsets.all(12.r),
@@ -138,7 +140,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
               iconName: 'assets/svg/search-icon.svg',
               width: 16.w,
               height: 16.h,
-              color: const Color(0xFF99A1AF),
+              color: Theme.of(context).hintColor,
             ),
           ),
           border: InputBorder.none,
@@ -163,7 +165,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
                 'عمليات البحث الأخيرة',
                 style: const TextStyle().textColorBold(
                   fontSize: 16.sp,
-                  color: const Color(0xFF101828),
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                 ),
               ),
               GestureDetector(
@@ -175,7 +177,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
                   'مسح الكل',
                   style: const TextStyle().textColorMedium(
                     fontSize: 12.sp,
-                    color: const Color(0xFF7F22FE),
+                    color: AppColors.purple,
                   ),
                 ),
               ),
@@ -186,7 +188,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
           child: ListView.separated(
             padding: EdgeInsets.symmetric(horizontal: 24.w),
             itemCount: _history.length,
-            separatorBuilder: (context, index) => const Divider(color: Color(0xFFF3F4F6)),
+            separatorBuilder: (context, index) => Divider(color: Theme.of(context).dividerColor),
             itemBuilder: (context, index) {
               final item = _history[index];
               return ListTile(
@@ -195,13 +197,13 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
                   iconName: 'assets/svg/search-icon.svg',
                   width: 16.w,
                   height: 16.h,
-                  color: const Color(0xFF99A1AF),
+                  color: Theme.of(context).hintColor,
                 ),
                 title: Text(
                   item,
                   style: const TextStyle().textColorNormal(
                     fontSize: 14.sp,
-                    color: const Color(0xFF101828),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 trailing: GestureDetector(
@@ -209,7 +211,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
                     await SearchHistoryService.removeFromHistory(widget.restaurant.id, item);
                     _loadHistory();
                   },
-                  child: Icon(Icons.close, size: 18.r, color: const Color(0xFF99A1AF)),
+                  child: Icon(Icons.close, size: 18.r, color: Theme.of(context).hintColor),
                 ),
                 onTap: () {
                   _searchController.text = item;
@@ -234,7 +236,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
             'الأقسام',
             style: const TextStyle().textColorBold(
               fontSize: 16.sp,
-              color: const Color(0xFF101828),
+              color: Theme.of(context).textTheme.titleLarge?.color,
             ),
           ),
           SizedBox(height: 12.h),
@@ -246,7 +248,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
             'العناصر',
             style: const TextStyle().textColorBold(
               fontSize: 16.sp,
-              color: const Color(0xFF101828),
+              color: Theme.of(context).textTheme.titleLarge?.color,
             ),
           ),
           SizedBox(height: 12.h),
@@ -264,23 +266,23 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
         height: 48.h,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8.r),
-          color: const Color(0xFFF3F4F6),
+          color: Theme.of(context).cardColor,
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8.r),
           child: category.image != null && category.image!.isNotEmpty
               ? CachedNetworkImage(imageUrl: category.image!, fit: BoxFit.cover)
-              : Center(child: Icon(Icons.category, size: 24.r, color: const Color(0xFF99A1AF))),
+              : Center(child: Icon(Icons.category, size: 24.r, color: Theme.of(context).hintColor)),
         ),
       ),
       title: Text(
         category.name,
         style: const TextStyle().textColorMedium(
           fontSize: 14.sp,
-          color: const Color(0xFF101828),
+          color: Theme.of(context).textTheme.bodyLarge?.color,
         ),
       ),
-      trailing: Icon(Icons.arrow_forward_ios, size: 14.r, color: const Color(0xFF99A1AF)),
+      trailing: Icon(Icons.arrow_forward_ios, size: 14.r, color: Theme.of(context).hintColor),
       onTap: () {
          _onQuerySubmitted(_searchController.text);
         Get.to(() => CategoryMenuPage(
@@ -299,27 +301,27 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
         height: 48.h,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8.r),
-          color: const Color(0xFFF3F4F6),
+          color: Theme.of(context).cardColor,
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8.r),
           child: item.image != null && item.image!.isNotEmpty
               ? CachedNetworkImage(imageUrl: item.image!, fit: BoxFit.cover)
-              : Center(child: Icon(Icons.fastfood, size: 24.r, color: const Color(0xFF99A1AF))),
+              : Center(child: Icon(Icons.fastfood, size: 24.r, color: Theme.of(context).hintColor)),
         ),
       ),
       title: Text(
         item.name,
         style: const TextStyle().textColorMedium(
           fontSize: 14.sp,
-          color: const Color(0xFF101828),
+          color: Theme.of(context).textTheme.bodyLarge?.color,
         ),
       ),
       subtitle: Text(
         '${item.price} د.ل',
         style: const TextStyle().textColorNormal(
           fontSize: 12.sp,
-          color: const Color(0xFF7F22FE),
+          color: AppColors.purple,
         ),
       ),
       onTap: () {
@@ -339,13 +341,13 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off, size: 64.r, color: const Color(0xFF99A1AF)),
+          Icon(Icons.search_off, size: 64.r, color: Theme.of(context).disabledColor),
           SizedBox(height: 16.h),
           Text(
             'لا توجد نتائج مطابقة',
             style: const TextStyle().textColorMedium(
               fontSize: 16.sp,
-              color: const Color(0xFF101828),
+              color: Theme.of(context).hintColor,
             ),
           ),
         ],

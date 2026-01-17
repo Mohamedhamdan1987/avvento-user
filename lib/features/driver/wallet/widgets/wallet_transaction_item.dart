@@ -23,21 +23,20 @@ class WalletTransactionItem extends StatelessWidget {
   });
 
   @override
+  @override
   Widget build(BuildContext context) {
     final isCredit = type == 'credit';
-    final iconBackgroundColor = isCredit
-        ? const Color(0xFFF0FDF4)
-        : const Color(0xFFFEF2F2);
     final amountColor = isCredit
         ? const Color(0xFF00A63E)
         : const Color(0xFFE7000B);
+    final iconBackgroundColor = amountColor.withOpacity(0.1);
 
     return Container(
       padding: EdgeInsetsDirectional.all(16.76.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         border: Border.all(
-          color: AppColors.borderLightGray.withOpacity(0.1),
+          color: Theme.of(context).dividerColor.withOpacity(0.5),
           width: 0.76.w,
         ),
         borderRadius: BorderRadius.circular(14.r),
@@ -69,7 +68,7 @@ class WalletTransactionItem extends StatelessWidget {
                         title,
                         style: const TextStyle().textColorBold(
                           fontSize: 14.sp,
-                          color: AppColors.textDark,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       SizedBox(height: 4.h),
@@ -77,7 +76,7 @@ class WalletTransactionItem extends StatelessWidget {
                         description,
                         style: const TextStyle().textColorNormal(
                           fontSize: 12.sp,
-                          color: const Color(0xFF99A1AF),
+                          color: Theme.of(context).textTheme.bodyMedium?.color ?? Theme.of(context).hintColor,
                         ),
                       ),
                     ],

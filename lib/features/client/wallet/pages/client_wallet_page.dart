@@ -17,20 +17,20 @@ class ClientWalletPage extends StatelessWidget {
     final controller = Get.put(ClientWalletController());
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'محفظتي',
           style: const TextStyle().textColorBold(
             fontSize: 20,
-            color: AppColors.textDark,
+            color: Theme.of(context).textTheme.titleLarge?.color,
           ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark),
+          icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).iconTheme.color),
           onPressed: () => Get.back(),
         ),
       ),
@@ -57,11 +57,11 @@ class ClientWalletPage extends StatelessWidget {
                     'العمليات الأخيرة',
                     style: const TextStyle().textColorBold(
                       fontSize: 18,
-                      color: AppColors.textDark,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                     ),
                   ),
                   SizedBox(height: 16.h),
-                  _buildTransactionsList(controller),
+                  _buildTransactionsList(context, controller),
                   SizedBox(height: 24.h),
                 ],
               ),
@@ -154,7 +154,7 @@ class ClientWalletPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionsList(ClientWalletController controller) {
+  Widget _buildTransactionsList(BuildContext context, ClientWalletController controller) {
     final transactions = controller.transactions;
 
     if (transactions.isEmpty) {
@@ -162,13 +162,13 @@ class ClientWalletPage extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(height: 48.h),
-            Icon(Icons.account_balance_wallet_outlined, size: 64.r, color: AppColors.textPlaceholder),
+            Icon(Icons.account_balance_wallet_outlined, size: 64.r, color: Theme.of(context).hintColor),
             SizedBox(height: 16.h),
             Text(
               'لا توجد عمليات سابقة',
               style: const TextStyle().textColorMedium(
                 fontSize: 16,
-                color: AppColors.textPlaceholder,
+                color: Theme.of(context).hintColor,
               ),
             ),
           ],

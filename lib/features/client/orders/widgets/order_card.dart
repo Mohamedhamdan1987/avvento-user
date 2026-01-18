@@ -3,6 +3,7 @@ import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../models/order_model.dart';
 
 class PreviousOrderCard extends StatelessWidget {
@@ -25,10 +26,10 @@ class PreviousOrderCard extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(16.76.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: const Color(0xFFF3F4F6),
+            color: Theme.of(context).dividerColor,
             width: 0.76.w,
           ),
         ),
@@ -50,10 +51,10 @@ class PreviousOrderCard extends StatelessWidget {
                         height: 55.h,
                         padding: EdgeInsets.all(5.r),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
+                          color: Theme.of(context).scaffoldBackgroundColor,
                           borderRadius: BorderRadius.circular(14.r),
                           border: Border.all(
-                            color: const Color(0xFFF3F4F6),
+                            color: Theme.of(context).dividerColor,
                             width: 0.76.w,
                           ),
                         ),
@@ -65,7 +66,7 @@ class PreviousOrderCard extends StatelessWidget {
                             height: 48.h,
                             fit: BoxFit.cover,
                             errorWidget: (context, url, error) => Container(
-                              color: const Color(0xFFF9FAFB),
+                              color: Theme.of(context).scaffoldBackgroundColor,
                             ),
                           ),
                         ),
@@ -80,7 +81,7 @@ class PreviousOrderCard extends StatelessWidget {
                               order.restaurant.name,
                               style: const TextStyle().textColorBold(
                                 fontSize: 14.sp,
-                                color: const Color(0xFF101828),
+                                color: Theme.of(context).textTheme.titleLarge?.color,
                               ),
                             ),
                             SizedBox(height: 4.h),
@@ -88,7 +89,7 @@ class PreviousOrderCard extends StatelessWidget {
                               'طلب #${order.id.substring(order.id.length - 4)}',
                               style: const TextStyle().textColorNormal(
                                 fontSize: 12.sp,
-                                color: const Color(0xFF99A1AF),
+                                color: Theme.of(context).textTheme.bodySmall?.color,
                               ),
                             ),
                           ],
@@ -102,9 +103,8 @@ class PreviousOrderCard extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: isCompleted
-                        ? const Color(0xFFF0FDF4)
-                        : const Color(0xFFFEF2F2),
+                    color: (isCompleted ? AppColors.successGreen : AppColors.error)
+                        .withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10.r),
                   ),
                   child: Row(
@@ -117,8 +117,8 @@ class PreviousOrderCard extends StatelessWidget {
                         width: 12.w,
                         height: 12.h,
                         color: isCompleted
-                            ? const Color(0xFF00A63E)
-                            : const Color(0xFFE7000B),
+                            ? AppColors.successGreen
+                            : AppColors.error,
                       ),
                       SizedBox(width: 4.w),
                       Text(
@@ -126,8 +126,8 @@ class PreviousOrderCard extends StatelessWidget {
                         style: const TextStyle().textColorBold(
                           fontSize: 10.sp,
                           color: isCompleted
-                              ? const Color(0xFF00A63E)
-                              : const Color(0xFFE7000B),
+                              ? AppColors.successGreen
+                              : AppColors.error,
                         ),
                       ),
                     ],
@@ -143,14 +143,14 @@ class PreviousOrderCard extends StatelessWidget {
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFF9FAFB),
+                color: Theme.of(context).scaffoldBackgroundColor,
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Text(
                 'طلب يحتوي على ${order.items.length} عناصر',
                 style: const TextStyle().textColorNormal(
                   fontSize: 12.sp,
-                  color: const Color(0xFF6A7282),
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
             ),
@@ -163,7 +163,7 @@ class PreviousOrderCard extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                    color: const Color(0xFFF9FAFB),
+                    color: Theme.of(context).dividerColor,
                     width: 0.76.w,
                   ),
                 ),
@@ -176,7 +176,7 @@ class PreviousOrderCard extends StatelessWidget {
                     '${order.totalPrice} د.ل',
                     style: const TextStyle().textColorBold(
                       fontSize: 14.sp,
-                      color: const Color(0xFF101828),
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                     ),
                   ),
 
@@ -192,14 +192,14 @@ class PreviousOrderCard extends StatelessWidget {
                           iconName: 'assets/svg/client/orders/reorder_icon.svg',
                           width: 12.w,
                           height: 12.h,
-                          color: Color(0xFF7F22FE),
+                          color: AppColors.primary,
                         ),
                         SizedBox(width: 4.w),
                         Text(
                           'إعادة الطلب',
                           style: const TextStyle().textColorBold(
                             fontSize: 12.sp,
-                            color: const Color(0xFF7F22FE),
+                            color: AppColors.primary,
                           ),
                         ),
                       ],

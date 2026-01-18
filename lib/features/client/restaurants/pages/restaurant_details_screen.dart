@@ -1,3 +1,5 @@
+import 'dart:math';
+import 'dart:ui';
 import 'package:avvento/core/theme/app_text_styles.dart';
 import 'package:avvento/features/client/restaurants/models/menu_item_model.dart';
 import 'package:avvento/features/client/restaurants/models/restaurant_model.dart';
@@ -11,16 +13,24 @@ import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_a
 import '../../../../core/widgets/reusable/svg_icon.dart';
 import '../controllers/restaurant_details_controller.dart';
 import '../../../../core/utils/location_utils.dart';
+import '../../cart/controllers/cart_controller.dart';
+import '../../cart/models/cart_model.dart';
+import '../../cart/pages/restaurant_cart_details_page.dart';
 import '../controllers/restaurants_controller.dart';
 import 'meal_details_dialog.dart';
 import 'restaurant_search_page.dart';
 
 class RestaurantDetailsScreen extends StatelessWidget {
   final String restaurantId;
-  
+
   RestaurantDetailsScreen({super.key, required this.restaurantId}) {
     if (!Get.isRegistered<RestaurantsController>()) {
       Get.put(RestaurantsController());
+    }
+    if (!Get.isRegistered<CartController>()) {
+      Get.put(CartController());
+    } else {
+      Get.find<CartController>().fetchAllCarts(); // Force refresh to get latest state
     }
     Get.delete<RestaurantDetailsController>(); // Ensure fresh controller
     Get.put(RestaurantDetailsController(restaurantId: restaurantId));
@@ -32,6 +42,19 @@ class RestaurantDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Obx(() {
+        final cartController = Get.find<CartController>();
+        final cart = cartController.carts.firstWhereOrNull(
+          (c) => c.restaurant.restaurantId == restaurantId,
+        );
+
+        if (cart == null || cart.items.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return _buildViewCartButton(context, cart);
+      }),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Obx(() {
@@ -39,41 +62,46 @@ class RestaurantDetailsScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          
-          return Column(
-            children: [
-              // Top Header Section with Background Image
-              _buildHeaderSection(context),
-              SizedBox(height: 60.h),
 
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Restaurant Stats Row
-                      _buildStatsRow(context),
+          return CustomScrollView(
+            slivers: [
+              // Shrinking Header
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: RestaurantHeaderDelegate(
+                  restaurant: controller.restaurant!,
+                  onBack: () => Navigator.pop(context),
+                  onSearch: () {
+                    Get.to(() => RestaurantSearchPage(
+                          restaurant: controller.restaurant!,
+                          categories: controller.categories,
+                          allItems: controller.allItems,
+                        ));
+                  },
+                ),
+              ),
 
-                      SizedBox(height: 14.h),
+              // Content
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 50.h),
+                    // Restaurant Stats Row
+                    _buildStatsRow(context),
 
-                      // Today's Offers Section (Hidden if empty, or keep placeholder for now)
-                      // For now, let's keep it but maybe it should be dynamic too.
-                      // The request didn't specify offers, but categories and items.
-                      // _buildTodaysOffersSection(context),
+                    SizedBox(height: 14.h),
 
-                      // SizedBox(height: 32.h),
+                    // Browse Menu Section
+                    _buildBrowseMenuSection(context),
 
-                      // Browse Menu Section
-                      _buildBrowseMenuSection(context),
+                    SizedBox(height: 32.h),
 
-                      SizedBox(height: 32.h),
+                    // All Items Section
+                    _buildAllItemsSection(context),
 
-                      // All Items Section
-                      _buildAllItemsSection(context),
-
-                      SizedBox(height: 32.h),
-                    ],
-                  ),
+                    SizedBox(height: 32.h),
+                  ],
                 ),
               ),
             ],
@@ -83,180 +111,9 @@ class RestaurantDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderSection(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        // Background Image
-        Container(
-          height: 280.h,
-          width: double.infinity,
-            child: ClipRRect(
-            borderRadius: BorderRadius.only(bottomRight: Radius.circular(40.r)),
-            child: controller.restaurant!.backgroundImage != null
-                ? CachedNetworkImage(
-                    imageUrl: controller.restaurant!.backgroundImage!,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: 280.h,
-                  )
-                : Container(color: Colors.grey[300]),
-          ),
-        ),
+  // Header section refactored into RestaurantHeaderDelegate
 
-        // Gradient Overlay
-        Container(
-          height: 280.h,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(bottomRight: Radius.circular(40.r)),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.black.withOpacity(0.1),
-                Color(0xFF101828).withOpacity(0.8),
-              ],
-              stops: [0.0, 0.5, 1.0],
-            ),
-          ),
-        ),
-
-        // Navigation Buttons (Top Right in RTL = Top Left visually)
-        Positioned(
-          width: MediaQuery.of(context).size.width,
-          top: 48.h,
-          // right: 24.w,
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.w),
-            child: Row(
-              children: [
-                CustomIconButtonApp(
-                  width: 40.w,
-                  height: 40.h,
-                  radius: 100.r,
-                  color: Color(0xB37F22FE),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  childWidget: SvgIcon(
-                    iconName: 'assets/svg/arrow-right.svg',
-                    width: 20.w,
-                    height: 20.h,
-                    color: Colors.white,
-                  ),
-                ),
-                Spacer(),
-                CustomIconButtonApp(
-                  width: 40.w,
-                  height: 40.h,
-                  radius: 100.r,
-                  color: Color(0x997F22FE),
-                  onTap: () {
-                    Get.to(() => RestaurantSearchPage(
-                          restaurant: controller.restaurant!,
-                          categories: controller.categories,
-                          allItems: controller.allItems,
-                        ));
-                  },
-                  childWidget: SvgIcon(
-                    iconName: 'assets/svg/search-icon.svg',
-                    width: 20.w,
-                    height: 20.h,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(width: 8.w),
-                CustomIconButtonApp(
-                  width: 40.w,
-                  height: 40.h,
-                  radius: 100.r,
-                  color: Color(0x997F22FE),
-                  onTap: () {},
-                  childWidget: SvgIcon(
-                    iconName: 'assets/svg/share_icon.svg',
-                    width: 20.w,
-                    height: 20.h,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Restaurant Name and Description (Bottom Right in RTL)
-        Positioned(
-          bottom: 16.h,
-          right: 24.w,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                controller.restaurant!.name,
-                style: const TextStyle().textColorBold(
-                  fontSize: 25.sp,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                controller.restaurant!.description,
-                style: const TextStyle().textColorMedium(
-                  fontSize: 14.sp,
-                  color: Colors.white.withOpacity(0.7),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Profile Picture Overlapping
-        _buildProfilePicture(),
-      ],
-    );
-  }
-
-  Widget _buildProfilePicture() {
-    return PositionedDirectional(
-      bottom: -50.h,
-      end: 43.w,
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 3.w),
-        ),
-        child: Container(
-          width: 98.w,
-          height: 98.h,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Color(0xFF7F22FE), width: 3.w),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipOval(
-            child: controller.restaurant!.logo != null
-                ? CachedNetworkImage(
-                    imageUrl: controller.restaurant!.logo!,
-                    width: 98.w,
-                    height: 98.h,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    color: Colors.grey[200],
-                    child: Icon(Icons.restaurant, size: 40.r),
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
+  // Profile picture refactored into RestaurantHeaderDelegate
 
   Widget _buildStatsRow(BuildContext context) {
     String distanceText = '--';
@@ -800,53 +657,307 @@ class RestaurantDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildQuantitySelector() {
+    return Container();
+  }
+
+  Widget _buildViewCartButton(BuildContext context, RestaurantCartResponse cart) {
     return Container(
-      width: 70.w,
-      height: 28.h,
+      margin: EdgeInsets.symmetric(horizontal: 24.w),
+      height: 56.h,
       decoration: BoxDecoration(
-        color: Color(0xFF121223),
-        borderRadius: BorderRadius.circular(50.r),
+        color: AppColors.purple,
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 20,
-            offset: Offset(0, 12),
+            color: AppColors.purple.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () async {
+            await Get.to(() => RestaurantCartDetailsPage(cart: cart));
+            // Refresh if needed when coming back
+            Get.find<CartController>().refreshCarts();
+          },
+          borderRadius: BorderRadius.circular(16.r),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Text(
+                    '${cart.items.length}',
+                    style: const TextStyle().textColorBold(fontSize: 14.sp, color: Colors.white),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  'عرض السلة',
+                  style: const TextStyle().textColorBold(fontSize: 16.sp, color: Colors.white),
+                ),
+                const Spacer(),
+                Text(
+                  '${cart.totalPrice.toStringAsFixed(0)} د.ل',
+                  style: const TextStyle().textColorBold(fontSize: 16.sp, color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Restaurant restaurant;
+  final VoidCallback onBack;
+  final VoidCallback onSearch;
+
+  RestaurantHeaderDelegate({
+    required this.restaurant,
+    required this.onBack,
+    required this.onSearch,
+  });
+
+  @override
+  double get minExtent => 85.h + Get.mediaQuery.padding.top;
+
+  @override
+  double get maxExtent => 180.h + Get.mediaQuery.padding.top;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final progress = shrinkOffset / (maxExtent - minExtent);
+    final double clampedProgress = progress.clamp(0.0, 1.0);
+
+    // Reverse progress for elements that should disappear (1.0 at expanded, 0.0 at collapsed)
+    final double reverseProgress = 1.0 - clampedProgress;
+
+    return Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.none,
+      children: [
+        // Background Image with Gradient
+        _buildBackground(clampedProgress),
+
+        // Bottom Content (Logo, Name, Description) - Animates on scroll
+        _buildBottomContent(clampedProgress, reverseProgress),
+
+        // Top Navigation Bar
+        _buildTopBar(context, reverseProgress, clampedProgress),
+      ],
+    );
+  }
+
+  Widget _buildBackground(double progress) {
+    return ClipRRect(
+      borderRadius: BorderRadius.only(
+        bottomRight: Radius.circular(lerpDouble(40.r, 8.r, progress)!),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        clipBehavior: Clip.none,
         children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(100.r),
-            onTap: () {},
-            child: SvgIcon(
-              iconName: 'assets/svg/client/restaurant_details/minus_icon.svg',
-              width: 14,
-              height: 14,
-              color: Colors.white,
-            ),
-          ),
-          Text(
-            '0',
-            style: TextStyle().textColorBold(
-              fontSize: 10.sp,
-              color: Colors.white,
-            ),
-          ),
-          InkWell(
-            borderRadius: BorderRadius.circular(100.r),
-            onTap: () {},
-            child: SvgIcon(
-              iconName: 'assets/svg/client/restaurant_details/plus_icon.svg',
-              width: 14,
-              height: 14,
-              color: Colors.white,
+          restaurant.backgroundImage != null
+              ? CachedNetworkImage(
+                  imageUrl: restaurant.backgroundImage!,
+                  fit: BoxFit.cover,
+                )
+              : Container(color: Colors.grey[300]),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.35),
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.85),
+                ],
+                stops: [0.0, 0.45, 1.0],
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildTopBar(BuildContext context, double reverseProgress, double progress) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        height: minExtent,
+        padding: EdgeInsets.only(top: Get.mediaQuery.padding.top, left: 16.w, right: 16.w),
+        child: Row(
+          children: [
+            CustomIconButtonApp(
+              width: 38.w,
+              height: 38.h,
+              radius: 100.r,
+              color: Color(0xB37F22FE).withOpacity(lerpDouble(0.7, 0.9, progress)!),
+              onTap: onBack,
+              childWidget: SvgIcon(
+                iconName: 'assets/svg/arrow-right.svg',
+                width: 18.w,
+                height: 18.h,
+                color: Colors.white,
+              ),
+            ),
+
+            // Collapsed Name (Fades in)
+            Expanded(
+              child: Opacity(
+                opacity: progress > 0.6 ? (progress - 0.6) / 0.4 : 0.0,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w),
+                  child: Text(
+                    restaurant.name,
+                    style: const TextStyle().textColorBold(
+                      fontSize: 16.sp,
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ),
+
+            // Navigation Actions (Search & Share) - Fades out
+            Opacity(
+              opacity: reverseProgress > 0.3 ? (reverseProgress - 0.3) / 0.7 : 0.0,
+              child: Row(
+                children: [
+                  CustomIconButtonApp(
+                    width: 38.w,
+                    height: 38.h,
+                    radius: 100.r,
+                    color: Color(0x997F22FE),
+                    onTap: onSearch,
+                    childWidget: SvgIcon(
+                      iconName: 'assets/svg/search-icon.svg',
+                      width: 18.w,
+                      height: 18.h,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  CustomIconButtonApp(
+                    width: 38.w,
+                    height: 38.h,
+                    radius: 100.r,
+                    color: Color(0x997F22FE),
+                    onTap: () {},
+                    childWidget: SvgIcon(
+                      iconName: 'assets/svg/share_icon.svg',
+                      width: 18.w,
+                      height: 18.h,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomContent(double progress, double reverseProgress) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Restaurant Name and Description (Fades out)
+        Positioned(
+          bottom: 12.h + (35.h * progress),
+          right: 24.w,
+          child: Opacity(
+            opacity: reverseProgress.clamp(0.0, 1.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  restaurant.name,
+                  style: const TextStyle().textColorBold(
+                    fontSize: 20.sp,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 1.h),
+                Text(
+                  restaurant.description,
+                  style: const TextStyle().textColorMedium(
+                    fontSize: 11.sp,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Profile Picture Animation
+        PositionedDirectional(
+          bottom: lerpDouble(-45.h, 12.h, progress),
+          end: lerpDouble(43.w, 12.w, progress),
+          child: Transform.scale(
+            scale: lerpDouble(1.0, 0.45, progress)!,
+            alignment: AlignmentDirectional.bottomEnd,
+            child: Container(
+              padding: EdgeInsets.all(3.w),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Container(
+                width: 90.w,
+                height: 90.h,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.primary, width: 2.w),
+                ),
+                child: ClipOval(
+                  child: restaurant.logo != null
+                      ? CachedNetworkImage(
+                          imageUrl: restaurant.logo!,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          color: Colors.grey[200],
+                          child: Icon(Icons.restaurant, size: 35.r),
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant RestaurantHeaderDelegate oldDelegate) {
+    return oldDelegate.restaurant != restaurant;
   }
 }

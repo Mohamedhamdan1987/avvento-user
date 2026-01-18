@@ -24,10 +24,10 @@ class CurrentOrderCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(24.w),
+        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(32.r),
+          borderRadius: BorderRadius.circular(24.r),
           border: Border.all(color: Theme.of(context).dividerColor, width: 0.76.w),
           boxShadow: [
             BoxShadow(
@@ -43,22 +43,22 @@ class CurrentOrderCard extends StatelessWidget {
             // Progress Bar
             _buildProgressBar(context),
 
-            SizedBox(height: 40.h),
+            SizedBox(height: 20.h),
 
             // Order Header
             _buildOrderHeader(context),
 
-            SizedBox(height: 24.h),
+            SizedBox(height: 16.h),
 
             // Estimated Time Section
             _buildEstimatedTimeSection(context),
 
-            SizedBox(height: 24.h),
+            SizedBox(height: 16.h),
 
             // Order Items
             _buildOrderItems(context),
 
-            SizedBox(height: 24.h),
+            SizedBox(height: 16.h),
 
             // Action Buttons
             _buildActionButtons(context),
@@ -75,10 +75,10 @@ class CurrentOrderCard extends StatelessWidget {
     int totalSteps = OrderStatus.values.where((e) => e != OrderStatus.cancelled).length;
 
     return Container(
-      height: 6.h,
+      height: 4.h,
       decoration: BoxDecoration(
         color: Theme.of(context).dividerColor,
-        borderRadius: BorderRadius.circular(3.r),
+        borderRadius: BorderRadius.circular(2.r),
       ),
       child: Row(
         children: List.generate(totalSteps, (index) {
@@ -87,7 +87,7 @@ class CurrentOrderCard extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: isCompleted ? AppColors.primary : Colors.transparent,
-                borderRadius: BorderRadius.circular(3.r),
+                borderRadius: BorderRadius.circular(2.r),
                 border: isCompleted && index < totalSteps - 1
                     ? BorderDirectional(
                         end: BorderSide(color: Theme.of(context).cardColor, width: 0.76.w),
@@ -134,11 +134,11 @@ class CurrentOrderCard extends StatelessWidget {
             children: [
               // Restaurant Image
               Container(
-                width: 56.w,
-                height: 56.h,
+                width: 48.w,
+                height: 48.h,
                 decoration: BoxDecoration(
                   color: Theme.of(context).scaffoldBackgroundColor,
-                  borderRadius: BorderRadius.circular(16.r),
+                  borderRadius: BorderRadius.circular(12.r),
                   border: Border.all(color: Theme.of(context).dividerColor, width: 0.76.w),
                   boxShadow: [
                     BoxShadow(
@@ -149,18 +149,18 @@ class CurrentOrderCard extends StatelessWidget {
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16.r),
+                  borderRadius: BorderRadius.circular(12.r),
                   child: CachedNetworkImage(
                     imageUrl: order.restaurant.logo ?? '',
-                    width: 56.w,
-                    height: 56.h,
+                    width: 48.w,
+                    height: 48.h,
                     fit: BoxFit.cover,
                     errorWidget: (context, url, error) =>
                         Container(color: Theme.of(context).scaffoldBackgroundColor),
                   ),
                 ),
               ),
-              SizedBox(width: 16.w),
+              SizedBox(width: 12.w),
               // Restaurant Name and Status
               Expanded(
                 child: Column(
@@ -169,38 +169,38 @@ class CurrentOrderCard extends StatelessWidget {
                     Text(
                       order.restaurant.name,
                       style: const TextStyle().textColorBold(
-                        fontSize: 18.sp,
+                        fontSize: 16.sp,
                         color: Theme.of(context).textTheme.titleLarge?.color,
                       ),
                     ),
-                    SizedBox(height: 4.h),
+                    SizedBox(height: 2.h),
                     Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: 8.w,
-                        vertical: 4.h,
+                        vertical: 2.h,
                       ),
                       decoration: BoxDecoration(
                         color: _getStatusColor(
                           status,
                         ).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10.r),
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            width: 8.w,
-                            height: 8.h,
+                            width: 6.w,
+                            height: 6.h,
                             decoration: BoxDecoration(
                               color: _getStatusColor(status),
                               shape: BoxShape.circle,
                             ),
                           ),
-                          SizedBox(width: 6.w),
+                          SizedBox(width: 4.w),
                           Text(
                             status.label,
                             style: const TextStyle().textColorBold(
-                              fontSize: 12.sp,
+                              fontSize: 11.sp,
                               color: _getStatusColor(status),
                             ),
                           ),
@@ -223,7 +223,7 @@ class CurrentOrderCard extends StatelessWidget {
           child: Text(
             '#${order.id.substring(order.id.length - 4)}',
             style: const TextStyle().textColorBold(
-              fontSize: 12.sp,
+              fontSize: 11.sp,
               color: Theme.of(context).textTheme.bodySmall?.color,
             ),
           ),
@@ -234,10 +234,10 @@ class CurrentOrderCard extends StatelessWidget {
 
   Widget _buildEstimatedTimeSection(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
         children: [
@@ -249,23 +249,23 @@ class CurrentOrderCard extends StatelessWidget {
                 Text(
                   'وقت الوصول المتوقع',
                   style: const TextStyle().textColorNormal(
-                    fontSize: 12.sp,
+                    fontSize: 11.sp,
                     color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
                 ),
-                SizedBox(height: 4.h),
+                SizedBox(height: 2.h),
                 Text(
                   '12:45 م', // Generic since API doesn't provide it
                   style: const TextStyle().textColorBold(
-                    fontSize: 20.sp,
+                    fontSize: 16.sp,
                     color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
-                SizedBox(height: 4.h),
+                SizedBox(height: 2.h),
                 Text(
                   'يصل خلال 15-20 دقيقة',
                   style: const TextStyle().textColorMedium(
-                    fontSize: 12.sp,
+                    fontSize: 11.sp,
                     color: const Color(0xFF00A63E),
                   ),
                 ),
@@ -275,8 +275,8 @@ class CurrentOrderCard extends StatelessWidget {
 
           // Icon
           Container(
-            width: 48.w,
-            height: 48.h,
+            width: 40.w,
+            height: 40.h,
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               shape: BoxShape.circle,
@@ -291,8 +291,8 @@ class CurrentOrderCard extends StatelessWidget {
             child:  Center(
               child: SvgIcon(
                 iconName: 'assets/svg/client/orders/clock_icon.svg',
-                width: 24.w,
-                height: 24.h,
+                width: 20.w,
+                height: 20.h,
                 color: Theme.of(context).iconTheme.color,
               ),
             ),
@@ -309,15 +309,15 @@ class CurrentOrderCard extends StatelessWidget {
         Text(
           'طلب يحتوي على ${order.items.length} عناصر',
           style: const TextStyle().textColorNormal(
-            fontSize: 14.sp,
+            fontSize: 13.sp,
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        SizedBox(height: 4.h),
+        SizedBox(height: 2.h),
         Text(
           'الإجمالي: ${order.totalPrice} د.ل',
           style: const TextStyle().textColorNormal(
-            fontSize: 12.sp,
+            fontSize: 11.sp,
             color: Theme.of(context).textTheme.bodySmall?.color,
           ),
         ),
@@ -361,11 +361,11 @@ class CurrentOrderCard extends StatelessWidget {
                     },
                   );
                 },
-                height: 48.h,
-                borderRadius: 14.r,
+                height: 40.h,
+                borderRadius: 10.r,
                 color: AppColors.primary,
                 textStyle: const TextStyle().textColorBold(
-                  fontSize: 14.sp,
+                  fontSize: 13.sp,
                   color: Colors.white,
                 ),
               );
@@ -382,14 +382,14 @@ class CurrentOrderCard extends StatelessWidget {
             onTap: () {
               Get.toNamed(AppRoutes.restaurantSupport);
             },
-            height: 48.h,
-            borderRadius: 14.r,
+            height: 40.h,
+            borderRadius: 10.r,
             isFill: false,
             borderColor: Theme.of(context).dividerColor,
             borderWidth: 0.76.w,
             color: Theme.of(context).cardColor,
             textStyle: const TextStyle().textColorBold(
-              fontSize: 14.sp,
+              fontSize: 13.sp,
               color: Theme.of(context).textTheme.titleLarge?.color,
             ),
             childWidget: Row(
@@ -398,15 +398,15 @@ class CurrentOrderCard extends StatelessWidget {
                 Text(
                   'الدعم',
                   style: const TextStyle().textColorBold(
-                    fontSize: 14.sp,
+                    fontSize: 13.sp,
                     color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
-                SizedBox(width: 8.w),
+                SizedBox(width: 6.w),
                  SvgIcon(
                   iconName: 'assets/svg/client/orders/support_icon.svg',
-                  width: 16.w,
-                  height: 16.h,
+                  width: 14.w,
+                  height: 14.h,
                   color: Theme.of(context).iconTheme.color,
                 ),
               ],
@@ -415,6 +415,7 @@ class CurrentOrderCard extends StatelessWidget {
         ),
       ],
     );
+
   }
 
   Color _getStatusColor(OrderStatus status) {

@@ -37,11 +37,9 @@ class CategoryMenuPage extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: AppBar(
           title: Text(category.name),
           centerTitle: true,
-          backgroundColor: Colors.white,
           elevation: 0,
           leading: CustomIconButtonApp(
             onTap: () {
@@ -84,15 +82,15 @@ class CategoryMenuPage extends StatelessWidget {
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: isSelected ? Color(0xFF7F22FE) : Color(0xFFF3F4F6),
+                            color: isSelected ? const Color(0xFF7F22FE) : Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(20.r),
-                            border: isSelected ? null : Border.all(color: Color(0xFFE5E7EB)),
+                            border: isSelected ? null : Border.all(color: Theme.of(context).dividerColor),
                           ),
                           child: Text(
                             subCategory.name,
                             style: const TextStyle().textColorMedium(
                               fontSize: 14.sp,
-                              color: isSelected ? Colors.white : Color(0xFF6A7282),
+                              color: isSelected ? Colors.white : Theme.of(context).textTheme.bodySmall?.color,
                             ),
                           ),
                         ),
@@ -115,7 +113,12 @@ class CategoryMenuPage extends StatelessWidget {
                 final items = controller.items.where((item) => item.categoryId == category.id).toList();
 
                 if (items.isEmpty) {
-                  return const Center(child: Text('لا توجد أصناف في هذا القسم'));
+                  return Center(
+                    child: Text(
+                      'لا توجد أصناف في هذا القسم',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  );
                 }
 
                 return ListView.builder(
@@ -188,21 +191,18 @@ class CategoryMenuPage extends StatelessWidget {
                         item.name,
                         style: const TextStyle().textColorBold(
                           fontSize: 14.sp,
-                          color: const Color(0xFF0A191E),
+                          color: Theme.of(context).textTheme.titleLarge?.color,
                         ),
                       ),
                       const Spacer(),
-                      Obx(() {
-                        // final isFav = controller.isItemFavorite(item.id);
-                        return GestureDetector(
-                          onTap: () => controller.toggleFavorite(item.id),
-                          child: Icon(
-                            item.isFav ? Icons.favorite : Icons.favorite_border,
-                            size: 20.w,
-                            color: item.isFav ? Colors.red : Colors.grey,
-                          ),
-                        );
-                      }),
+                      GestureDetector(
+                        onTap: () => controller.toggleFavorite(item.id),
+                        child: Icon(
+                          item.isFav ? Icons.favorite : Icons.favorite_border,
+                          size: 20.w,
+                          color: item.isFav ? Colors.red : Colors.grey,
+                        ),
+                      ),
                       SizedBox(width: 8.w),
                     ],
                   ),
@@ -213,7 +213,7 @@ class CategoryMenuPage extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle().textColorMedium(
                       fontSize: 12.sp,
-                      color: const Color(0xFF0A191E).withOpacity(0.6),
+                      color: (Theme.of(context).textTheme.titleLarge?.color ?? Colors.black).withOpacity(0.6),
                     ),
                   ),
                   SizedBox(height: 4.h),
@@ -221,7 +221,7 @@ class CategoryMenuPage extends StatelessWidget {
                     '${item.price} د.ل',
                     style: const TextStyle().textColorMedium(
                       fontSize: 12.sp,
-                      color: const Color(0xFF0A191E),
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                     ),
                   ),
                 ],
@@ -229,20 +229,25 @@ class CategoryMenuPage extends StatelessWidget {
             ),
 
             // Quantity Selector (Reusing the one from Details Screen style)
-            _buildQuantitySelector(),
+            _buildQuantitySelector(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQuantitySelector() {
+  Widget _buildQuantitySelector(BuildContext context) {
     return Container(
       width: 70.w,
       height: 28.h,
       decoration: BoxDecoration(
-        color: const Color(0xFF121223),
+        color: Theme.of(context).brightness == Brightness.light
+            ? const Color(0xFF121223)
+            : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(50.r),
+        border: Theme.of(context).brightness == Brightness.dark
+            ? Border.all(color: Theme.of(context).dividerColor)
+            : null,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,

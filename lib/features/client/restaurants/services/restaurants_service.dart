@@ -7,6 +7,7 @@ import '../models/menu_item_model.dart';
 import '../models/sub_category_model.dart';
 import '../../cart/models/cart_model.dart';
 import '../models/favorite_restaurant_model.dart';
+import '../models/best_restaurant_model.dart';
 
 class RestaurantsService {
   final DioClient _dioClient = DioClient.instance;
@@ -34,6 +35,37 @@ class RestaurantsService {
 
       final responseData = response.data as Map<String, dynamic>;
       return RestaurantsResponse.fromJson(responseData);
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Fetch best restaurants
+  Future<List<BestRestaurant>> getBestRestaurants({
+    int page = 1,
+    int limit = 10,
+    int minRating = 0,
+    int minRatingsCount = 1,
+  }) async {
+    try {
+      final queryParameters = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+        'minRating': minRating,
+        'minRatingsCount': minRatingsCount,
+      };
+
+      final response = await _dioClient.get(
+        '/restaurants/best',
+        queryParameters: queryParameters,
+      );
+      
+      final responseData = response.data as Map<String, dynamic>;
+      // Based on JSON structure: { "restaurants": [...] }
+      final list = (responseData['restaurants'] as List<dynamic>)
+          .map((e) => BestRestaurant.fromJson(e as Map<String, dynamic>))
+          .toList();
+      return list;
     } on DioException {
       rethrow;
     }

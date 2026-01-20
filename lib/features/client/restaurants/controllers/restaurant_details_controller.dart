@@ -124,6 +124,21 @@ class RestaurantDetailsController extends GetxController {
       _isLoadingItems.value = true;
       _errorMessage.value = '';
       final items = await _restaurantsService.getMenuItems(restaurant!.user.id);
+      
+      // Sort items based on category order
+      if (_categories.isNotEmpty) {
+        items.sort((a, b) {
+          var indexA = _categories.indexWhere((c) => c.id == a.categoryId);
+          var indexB = _categories.indexWhere((c) => c.id == b.categoryId);
+          
+          // Put items with unknown categories at the end
+          if (indexA == -1) indexA = 999999;
+          if (indexB == -1) indexB = 999999;
+          
+          return indexA.compareTo(indexB);
+        });
+      }
+
       _allItems.assignAll(items);
       _filterItems();
     } catch (e) {

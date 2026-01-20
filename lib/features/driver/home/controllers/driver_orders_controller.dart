@@ -20,6 +20,8 @@ class DriverOrdersController extends GetxController {
   final RxSet<Marker> _markers = <Marker>{}.obs;
   final RxBool _isAvailable = false.obs;
   final RxDouble _todayEarnings = 0.0.obs;
+  final RxBool _showActiveOrders = true.obs;
+  final RxInt _activeOrderPageIndex = 0.obs;
 
   List<DriverOrderModel> get nearbyOrders => _nearbyOrders;
   List<DriverOrderModel> get myOrders => _myOrders;
@@ -29,11 +31,23 @@ class DriverOrdersController extends GetxController {
   Set<Marker> get markers => _markers;
   bool get isAvailable => _isAvailable.value;
   double get todayEarnings => _todayEarnings.value;
+  bool get showActiveOrders => _showActiveOrders.value;
+  int get activeOrderPageIndex => _activeOrderPageIndex.value;
 
   // Toggle driver availability
   void toggleAvailability() {
     _isAvailable.value = !_isAvailable.value;
     // TODO: Send availability status to backend
+  }
+
+  // Toggle active orders visibility
+  void toggleActiveOrdersVisibility() {
+    _showActiveOrders.value = !_showActiveOrders.value;
+  }
+
+  // Set active order page index
+  void setActiveOrderPageIndex(int index) {
+    _activeOrderPageIndex.value = index;
   }
 
   // Set today's earnings
@@ -198,6 +212,7 @@ class DriverOrdersController extends GetxController {
           message: 'تم تحديث حالة الطلب بنجاح',
           isSuccess: true,
         );
+        fetchMyOrders();
       } else {
         showSnackBar(
           title: 'خطأ',
@@ -294,6 +309,8 @@ class DriverOrdersController extends GetxController {
       // Skip delivered or cancelled orders
       if ([OrderStatus.delivered, OrderStatus.cancelled].contains(order.status)) continue;
 
+      // Determine marker position based on status
+      // If we haven't picked up yet, show pickup location. If on the way, show delivery location.
       bool isPickupPhase = [
         OrderStatus.confirmed,
         OrderStatus.preparing,
@@ -304,6 +321,7 @@ class DriverOrdersController extends GetxController {
           ? LatLng(order.pickupLocation.latitude, order.pickupLocation.longitude)
           : LatLng(order.deliveryLocation.latitude, order.deliveryLocation.longitude);
 
+      // Blue for pickup, Green for delivery
       double hue = isPickupPhase ? BitmapDescriptor.hueAzure : BitmapDescriptor.hueGreen;
       String phaseTitle = isPickupPhase ? 'استلام من المطعم' : 'تسليم للعميل';
       String targetName = isPickupPhase ? order.restaurantName : order.customerName;
@@ -318,8 +336,6 @@ class DriverOrdersController extends GetxController {
             snippet: 'الوجهة: $targetName',
           ),
           onTap: () {
-            // For my orders, we might want a different modal or just focus on it
-            // For now, use the same modal
             selectOrder(order);
           },
         ),

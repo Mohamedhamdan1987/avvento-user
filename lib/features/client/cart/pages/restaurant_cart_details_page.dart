@@ -23,6 +23,8 @@ class RestaurantCartDetailsPage extends StatefulWidget {
 
 class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
   final CartController controller = Get.find<CartController>();
+  bool _isInvoiceExpanded = false;
+
 
   @override
   void initState() {
@@ -122,7 +124,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
 
   Widget _buildRestaurantHeader(RestaurantCartResponse currentCart) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.76.w, vertical: 0.76.h),
+      padding: EdgeInsetsDirectional.only(start: 16.76.w, top: 1, bottom: 1 ),
       height: 73.51.h,
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
@@ -195,8 +197,8 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
           SizedBox(width: 12.w),
           // Back Arrow Button (Left in RTL - was Left in Figma)
           CustomIconButtonApp(
-            width: 16.w,
-            height: 16.h,
+            // width: 16.w,
+            // height: 16.h,
             onTap: () => Navigator.pop(context),
             childWidget: Transform.rotate(
               angle: 3.14159, // 180 degrees
@@ -741,32 +743,45 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Invoice Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Chevron Icon (Left in RTL)
-              CustomIconButtonApp(
-                width: 20.w,
-                height: 20.h,
-                onTap: () {
-                  // Expand/collapse invoice details
-                },
-                childWidget: SvgIcon(
-                  iconName: 'assets/svg/cart/arrow-top.svg',
-                  width: 20.w,
-                  height: 20.h,
-                  color: Theme.of(context).iconTheme.color,
-                ),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isInvoiceExpanded = !_isInvoiceExpanded;
+              });
+            },
+            child: Container(
+              color: Colors.transparent, // Hit test for full width
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Chevron Icon (Left in RTL)
+                  CustomIconButtonApp(
+                    onTap: () {
+                      setState(() {
+                        _isInvoiceExpanded = !_isInvoiceExpanded;
+                      });
+                    },
+                    childWidget: Transform.rotate(
+                      angle: _isInvoiceExpanded ? 3.14159 : 0,
+                      child: SvgIcon(
+                        iconName: 'assets/svg/cart/arrow-top.svg',
+                        width: 20.w,
+                        height: 20.h,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                    ),
+                  ),
+                  // Invoice Text (Right in RTL)
+                  Text(
+                    'الفاتورة',
+                    style: TextStyle().textColorBold(
+                      fontSize: 14.sp,
+                      color: Theme.of(context).textTheme.titleMedium?.color,
+                    ),
+                  ),
+                ],
               ),
-              // Invoice Text (Right in RTL)
-              Text(
-                'الفاتورة',
-                style: TextStyle().textColorBold(
-                  fontSize: 14.sp,
-                  color: Theme.of(context).textTheme.titleMedium?.color,
-                ),
-              ),
-            ],
+            ),
           ),
           SizedBox(height: 12.h),
           // Continue Button
@@ -774,6 +789,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 onTap: controller.isLoading
                     ? null
                     : () {
+                        // Pass total price if needed, or rely on backend re-calculation
                         Get.toNamed(AppRoutes.checkout, arguments: currentCart);
                       },
                 child: Container(
@@ -785,7 +801,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                     boxShadow: [
                       BoxShadow(
                         color: const Color(0xFF8E51FF).withOpacity(0.19),
-                        blurRadius: 15,
+                         blurRadius: 15,
                         offset: const Offset(0, 10),
                       ),
                     ],
@@ -800,28 +816,107 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                         )
                       else
                         Text(
-                          'استمرار',
-                          style: const TextStyle().textColorBold(
+                          'تأكيد الطلب',
+                          style: TextStyle().textColorBold(
                             fontSize: 16.sp,
                             color: Colors.white,
                           ),
                         ),
                       // Total Price (Left in RTL)
-                      Text(
-                        '${currentCart.totalPrice.toStringAsFixed(1)} د.ل',
-                        style: const TextStyle().textColorBold(
-                          fontSize: 18.sp,
-                          color: Colors.white,
+                      if (!controller.isLoading)
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Text(
+                            '${(currentCart.totalPrice + _calculateDrinksTotal() + 10).toStringAsFixed(0)} د.ل', // Added dummy delivery fee 10
+                            style: TextStyle().textColorBold(
+                              fontSize: 16.sp,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
               )),
+          
+          // Invoice Details (Expandable)
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Column(
+              children: [
+                SizedBox(height: 16.h),
+                _buildInvoiceRow('المجموع الفرعي', '${currentCart.totalPrice.toStringAsFixed(0)} د.ل'),
+                if (_calculateDrinksTotal() > 0)
+                  Padding(
+                    padding: EdgeInsets.only(top: 12.h),
+                    child: _buildInvoiceRow('المشروبات', '${_calculateDrinksTotal().toStringAsFixed(0)} د.ل'),
+                  ),
+                SizedBox(height: 12.h),
+                _buildInvoiceRow('رسوم التوصيل', '10 د.ل'), // Fixed delivery fee for now
+                SizedBox(height: 12.h),
+                const Divider(height: 1),
+                SizedBox(height: 12.h),
+                _buildInvoiceRow(
+                  'المجموع الكلي',
+                  '${(currentCart.totalPrice + _calculateDrinksTotal() + 10).toStringAsFixed(0)} د.ل',
+                  isTotal: true,
+                ),
+                SizedBox(height: 8.h),
+              ],
+            ),
+            crossFadeState: _isInvoiceExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
+          ),
         ],
       ),
     );
   }
+
+  double _calculateDrinksTotal() {
+    double total = 0;
+    for (var drink in controller.selectedDrinks) {
+      total += (drink['price'] as num) * (drink['quantity'] as num);
+    }
+    return total;
+  }
+
+  Widget _buildInvoiceRow(String title, String value, {bool isTotal = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: isTotal
+              ? TextStyle().textColorBold(
+                  fontSize: 16.sp,
+                  color: Theme.of(context).textTheme.titleMedium?.color,
+                )
+              : TextStyle().textColorNormal(
+                  fontSize: 14.sp,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
+        ),
+        Text(
+          value,
+          style: isTotal
+              ? TextStyle().textColorBold(
+                  fontSize: 16.sp,
+                  color: Theme.of(context).primaryColor,
+                )
+              : TextStyle().textColorBold(
+                  fontSize: 14.sp,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+        ),
+      ],
+    );
+  }
+
+
 
   void _showAddDrinkBottomSheet(MenuItem drink) {
     int quantity = 1;

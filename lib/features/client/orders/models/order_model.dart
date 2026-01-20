@@ -61,6 +61,29 @@ class OrderRestaurant {
   }
 }
 
+class OrderDriver {
+  final String id;
+  final String name;
+  final String? username;
+  final String? phone;
+
+  OrderDriver({
+    required this.id,
+    required this.name,
+    this.username,
+    this.phone,
+  });
+
+  factory OrderDriver.fromJson(Map<String, dynamic> json) {
+    return OrderDriver(
+      id: json['_id'] as String,
+      name: json['name'] as String,
+      username: json['username'] as String?,
+      phone: json['phone'] as String?,
+    );
+  }
+}
+
 class OrderModel {
   final String id;
   final String userId;
@@ -71,6 +94,7 @@ class OrderModel {
   final double tax;
   final double totalPrice;
   final String status;
+  final OrderDriver? driver;
   final String? deliveryAddress;  // Changed to nullable as it might be missing or object
   final double? deliveryLat;      // Changed to nullable
   final double? deliveryLong;     // Changed to nullable
@@ -88,6 +112,7 @@ class OrderModel {
     required this.tax,
     required this.totalPrice,
     required this.status,
+    this.driver,
     this.deliveryAddress,
     this.deliveryLat,
     this.deliveryLong,
@@ -114,6 +139,9 @@ class OrderModel {
       tax: (json['tax'] as num).toDouble(),
       totalPrice: (json['totalPrice'] as num).toDouble(),
       status: json['status'] as String,
+      driver: (json['delivery'] ?? json['driver']) != null 
+          ? OrderDriver.fromJson((json['delivery'] ?? json['driver']) as Map<String, dynamic>) 
+          : null,
       deliveryAddress: json['deliveryAddress'] is Map 
           ? (json['deliveryAddress'] as Map<String, dynamic>)['address'] as String? // Assuming structure if populated
           : json['deliveryAddress'] as String?,

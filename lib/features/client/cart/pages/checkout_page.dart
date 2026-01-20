@@ -30,6 +30,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final AddressController addressController = Get.put(AddressController());
   final ClientWalletController walletController = Get.put(ClientWalletController());
   PaymentMethod selectedPaymentMethod = PaymentMethod.cash;
+  Worker? _addressWorker;
+  Worker? _paymentWorker; // Also listen to payment method changes logic if needed, but keeping it simple for now.
+
+  @override
+  void dispose() {
+    _addressWorker?.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -37,6 +45,30 @@ class _CheckoutPageState extends State<CheckoutPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       addressController.fetchAddresses();
     });
+    
+    _addressWorker = ever(addressController.activeAddress, (address) {
+       if (address != null) {
+         _calculatePrice(address);
+       }
+    });
+  }
+
+  void _calculatePrice(AddressModel address) {
+    String paymentStr = 'cash';
+    if (selectedPaymentMethod == PaymentMethod.card) {
+      paymentStr = 'gateway';
+    } else if (selectedPaymentMethod == PaymentMethod.wallet) {
+      paymentStr = 'wallet';
+    }
+
+    cartController.calculateOrderPrice(
+      restaurantId: widget.cart.restaurant.id!,
+      addressId: address.id,
+      deliveryAddress: address.address,
+      deliveryLat: address.lat,
+      deliveryLong: address.long,
+      paymentMethod: paymentStr,
+    );
   }
 
   @override
@@ -74,6 +106,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             // Order Summary Section
                             _buildOrderSummarySection(),
                             SizedBox(height: 24.h),
+                            
+                            // Bill Details
+                            _buildBillDetailsSection(),
+                            SizedBox(height: 24.h), // Spacing after bill details
                             // Delivery Address Section
 
                             // Payment Method Section
@@ -523,7 +559,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ),
         child: Obx(() {
             double walletBalance = walletController.wallet.value?.balance ?? 0.0;
-            double orderTotal = widget.cart.totalPrice;
+            final calculated = cartController.calculatedPrice.value;
+            double orderTotal = calculated != null ? calculated.totalPrice : widget.cart.totalPrice;
             bool isWalletBalanceEnough = walletBalance >= orderTotal;
 
             return StatefulBuilder(
@@ -568,7 +605,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               setStateBottomSheet(() {
                                  selectedPaymentMethod = PaymentMethod.wallet; 
                               });
-                              setState(() {}); 
+                              setState(() {});
+                              if (addressController.activeAddress.value != null) {
+                                _calculatePrice(addressController.activeAddress.value!);
+                              } 
                             },
                             child: Stack(
                               children: [
@@ -630,6 +670,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                  selectedPaymentMethod = PaymentMethod.cash;
                                });
                                setState(() {});
+                               if (addressController.activeAddress.value != null) {
+                                 _calculatePrice(addressController.activeAddress.value!);
+                               }
                             },
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -656,6 +699,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                  selectedPaymentMethod = PaymentMethod.card;
                                });
                                setState(() {});
+                               if (addressController.activeAddress.value != null) {
+                                 _calculatePrice(addressController.activeAddress.value!);
+                               }
                             },
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -749,7 +795,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
         final hasAddress = activeAddress != null;
         
         final walletBalance = walletController.wallet.value?.balance ?? 0.0;
-        final orderTotal = widget.cart.totalPrice;
+        final calculated = cartController.calculatedPrice.value;
+        final orderTotal = calculated != null ? calculated.totalPrice : widget.cart.totalPrice;
         final isWalletBalanceEnough = walletBalance >= orderTotal;
         final isWalletSelected = selectedPaymentMethod == PaymentMethod.wallet;
 
@@ -788,6 +835,87 @@ class _CheckoutPageState extends State<CheckoutPage> {
         );
       }),
     );
+  }
+
+  Widget _buildBillDetailsSection() {
+    return Obx(() {
+      final calculated = cartController.calculatedPrice.value;
+      
+      if (cartController.isCalculatingPrice) {
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.all(20.0),
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+      
+      // Use fallback values if calculation is not yet available
+      final double subtotal = calculated?.subtotal ?? widget.cart.totalPrice;
+      final double deliveryFee = calculated?.deliveryFee ?? 0.0;
+      final double tax = calculated?.tax ?? 0.0;
+      final double total = calculated?.totalPrice ?? subtotal;
+      final bool hasCalculation = calculated != null;
+
+      return Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: Theme.of(context).dividerColor, width: 0.761),
+        ),
+        child: Column(
+          children: [
+            _buildBillRow("المجموع", subtotal),
+            SizedBox(height: 12.h),
+            _buildBillRow("التوصيل", deliveryFee, valueText: hasCalculation ? null : "--"),
+            SizedBox(height: 12.h),
+            if (hasCalculation || tax > 0) ...[
+               _buildBillRow("الضريبة", tax),
+               SizedBox(height: 16.h),
+            ] else ...[
+               // If no calculation yet, maybe skip tax or show -- 
+            ],
+
+            if(calculated?.deliveryFeeDetails != null && calculated!.deliveryFeeDetails!.isNight)
+             Padding(
+               padding: EdgeInsets.only(bottom: 12.h), // adjusted spacing
+               child: Row(
+                 children: [
+                   Icon(Icons.nightlight_round, size: 14.sp, color: Colors.orange),
+                   SizedBox(width: 4.w),
+                   Text("توصيل ليلي", style: TextStyle(fontSize: 12.sp, color: Colors.orange)),
+                 ],
+               ),
+             ),
+             
+            Divider(color: Theme.of(context).dividerColor),
+            SizedBox(height: 16.h),
+            _buildBillRow("الإجمالي الكلي", total, isBold: true, fontSize: 18),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildBillRow(String label, double amount, {bool isBold = false, double fontSize = 14, String? valueText}) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: isBold 
+             ? TextStyle().textColorBold(fontSize: fontSize.sp, color: Theme.of(context).textTheme.bodyLarge?.color)
+             : TextStyle().textColorNormal(fontSize: fontSize.sp, color: Theme.of(context).textTheme.bodyMedium?.color),
+          ),
+          Text(
+            valueText ?? '${amount.toStringAsFixed(1)} د.ل', 
+             style: isBold 
+             ? TextStyle().textColorBold(fontSize: fontSize.sp, color: Theme.of(context).textTheme.bodyLarge?.color)
+             : TextStyle().textColorBold(fontSize: fontSize.sp, color: Theme.of(context).textTheme.bodyLarge?.color),
+          )
+        ],
+      );
   }
 
   String _getDeliveryTimeText(AddressModel deliveryAddress) {

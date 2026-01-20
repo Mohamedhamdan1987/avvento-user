@@ -127,17 +127,22 @@ class RestaurantDetailsScreen extends StatelessWidget {
         restaurantLong: controller.restaurant!.long,
       );
       distanceText = LocationUtils.formatDistance(distance);
-      final price = LocationUtils.calculateDeliveryPrice(distanceInKm: distance);
+      final price = LocationUtils.calculateDeliveryPrice(distanceInKm: distance, );
       priceText = LocationUtils.formatPrice(price);
     }
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 34.w),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(21.r),
-        border: Border.all(color: Theme.of(context).dividerColor, width: 1),
+      decoration: ShapeDecoration(
+        color: const Color(0x11D9D9D9),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(
+            width: 1,
+            color: const Color(0x33E3E3E3),
+          ),
+          borderRadius: BorderRadius.circular(21),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -518,9 +523,28 @@ class RestaurantDetailsScreen extends StatelessWidget {
               return const Center(child: Text('لا توجد أصناف'));
             }
             return Column(
-              children: controller.items.map((item) => _buildItemCard(context, item)).toList(),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (int i = 0; i < controller.items.length; i++) ...[
+                  if (i == 0 ||
+                      controller.items[i].categoryId !=
+                          controller.items[i - 1].categoryId)
+                    Padding(
+                      padding: EdgeInsetsDirectional.only(top: 16.h, bottom: 8.h),
+                      child: Text(
+                        controller.items[i].categoryName,
+                        style: const TextStyle().textColorBold(
+                          fontSize: 16.sp,
+                          color: Colors.grey, // Changed to grey as requested
+                        ),
+                      ),
+                    ),
+                  _buildItemCard(context, controller.items[i]),
+                ],
+              ],
             );
           }),
+          SizedBox(height: 70.h),
         ],
       ),
     );
@@ -564,6 +588,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                         width: 88.w,
                         height: 76.h,
                         fit: BoxFit.cover,
+                        errorWidget: (context, url, error) => Container(color: Colors.grey[300]),
                       )
                     : Container(color: Colors.grey[300]),
               ),
@@ -574,91 +599,171 @@ class RestaurantDetailsScreen extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(children: [
-                  // Item Details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              item.name,
-                              style: const TextStyle().textColorBold(
-                                fontSize: 14.sp,
-                                color: Theme.of(context).textTheme.titleMedium?.color,
-                              ),
+                child: Row(
+                  children: [
+                    // Item Details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.name,
+                            style: const TextStyle().textColorBold(
+                              fontSize: 14.sp,
+                              color: Theme.of(context).textTheme.titleMedium?.color,
                             ),
-                            // const Spacer(),
-                            // GestureDetector(
-                            //   onTap: () => controller.toggleFavorite(item.id),
-                            //   child: Padding(
-                            //     padding: EdgeInsets.symmetric(horizontal: 4.w),
-                            //     child: Icon(
-                            //       item.isFav ? Icons.favorite : Icons.favorite_border,
-                            //       size: 20.w,
-                            //       color: item.isFav ? Colors.red : Colors.grey[400],
-                            //     ),
-                            //   ),
-                            // ),
-                          ],
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          item.description,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle().textColorMedium(
-                            fontSize: 12.sp,
-                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
-                        ),
-
-                      ],
+                          SizedBox(height: 4.h),
+                          Text(
+                            item.description,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle().textColorMedium(
+                              fontSize: 12.sp,
+                              color: Theme.of(context).textTheme.bodySmall?.color,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            '${item.price} د.ل',
+                            style: const TextStyle().textColorMedium(
+                              fontSize: 12.sp,
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // Quantity Selector
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      // favorite
-                      GestureDetector(
-                        onTap: () => controller.toggleFavorite(item.id),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4.w),
-                          child: Icon(
-                            item.isFav ? Icons.favorite : Icons.favorite_border,
-                            size: 20.w,
-                            color: item.isFav ? AppColors.primary : Colors.grey[400],
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        '${item.price} د.ل',
-                        style: const TextStyle().textColorMedium(
-                          fontSize: 12.sp,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                      ),
-                      // _buildQuantitySelector(),
-                    ],
-                  ),
-                ],),
+                    // Quantity Selector
+                    _buildQuantitySelector(item),
+                  ],
+                ),
               ),
             ),
-
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQuantitySelector() {
-    return Container();
+  Widget _buildQuantitySelector(MenuItem item) {
+    return Obx(() {
+      final cartController = Get.find<CartController>();
+      final cart = cartController.carts.firstWhereOrNull(
+        (c) => c.restaurant.restaurantId == restaurantId,
+      );
+      
+      int qty = 0;
+      if (cart != null) {
+        qty = cart.items
+            .where((i) => i.item.id == item.id)
+            .fold(0, (sum, i) => sum + i.quantity);
+      }
+
+      if (qty == 0) {
+        return _buildQtyBtn(
+          icon: Icons.add,
+          onTap: () => _handleIncrement(item),
+        );
+      }
+
+      return Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildQtyBtn(
+              icon: Icons.add,
+              onTap: () => _handleIncrement(item),
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              '$qty',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(width: 8.w),
+            _buildQtyBtn(
+              icon: Icons.remove,
+              onTap: () => _handleDecrement(cartController, cart!, item),
+            ),
+          ],
+        ),
+      );
+    });
   }
+
+  void _handleIncrement(MenuItem item) {
+    if (item.variations.isNotEmpty || item.addOns.isNotEmpty) {
+      showModalBottomSheet(
+        context: Get.context!,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => MealDetailsDialog(menuItem: item),
+      );
+    } else {
+      controller.addToCart(
+        itemId: item.id,
+        quantity: 1,
+        selectedVariations: [],
+        selectedAddOns: [],
+      );
+    }
+  }
+
+  void _handleDecrement(CartController cartController, RestaurantCartResponse cart, MenuItem item) {
+    final restaurantDetailsController = Get.find<RestaurantDetailsController>();
+    // Find the last item index that matches this menu item
+    // We iterate backwards or just find last index
+    final index = cart.items.lastIndexWhere((i) => i.item.id == item.id);
+    if (index != -1) {
+      final cartItem = cart.items[index];
+      if (cartItem.quantity > 1) {
+        cartController.updateQuantity(
+          restaurantId: restaurantDetailsController.restaurant!.id,
+          itemIndex: index,
+          quantity: cartItem.quantity - 1,
+        );
+      } else {
+        cartController.removeItem(restaurantId, index);
+      }
+    }
+  }
+
+  Widget _buildQtyBtn({required IconData icon, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(4.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+             BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(
+          icon,
+          size: 16.w,
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+
+
 
   Widget _buildViewCartButton(BuildContext context, RestaurantCartResponse cart) {
     return Container(
@@ -912,10 +1017,10 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
 
         // Profile Picture Animation
         PositionedDirectional(
-          bottom: lerpDouble(-45.h, 12.h, progress),
+          bottom: lerpDouble(-45.h, -12.h, progress),
           end: lerpDouble(43.w, 12.w, progress),
           child: Transform.scale(
-            scale: lerpDouble(1.0, 0.45, progress)!,
+            scale: lerpDouble(1.0, 0.60, progress)!,
             alignment: AlignmentDirectional.bottomEnd,
             child: Container(
               padding: EdgeInsets.all(3.w),

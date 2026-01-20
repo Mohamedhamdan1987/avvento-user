@@ -235,7 +235,7 @@ class RestaurantsResponse {
 
   factory RestaurantsResponse.fromJson(Map<String, dynamic> json) {
     return RestaurantsResponse(
-      data: (json['data'] as List<dynamic>)
+      data: ((json['data'] ?? json['restaurants']) as List<dynamic>)
           .map((item) => Restaurant.fromJson(item as Map<String, dynamic>))
           .toList(),
       pagination: PaginationModel.fromJson(

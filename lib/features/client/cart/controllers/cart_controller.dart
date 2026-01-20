@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../restaurants/services/restaurants_service.dart';
 import '../models/cart_model.dart';
+import '../models/calculate_price_model.dart';
 import '../../orders/services/orders_service.dart';
 import '../../orders/models/order_model.dart';
 import '../../restaurants/models/menu_item_model.dart';
@@ -12,9 +13,11 @@ class CartController extends GetxController {
 
   final RxList<RestaurantCartResponse> _carts = <RestaurantCartResponse>[].obs;
   final Rx<RestaurantCartResponse?> _detailedCart = Rx<RestaurantCartResponse?>(null);
+  final Rx<CalculatePriceResponse?> calculatedPrice = Rx<CalculatePriceResponse?>(null); // Store calculated price
   final RxList<MenuItem> _drinks = <MenuItem>[].obs; // Add drinks list
   final RxList<Map<String, dynamic>> selectedDrinks = <Map<String, dynamic>>[].obs; // Selected drinks for order
   final RxBool _isLoading = false.obs;
+  final RxBool _isCalculatingPrice = false.obs; // Add loading state for price calculation
   final RxBool _isLoadingDrinks = false.obs; // Add loading state for drinks
   final RxInt _updatingItemIndex = (-1).obs;
   final RxString _errorMessage = ''.obs;
@@ -23,6 +26,7 @@ class CartController extends GetxController {
   RestaurantCartResponse? get detailedCart => _detailedCart.value;
   List<MenuItem> get drinks => _drinks; // Getter for drinks
   bool get isLoading => _isLoading.value;
+  bool get isCalculatingPrice => _isCalculatingPrice.value; // Getter for price calculation loading
   bool get isLoadingDrinks => _isLoadingDrinks.value; // Getter for drinks loading
   int get updatingItemIndex => _updatingItemIndex.value;
   String get errorMessage => _errorMessage.value;
@@ -167,6 +171,41 @@ class CartController extends GetxController {
 
   void clearDrinks() {
     selectedDrinks.clear();
+  }
+
+  Future<void> calculateOrderPrice({
+    required String restaurantId,
+    required String addressId,
+    required String deliveryAddress,
+    required double deliveryLat,
+    required double deliveryLong,
+    required String paymentMethod,
+  }) async {
+    _isCalculatingPrice.value = true;
+    _errorMessage.value = '';
+    try {
+      // Clean drinks list to only send required fields
+      final drinksPayload = selectedDrinks.map((d) => {
+        "drinkId": d["drinkId"],
+        "quantity": d["quantity"],
+        "notes": d["notes"],
+      }).toList();
+
+      final result = await _ordersService.calculatePrice(
+        restaurantId: restaurantId,
+        addressId: addressId,
+        deliveryAddress: deliveryAddress,
+        deliveryLat: deliveryLat,
+        deliveryLong: deliveryLong,
+        paymentMethod: paymentMethod,
+        drinks: drinksPayload.isNotEmpty ? drinksPayload : null,
+      );
+      calculatedPrice.value = result;
+    } catch (e) {
+      print('Error calculating price: $e');
+    } finally {
+      _isCalculatingPrice.value = false;
+    }
   }
 
   Future<void> placeOrder({

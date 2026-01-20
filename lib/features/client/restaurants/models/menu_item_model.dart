@@ -45,6 +45,7 @@ class MenuItem {
   final bool isAvailable;
   final bool isFav;
   final int preparationTime;
+  final num? calories;
   final String restaurant;
   final List<Variation> variations;
   final List<AddOn> addOns;
@@ -62,6 +63,7 @@ class MenuItem {
     required this.isAvailable,
     required this.isFav,
     required this.preparationTime,
+     this.calories,
     required this.restaurant,
     required this.variations,
     required this.addOns,
@@ -82,7 +84,8 @@ class MenuItem {
       isAvailable: json['isAvailable'] as bool? ?? false,
       isFav: json['isFav'] as bool? ?? false,
       preparationTime: json['preparationTime'] as int? ?? 0,
-      restaurant: json['restaurant'] is String 
+      calories: json['calories'] as num? ?? 0,
+      restaurant: json['restaurant'] is String
           ? json['restaurant'] as String 
           : (json['restaurant'] as Map<String, dynamic>)['_id'] as String,
       variations: (json['variations'] as List<dynamic>? ?? [])
@@ -110,6 +113,7 @@ class MenuItem {
       'isAvailable': isAvailable,
       'isFav': isFav,
       'preparationTime': preparationTime,
+      'calories': calories,
       'restaurant': restaurant,
       'variations': variations.map((v) => v.toJson()).toList(),
       'addOns': addOns.map((a) => a.toJson()).toList(),
@@ -129,6 +133,7 @@ class MenuItem {
     bool? isAvailable,
     bool? isFav,
     int? preparationTime,
+    num? calories,
     String? restaurant,
     List<Variation>? variations,
     List<AddOn>? addOns,
@@ -146,6 +151,7 @@ class MenuItem {
       isAvailable: isAvailable ?? this.isAvailable,
       isFav: isFav ?? this.isFav,
       preparationTime: preparationTime ?? this.preparationTime,
+      calories: calories ?? this.calories,
       restaurant: restaurant ?? this.restaurant,
       variations: variations ?? this.variations,
       addOns: addOns ?? this.addOns,

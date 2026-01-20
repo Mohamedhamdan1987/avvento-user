@@ -12,16 +12,34 @@ import '../../../profile/controllers/profile_controller.dart';
 import '../../../profile/pages/edit_profile_page.dart';
 import '../../../../core/theme/theme_controller.dart';
 
-class AccountPage extends StatelessWidget {
+class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Initialize AuthController if it doesn't exist
-    final authController = Get.isRegistered<AuthController>()
+  State<AccountPage> createState() => _AccountPageState();
+}
+
+class _AccountPageState extends State<AccountPage> {
+  late final AuthController authController;
+  late final ProfileController profileController;
+  late final ThemeController themeController;
+
+  @override
+  void initState() {
+    super.initState();
+    authController = Get.isRegistered<AuthController>()
         ? Get.find<AuthController>()
         : Get.put(AuthController());
-    final profileController = Get.put(ProfileController());
+    profileController = Get.isRegistered<ProfileController>()
+        ? Get.find<ProfileController>()
+        : Get.put(ProfileController());
+    themeController = Get.isRegistered<ThemeController>()
+        ? Get.find<ThemeController>()
+        : Get.put(ThemeController());
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = authController.getCachedUser();
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -33,7 +51,7 @@ class AccountPage extends StatelessWidget {
               child: Column(
                 children: [
                   SizedBox(height: 24.h),
-                  _buildSettingsList(),
+                  _buildSettingsList(context),
                   SizedBox(height: 100.h), // Spacing for navigation bar
                 ],
               ),
@@ -84,7 +102,7 @@ class AccountPage extends StatelessWidget {
                 ),
               ),
             ),
-            // Decorative circles (optional, matching home aesthetic)
+            // Decorative circles
             Positioned(
               top: -50.h,
               left: -50.w,
@@ -196,27 +214,31 @@ class AccountPage extends StatelessWidget {
     });
   }
 
-  Widget _buildSettingsList() {
+  Widget _buildSettingsList(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
         children: [
           _buildSettingsItem(
+            context: context,
             iconPath: 'assets/svg/client/location.svg',
             title: 'عناوين التوصيل',
             onTap: () => Get.toNamed(AppRoutes.addressList),
           ),
           _buildSettingsItem(
+            context: context,
             iconPath: 'assets/svg/nav/wallet.svg',
             title: 'محفظتي',
             onTap: () => Get.toNamed(AppRoutes.wallet),
           ),
           _buildSettingsItem(
+            context: context,
             iconPath: 'assets/svg/client/home/favorite.svg',
             title: 'المفضلة',
             onTap: () => Get.to(() => const FavoritesPage()),
           ),
           _buildSettingsItem(
+            context: context,
             iconPath: 'assets/svg/client/home/notification.svg',
             title: 'التنبيهات',
             onTap: () {
@@ -224,51 +246,60 @@ class AccountPage extends StatelessWidget {
             },
           ),
           _buildSettingsItem(
-            iconPath: 'assets/svg/client/home/location_pin.svg', // Placeholder for language or similar
+            context: context,
+            iconPath: 'assets/svg/client/home/location_pin.svg',
             title: 'تغيير كلمة المرور',
             onTap: () {
               Get.toNamed(AppRoutes.changePassword);
             },
           ),
-
-
           GetBuilder<ThemeController>(
             builder: (controller) {
               return _buildSettingsItem(
-                iconPath: 'assets/svg/client/home/more.svg', // Using a generic icon or we might need a specific one for theme
+                context: context,
+                iconPath: 'assets/svg/client/home/more.svg',
                 title: 'الوضع الليلي',
                 onTap: () {
-                  controller.changeTheme(!Get.isDarkMode);
+                  // Delay theme change to allow ripples/animations to settle
+                  Future.delayed(Duration.zero, () {
+                    if (mounted) controller.changeTheme(!Get.isDarkMode);
+                  });
                 },
                 trailingWidget: Switch(
                   value: Get.isDarkMode,
-                  onChanged: (value) => controller.changeTheme(value),
+                  onChanged: (value) {
+                    Future.delayed(Duration.zero, () {
+                      if (mounted) controller.changeTheme(value);
+                    });
+                  },
                   activeColor: AppColors.primary,
                 ),
               );
             },
           ),
           _buildSettingsItem(
-            iconPath: 'assets/svg/client/home/search.svg', // Placeholder for help
+            context: context,
+            iconPath: 'assets/svg/client/home/search.svg',
             title: 'الدعم والمساعدة',
             onTap: () {
               Get.toNamed(AppRoutes.restaurantSupport);
-
             },
           ),
           _buildSettingsItem(
-            iconPath: 'assets/svg/client/home/store.svg', // Placeholder for about
+            context: context,
+            iconPath: 'assets/svg/client/home/store.svg',
             title: 'عن التطبيق',
             onTap: () {},
           ),
           SizedBox(height: 12.h),
           _buildSettingsItem(
+            context: context,
             iconPath: 'assets/svg/client/orders/cancel_icon.svg',
             title: 'تسجيل الخروج',
             titleColor: AppColors.notificationRed,
             showChevron: false,
             onTap: () {
-              _showLogoutDialog();
+              _showLogoutDialog(context);
             },
           ),
         ],
@@ -277,6 +308,7 @@ class AccountPage extends StatelessWidget {
   }
 
   Widget _buildSettingsItem({
+    required BuildContext context,
     required String iconPath,
     required String title,
     String? subtitle,
@@ -288,7 +320,7 @@ class AccountPage extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
-        color: Theme.of(Get.context!).cardColor,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
@@ -303,14 +335,13 @@ class AccountPage extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
         ),
-
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
         leading: Container(
           width: 40.w,
           height: 40.h,
           padding: EdgeInsets.all(10.w),
           decoration: BoxDecoration(
-            color: Theme.of(Get.context!).scaffoldBackgroundColor,
+            color: Theme.of(context).scaffoldBackgroundColor,
             borderRadius: BorderRadius.circular(12.r),
           ),
           child: SvgPicture.asset(
@@ -325,7 +356,7 @@ class AccountPage extends StatelessWidget {
           title,
           style: const TextStyle().textColorMedium(
             fontSize: 15,
-            color: titleColor ?? Theme.of(Get.context!).textTheme.bodyLarge?.color,
+            color: titleColor ?? Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         subtitle: subtitle != null
@@ -333,40 +364,41 @@ class AccountPage extends StatelessWidget {
                 subtitle,
                 style: const TextStyle().textColorNormal(
                   fontSize: 12,
-                  color: Theme.of(Get.context!).textTheme.bodySmall?.color,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
               )
             : null,
-        trailing: trailingWidget ?? (showChevron
-            ? Icon(
-                Icons.chevron_right,
-                color: AppColors.textPlaceholder,
-                size: 20.r,
-              )
-            : null),
+        trailing: trailingWidget ??
+            (showChevron
+                ? Icon(
+                    Icons.chevron_right,
+                    color: AppColors.textPlaceholder,
+                    size: 20.r,
+                  )
+                : null),
       ),
     );
   }
 
-  void _showLogoutDialog() {
+  void _showLogoutDialog(BuildContext context) {
     Get.dialog(
       AlertDialog(
-        backgroundColor: Theme.of(Get.context!).cardColor,
+        backgroundColor: Theme.of(context).cardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
         ),
         title: Text(
           'تسجيل الخروج',
-          style: TextStyle().textColorBold(
+          style: const TextStyle().textColorBold(
             fontSize: 18,
-            color: Theme.of(Get.context!).textTheme.titleLarge?.color,
+            color: Theme.of(context).textTheme.titleLarge?.color,
           ),
         ),
         content: Text(
           'هل أنت متأكد من رغبتك في تسجيل الخروج؟',
           style: TextStyle(
             fontSize: 16.sp,
-            color: Theme.of(Get.context!).textTheme.bodyMedium?.color,
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
         actions: [
@@ -376,17 +408,13 @@ class AccountPage extends StatelessWidget {
               'إلغاء',
               style: TextStyle(
                 fontSize: 16.sp,
-                color: Theme.of(Get.context!).textTheme.bodyMedium?.color,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
           ),
           TextButton(
             onPressed: () {
               Get.back(); // Close dialog
-              // Safely get or initialize AuthController
-              final authController = Get.isRegistered<AuthController>()
-                  ? Get.find<AuthController>()
-                  : Get.put(AuthController());
               authController.logout();
             },
             child: Text(

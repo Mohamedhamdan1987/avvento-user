@@ -307,6 +307,31 @@ class OrderTrackingDialog extends StatelessWidget {
             ],
           ),
         );
+      case OrderStatus.deliveryReceived:
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('🎉', style: TextStyle(fontSize: 72.sp)),
+              SizedBox(height: 8.h),
+              Text(
+                'تم استلام الطلب بنجاح!',
+                style: TextStyle().textColorBold(
+                  fontSize: 18.sp,
+                  color: Theme.of(context).textTheme.titleLarge?.color,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                'شكراً لاستخدامك أفينتو',
+                style: TextStyle().textColorNormal(
+                  fontSize: 12.sp,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
+              ),
+            ],
+          ),
+        );
       case OrderStatus.cancelled:
         // TODO: Handle this case.
         return Center(
@@ -364,9 +389,18 @@ class OrderTrackingDialog extends StatelessWidget {
               SizedBox(height: 24.h),
               _buildTimelineItem(
                 context,
+                time: '12:45',
+                title: 'استلم المستخدم الطلب',
+                isActive: status.index >= 3,
+                isCurrent: status == OrderStatus.deliveryReceived,
+                icon: "assets/svg/client/orders/delivered.svg",
+              ),
+              SizedBox(height: 24.h),
+              _buildTimelineItem(
+                context,
                 time: '12:50',
                 title: 'في الطريق إليك',
-                isActive: status.index >= 3,
+                isActive: status.index >= 4,
                 isCurrent: status == OrderStatus.onTheWay,
                 icon: "assets/svg/client/orders/on_the_way.svg",
               ),
@@ -374,8 +408,8 @@ class OrderTrackingDialog extends StatelessWidget {
               _buildTimelineItem(
                 context,
                 time: '01:05',
-                title: 'في انتظار الاستلام',
-                isActive: status.index >= 4,
+                title: 'في انتظار التسليم',
+                isActive: status.index >= 5,
                 isCurrent: status == OrderStatus.awaitingDelivery,
                 icon: "assets/svg/client/orders/waiting_pickup.svg",
               ),
@@ -384,7 +418,7 @@ class OrderTrackingDialog extends StatelessWidget {
                 context,
                 time: '01:10',
                 title: 'تم تسليم الطلب',
-                isActive: status.index >= 5,
+                isActive: status.index >= 6,
                 isCurrent: status == OrderStatus.delivered,
                 icon: "assets/svg/client/orders/delivered.svg",
               ),

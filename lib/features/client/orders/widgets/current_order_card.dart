@@ -109,12 +109,14 @@ class CurrentOrderCard extends StatelessWidget {
         return 1;
       case OrderStatus.preparing:
         return 2;
-      case OrderStatus.onTheWay:
+      case OrderStatus.deliveryReceived:
         return 3;
-      case OrderStatus.awaitingDelivery:
+      case OrderStatus.onTheWay:
         return 4;
-      case OrderStatus.delivered:
+      case OrderStatus.awaitingDelivery:
         return 5;
+      case OrderStatus.delivered:
+        return 6;
       case OrderStatus.cancelled:
         return -1;
       default:
@@ -429,6 +431,8 @@ class CurrentOrderCard extends StatelessWidget {
       case OrderStatus.onTheWay:
         return AppColors.primary;
       case OrderStatus.delivered:
+        return const Color(0xFF00C950);
+      case OrderStatus.deliveryReceived:
         return const Color(0xFF00C950);
       default:
         return AppColors.primary;

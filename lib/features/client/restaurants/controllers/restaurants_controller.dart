@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import '../models/restaurant_model.dart';
+import '../models/best_restaurant_model.dart';
 import '../models/story_model.dart';
 import '../services/restaurants_service.dart';
 
@@ -14,6 +15,10 @@ class RestaurantsController extends GetxController {
   final RxInt _currentPage = 1.obs;
   final RxInt _totalPages = 1.obs;
   final RxString _errorMessage = ''.obs;
+  
+  // Best Restaurants state
+  final RxList<BestRestaurant> _bestRestaurants = <BestRestaurant>[].obs;
+  final RxBool _isLoadingBest = false.obs;
   
   // Stories observable state
   final RxList<Story> _stories = <Story>[].obs;
@@ -33,6 +38,10 @@ class RestaurantsController extends GetxController {
   String get errorMessage => _errorMessage.value;
   bool get hasMore => _currentPage.value < _totalPages.value;
   bool get hasError => _errorMessage.value.isNotEmpty;
+  
+  // Best Restaurants getters
+  List<BestRestaurant> get bestRestaurants => _bestRestaurants;
+  bool get isLoadingBest => _isLoadingBest.value;
   double? get userLat => _userLat.value;
   double? get userLong => _userLong.value;
   
@@ -48,7 +57,22 @@ class RestaurantsController extends GetxController {
     _userLong.value = 13.1913;
     
     fetchRestaurants();
+    fetchRestaurants();
+    fetchBestRestaurants();
     fetchStories();
+  }
+
+  /// Fetch best restaurants
+  Future<void> fetchBestRestaurants() async {
+    // try {
+      _isLoadingBest.value = true;
+      final restaurants = await _restaurantsService.getBestRestaurants();
+      _bestRestaurants.assignAll(restaurants);
+    // } catch (e) {
+    //   print('Failed to fetch best restaurants: $e');
+    // } finally {
+    //   _isLoadingBest.value = false;
+    // }
   }
 
   /// Fetch stories
@@ -150,6 +174,7 @@ class RestaurantsController extends GetxController {
   Future<void> refreshRestaurants() async {
     await Future.wait([
       fetchRestaurants(refresh: true),
+      fetchBestRestaurants(),
       fetchStories(),
     ]);
   }
@@ -194,6 +219,45 @@ class RestaurantsController extends GetxController {
       if (index != -1) {
         _restaurants[index] = restaurant;
         _restaurants.refresh();
+      }
+      
+      Get.snackbar(
+        'خطأ',
+        'فشل تحديث الحالة المفضلة',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  /// Toggle best restaurant favorite status
+  Future<void> toggleBestRestaurantFavorite(BestRestaurant restaurant) async {
+    try {
+      // Optimistic update
+      final index = _bestRestaurants.indexWhere((r) => r.id == restaurant.id);
+      if (index != -1) {
+        _bestRestaurants[index] = restaurant.copyWith(isFavorite: !restaurant.isFavorite);
+        _bestRestaurants.refresh();
+      }
+
+      final isFavorite = await _restaurantsService.toggleFavorite(restaurant.id);
+      
+      // Update with actual result from server
+      if (index != -1) {
+        _bestRestaurants[index] = _bestRestaurants[index].copyWith(isFavorite: isFavorite);
+        _bestRestaurants.refresh();
+      }
+      
+      Get.snackbar(
+        'نجاح',
+        isFavorite ? 'تمت إضافة المطعم إلى المفضلة' : 'تمت إزالة المطعم من المفضلة',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      // Revert on error
+      final index = _bestRestaurants.indexWhere((r) => r.id == restaurant.id);
+      if (index != -1) {
+        _bestRestaurants[index] = restaurant;
+        _bestRestaurants.refresh();
       }
       
       Get.snackbar(

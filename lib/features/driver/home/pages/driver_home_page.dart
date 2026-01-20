@@ -6,12 +6,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/enums/order_status.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import '../controllers/driver_orders_controller.dart';
-import '../widgets/new_order_request_modal.dart';
-import '../widgets/active_order_view.dart';
+import '../widgets/orders_list_bottom_sheet.dart';
 
 class DriverHomePage extends StatefulWidget {
   const DriverHomePage({super.key});
@@ -105,6 +105,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
   }
 
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,6 +137,33 @@ class _DriverHomePageState extends State<DriverHomePage> {
                   controller.clearSelectedOrder();
                 },
               );
+            },
+          ),
+
+          // Listener for order selection to animate camera
+          GetX<DriverOrdersController>(
+            builder: (controller) {
+              final selectedOrder = controller.selectedOrder;
+              if (selectedOrder != null) {
+                // Determine target location (pickup or delivery based on status)
+                bool isPickupPhase = [
+                  OrderStatus.confirmed,
+                  OrderStatus.preparing,
+                  OrderStatus.awaitingDelivery
+                ].contains(selectedOrder.status);
+
+                LatLng targetLocation = isPickupPhase
+                    ? LatLng(selectedOrder.pickupLocation.latitude, selectedOrder.pickupLocation.longitude)
+                    : LatLng(selectedOrder.deliveryLocation.latitude, selectedOrder.deliveryLocation.longitude);
+
+                // Delay slightly to ensure map is ready and avoid animation conflicts
+                Future.delayed(const Duration(milliseconds: 300), () {
+                  _mapController?.animateCamera(
+                    CameraUpdate.newLatLngZoom(targetLocation, 15),
+                  );
+                });
+              }
+              return const SizedBox.shrink();
             },
           ),
 
@@ -311,63 +339,59 @@ class _DriverHomePageState extends State<DriverHomePage> {
             ),
           ),
 
-          // Show active orders view if there are active orders
-          Obx(() {
-            final controller = Get.find<DriverOrdersController>();
-            // Get all active orders (not delivered or cancelled)
-            final activeOrders = controller.myOrders.where(
-              (order) => !['delivered', 'cancelled'].contains(order.status.toString().toLowerCase()),
-            ).toList();
 
-            if (activeOrders.isNotEmpty) {
-              return Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // PageView for orders
-                    SizedBox(
-                      height: 400.h, // Adjusted height for better fit
-                      child: PageView.builder(
-                        itemCount: activeOrders.length,
-                        controller: PageController(viewportFraction: 0.95),
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 4.w),
-                            child: ActiveOrderView(order: activeOrders[index]),
-                          );
-                        },
-                      ),
-                    ),
-                    // Only show indicators if more than one order
-                    if (activeOrders.length > 1)
-                      Padding(
-                        padding: EdgeInsets.only(bottom: 16.h),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(
-                            activeOrders.length,
-                            (index) => Container(
-                              width: 8.w,
-                              height: 8.h,
-                              margin: EdgeInsets.symmetric(horizontal: 4.w),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.5),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
+
+          // Floating list buttons
+          PositionedDirectional(
+            bottom: 32.h,
+            end: 16.w,
+            child: Obx(() {
+              final controller = Get.find<DriverOrdersController>();
+
+
+              return Column(
+                children: [
+                  // My Orders Button
+                  _buildFloatingListButton(
+                    context,
+                    icon: Icons.assignment_outlined,
+                    label: 'طلباتي',
+                    onTap: () {
+                      Get.bottomSheet(
+                        OrdersListBottomSheet(
+                          title: 'طلباتي المعينة',
+                          orders: controller.myOrders,
                         ),
-                      ),
-                  ],
-                ),
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                      );
+                    },
+                    count: controller.myOrders.length,
+                  ),
+                  SizedBox(height: 16.h),
+                  // Nearby Orders Button
+                  _buildFloatingListButton(
+                    context,
+                    icon: Icons.near_me_outlined,
+                    label: 'طلبات قريبة',
+                    onTap: () {
+                      Get.bottomSheet(
+                        OrdersListBottomSheet(
+                          title: 'طلبات قريبة متاحة',
+                          orders: controller.nearbyOrders,
+                          isNearby: true,
+                        ),
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                      );
+                    },
+                    count: controller.nearbyOrders.length,
+                    isPrimary: true,
+                  ),
+                ],
               );
-            }
-
-            return const SizedBox.shrink();
-          }),
+            }),
+          ),
 
           // Modal is now triggered directly from DriverOrdersController.selectOrder using Get.bottomSheet
 
@@ -378,10 +402,13 @@ class _DriverHomePageState extends State<DriverHomePage> {
               (order) => !['delivered', 'cancelled'].contains(order.status.toString().toLowerCase()),
             );
 
-            if (controller.selectedOrder == null &&
+            if (
+            controller.selectedOrder == null &&
                 !hasActiveOrder &&
                 controller.nearbyOrders.isEmpty &&
-                !controller.isLoading) {
+                !controller.isLoading)
+            {
+
               return Positioned(
                 bottom: 0,
                 left: 0,
@@ -458,6 +485,74 @@ class _DriverHomePageState extends State<DriverHomePage> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingListButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required int count,
+    bool isPrimary = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: isPrimary ? AppColors.primary : Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(100.r),
+          border: Border.all(
+            color: isPrimary ? AppColors.primary : Theme.of(context).dividerColor,
+            width: 0.76.w,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (count > 0) ...[
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: isPrimary ? Colors.white.withOpacity(0.2) : AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(100.r),
+                ),
+                child: Text(
+                  '$count',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.bold,
+                    color: isPrimary ? Colors.white : AppColors.primary,
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.bold,
+                color: isPrimary ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color,
+              ),
+            ),
+            SizedBox(width: 8.w),
+            Icon(
+              icon,
+              size: 20.r,
+              color: isPrimary ? Colors.white : Theme.of(context).iconTheme.color,
+            ),
+          ],
+        ),
       ),
     );
   }

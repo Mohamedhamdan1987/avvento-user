@@ -3,6 +3,7 @@ import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_ap
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:avvento/features/client/restaurants/models/restaurant_model.dart';
+import 'package:avvento/features/client/restaurants/models/best_restaurant_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -156,8 +157,8 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                 SizedBox(width: 4.w),
                                 Text(
                                   'ستوري المطاعم',
-                                  style: const TextStyle(
-                                    color: Color(0xFF101727),
+                                  style:  TextStyle(
+                                    color: Theme.of(context).textTheme.titleLarge?.color,
                                     fontSize: 18,
                                     fontFamily: 'IBM Plex Sans Arabic',
                                     fontWeight: FontWeight.w700,
@@ -264,6 +265,90 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                           ),
                         ),
 
+                      if (controller.bestRestaurants.isNotEmpty)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsetsDirectional.only(
+                                start: 24.w,
+                                top: 16.h,
+                                bottom: 8.h,
+                              ),
+                              child: Text(
+                                'الأكثر شعبية',
+                                style: const TextStyle().textColorBold(
+                                  color: Theme.of(context).textTheme.titleLarge?.color,
+                                  fontSize: 18.sp,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 100.h,
+                              child: ListView.builder(
+                                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                                scrollDirection: Axis.horizontal,
+                                itemCount: controller.bestRestaurants.length,
+                                itemBuilder: (context, index) {
+                                  final restaurant = controller.bestRestaurants[index];
+                                  return Padding(
+                                    padding: EdgeInsetsDirectional.only(end: 12.w),
+                                    child: InkWell(
+                                      onTap: () {
+                                        Get.to(
+                                              () => RestaurantDetailsScreen(
+                                            restaurantId: restaurant.id,
+                                          ),
+                                        );
+                                      },
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            width: 70,
+                                            height: 70,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: ClipOval(
+                                              child: CachedNetworkImage(
+                                                imageUrl: restaurant.logo!,
+                                                fit: BoxFit.cover,
+                                                errorWidget: (context, url, error) => Container(
+                                                  color: Colors.grey[300],
+                                                  child: const Icon(
+                                                    Icons.restaurant,
+                                                    size: 30,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(height: 4.h),
+                                          SizedBox(
+                                            width: 70.w,
+                                            child: Text(
+                                              restaurant.name,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+
+
                       Padding(
                         padding: EdgeInsetsDirectional.only(
                           start: 24.w,
@@ -282,7 +367,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                             Text(
                               'المميزة',
                               style: const TextStyle().textColorBold(
-                                color: const Color(0xFF101727),
+                                color: Theme.of(context).textTheme.titleLarge?.color,
                                 fontSize: 18.sp,
                               ),
                             ),
@@ -310,6 +395,9 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                         ),
                       ),
 
+
+
+
                       Padding(
                         padding: EdgeInsetsDirectional.only(
                           start: 24.w,
@@ -319,7 +407,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                         child: Text(
                           'كُل المطاعم',
                           style: const TextStyle().textColorBold(
-                            color: const Color(0xFF101727),
+                            color: Theme.of(context).textTheme.titleLarge?.color,
                             fontSize: 18.sp,
                           ),
                         ),
@@ -365,6 +453,8 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                           ),
                         ),
                       ),
+
+
                       SizedBox(height: 20.h),
                     ],
                   ),
@@ -386,7 +476,9 @@ class RestaurantCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isFavorite = restaurant.isFavorite;
-    final bool isActive = restaurant is Restaurant ? restaurant.user.isActive : restaurant.isOpen;
+    final bool isActive = restaurant is Restaurant 
+        ? restaurant.user.isActive 
+        : (restaurant is BestRestaurant ? restaurant.isOpen : restaurant.isOpen);
     final String restaurantId = restaurant.id;
     final String name = restaurant.name;
     final String? backgroundImage = restaurant.backgroundImage;
@@ -438,6 +530,9 @@ class RestaurantCard extends StatelessWidget {
                             if (restaurant is Restaurant) {
                               final controller = Get.find<RestaurantsController>();
                               controller.toggleFavorite(restaurant);
+                            } else if (restaurant is BestRestaurant) {
+                              final controller = Get.find<RestaurantsController>();
+                              controller.toggleBestRestaurantFavorite(restaurant);
                             } else {
                               final controller = Get.find<FavoritesController>();
                               controller.toggleFavorite(restaurant);

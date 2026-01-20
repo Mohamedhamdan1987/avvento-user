@@ -130,33 +130,94 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
               topRight: Radius.circular(40.r),
             ),
             child: widget.menuItem.image != null && widget.menuItem.image!.isNotEmpty
-                ? CachedNetworkImage(
-                    imageUrl: widget.menuItem.image!,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: 290.h,
+                ? GestureDetector(
+                    onTap: () {
+                      print("object");
+                      showDialog(
+                        context: context,
+                        builder: (context) => Dialog(
+                          backgroundColor: Colors.transparent,
+                          insetPadding: EdgeInsets.zero,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Dismiss by tapping background
+                              Positioned.fill(
+                                child: GestureDetector(
+                                  onTap: () => Navigator.pop(context),
+                                  child: Container(
+
+                                    color: Colors.black.withOpacity(0.9),
+                                  ),
+                                ),
+                              ),
+                              // Interactive Viewer for zooming
+                              InteractiveViewer(
+                                panEnabled: true,
+                                boundaryMargin: EdgeInsets.all(20),
+                                minScale: 0.5,
+                                maxScale: 4.0,
+                                child: CachedNetworkImage(
+                                  imageUrl: widget.menuItem.image!,
+                                  fit: BoxFit.contain,
+                                  width: MediaQuery.of(context).size.width,
+                                  height: MediaQuery.of(context).size.height,
+                                ),
+                              ),
+                              // Close Button
+                              Positioned(
+                                top: 40.h,
+                                right: 20.w,
+                                child: CustomIconButtonApp(
+                                  width: 40.w,
+                                  height: 40.h,
+                                  radius: 100.r,
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderColor: Colors.white.withOpacity(0.2),
+                                  onTap: () => Navigator.pop(context),
+                                  childWidget: Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 24.w,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    child: CachedNetworkImage(
+                      imageUrl: widget.menuItem.image!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: 290.h,
+                    ),
                   )
                 : Container(color: Colors.grey[300]),
           ),
         ),
         
         // Gradient Overlay
-        Container(
-          height: 290.h,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(40.r),
-              topRight: Radius.circular(40.r),
-            ),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Theme.of(context).cardColor.withOpacity(0.2),
-                Theme.of(context).cardColor,
-              ],
-              stops: [0.0, 0.5, 1.0],
+        IgnorePointer(
+          ignoring: true,
+          child: Container(
+            height: 290.h,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(40.r),
+                topRight: Radius.circular(40.r),
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Theme.of(context).cardColor.withOpacity(0.2),
+                  Theme.of(context).cardColor,
+                ],
+                stops: [0.0, 0.5, 1.0],
+              ),
             ),
           ),
         ),
@@ -234,6 +295,37 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
+              // Meal Name
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.menuItem.name,
+                      style: TextStyle().textColorBold(
+                        fontSize: 25.sp,
+                        color: Theme.of(context).textTheme.titleLarge?.color,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+
+                    SizedBox(height: 8.h),
+
+                    // Description
+                    Text(
+                      widget.menuItem.description,
+                      style: TextStyle().textColorMedium(
+                        fontSize: 14.sp,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+
+                  ],
+                ),
+              ),
+              SizedBox(width: 16.w),
               // Price and Rating
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,67 +385,47 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                   ),
                 ],
               ),
-              
-              SizedBox(width: 16.w),
-              
-              // Meal Name
-              Expanded(
-                child: Text(
-                  widget.menuItem.name,
-                  style: TextStyle().textColorBold(
-                    fontSize: 25.sp,
-                    color: Theme.of(context).textTheme.titleLarge?.color,
-                  ),
-                  textAlign: TextAlign.right,
-                ),
-              ),
+
+
             ],
           ),
-          
-          SizedBox(height: 8.h),
-          
-          // Description
-          Text(
-            widget.menuItem.description,
-            style: TextStyle().textColorMedium(
-              fontSize: 14.sp,
-              color: Theme.of(context).textTheme.bodyMedium?.color,
-            ),
-            textAlign: TextAlign.right,
-          ),
-          
+
           SizedBox(height: 8.h),
           
           // Time and Calories
           Row(
             children: [
-              Spacer(),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(100.r),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.local_fire_department,
-                      size: 12.w,
-                      color: Theme.of(context).textTheme.bodySmall?.color,
+              // Spacer(),
+              if(widget.menuItem.calories != null)
+                ...[
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(100.r),
                     ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '320 سعرة',
-                      style: TextStyle().textColorBold(
-                        fontSize: 12.sp,
-                        color: Theme.of(context).textTheme.bodySmall?.color,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.local_fire_department,
+                          size: 12.w,
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          '${widget.menuItem.calories } سعرة',
+                          style: TextStyle().textColorBold(
+                            fontSize: 12.sp,
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 16.w),
+                  ),
+                  SizedBox(width: 16.w),
+
+                ],
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(

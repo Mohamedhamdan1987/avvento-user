@@ -4,6 +4,7 @@ enum OrderStatus {
   pendingRestaurant('pending_restaurant'),
   confirmed('confirmed'),
   preparing('preparing'),
+  deliveryReceived('delivery_received'),
   onTheWay('on_the_way'),
   awaitingDelivery('awaiting_delivery'),
   delivered('delivered'),
@@ -34,6 +35,8 @@ enum OrderStatus {
         return 'في انتظار التسليم';
       case OrderStatus.delivered:
         return 'تم التسليم';
+      case OrderStatus.deliveryReceived:
+        return 'تم استلام الطلب';
       case OrderStatus.cancelled:
         return 'تم الإلغاء';
     }

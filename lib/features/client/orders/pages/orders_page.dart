@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'order_details_screen.dart';
-import '../widgets/order_card.dart';
+import '../widgets/previous_order_card.dart';
 import '../widgets/current_order_card.dart';
 
 class OrdersPage extends StatefulWidget {

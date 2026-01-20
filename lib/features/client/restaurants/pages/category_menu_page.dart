@@ -1,3 +1,4 @@
+import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -37,26 +38,16 @@ class CategoryMenuPage extends StatelessWidget {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(category.name),
+        appBar: CustomAppBar(
+          title: category.name,
           centerTitle: true,
           elevation: 0,
-          leading: CustomIconButtonApp(
-            onTap: () {
-              controller.clearFilters();
-              Get.back();
-            },
-            childWidget: SvgIcon(
-              iconName: 'assets/svg/arrow-right.svg',
-              width: 20.w,
-              height: 20.h,
-            ),
-          ),
         ),
         body: Directionality(
           textDirection: TextDirection.rtl,
           child: Column(
             children: [
+              SizedBox(height: 2.h),
             // Subcategories Horizontal List
             Obx(() {
               if (controller.isLoadingSubCategories && controller.subCategories.isEmpty) {
@@ -70,10 +61,35 @@ class CategoryMenuPage extends StatelessWidget {
                 child: ListView.separated(
                   padding: EdgeInsets.symmetric(horizontal: 24.w),
                   scrollDirection: Axis.horizontal,
-                  itemCount: controller.subCategories.length,
+                  itemCount: controller.subCategories.length + 1,
                   separatorBuilder: (context, index) => SizedBox(width: 8.w),
                   itemBuilder: (context, index) {
-                    final subCategory = controller.subCategories[index];
+                    if (index == 0) {
+                      return Obx(() {
+                        final isSelected = controller.selectedSubCategoryId.isEmpty;
+                        return GestureDetector(
+                          onTap: () => controller.selectSubCategory(''),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isSelected ? const Color(0xFF7F22FE) : Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(20.r),
+                              border: isSelected ? null : Border.all(color: Theme.of(context).dividerColor),
+                            ),
+                            child: Text(
+                              'الكل',
+                              style: const TextStyle().textColorMedium(
+                                fontSize: 14.sp,
+                                color: isSelected ? Colors.white : Theme.of(context).textTheme.bodySmall?.color,
+                              ),
+                            ),
+                          ),
+                        );
+                      });
+                    }
+                    
+                    final subCategory = controller.subCategories[index - 1];
                     return Obx(() {
                       final isSelected = controller.selectedSubCategoryId == subCategory.id;
                       return GestureDetector(
@@ -229,7 +245,7 @@ class CategoryMenuPage extends StatelessWidget {
             ),
 
             // Quantity Selector (Reusing the one from Details Screen style)
-            _buildQuantitySelector(context),
+            // _buildQuantitySelector(context),
           ],
         ),
       ),

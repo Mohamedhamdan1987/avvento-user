@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import '../models/restaurant_model.dart';
 import '../models/menu_category_model.dart';
 import '../models/menu_item_model.dart';
@@ -247,20 +248,16 @@ class RestaurantDetailsController extends GetxController {
         Get.find<CartController>().refreshCarts();
       }
 
-      Get.snackbar(
-        'نجاح',
-        'تم إضافة المنتج للسلة بنجاح',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+      showSnackBar(
+        title: 'نجاح',
+        message: 'تم إضافة المنتج للسلة بنجاح',
+        isSuccess: true,
       );
     } catch (e) {
-      Get.snackbar(
-        'خطأ',
-        'فشل إضافة المنتج للسلة',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+      showSnackBar(
+        title: 'خطأ',
+        message: 'فشل إضافة المنتج للسلة',
+        isError: true,
       );
     } finally {
       _isAddingToCart.value = false;

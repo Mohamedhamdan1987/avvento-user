@@ -4,6 +4,7 @@ import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/features/client/address/controllers/address_controller.dart';
 import 'package:avvento/features/client/address/models/address_model.dart';
+import 'package:avvento/core/utils/app_dialogs.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -215,24 +216,12 @@ class AddressListPage extends StatelessWidget {
   }
 
   void _showDeleteConfirmation(AddressModel address, AddressController controller) {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('حذف العنوان', textAlign: TextAlign.right),
-        content: Text('هل أنت متأكد من حذف عنوان "${address.label}"؟', textAlign: TextAlign.right),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: Text('إلغاء', style: const TextStyle().textColorMedium(color: AppColors.textLight)),
-          ),
-          TextButton(
-            onPressed: () {
-              controller.deleteAddress(address.id);
-              Get.back();
-            },
-            child: Text('حذف', style: const TextStyle().textColorBold(color: AppColors.notificationRed)),
-          ),
-        ],
-      ),
+    AppDialogs.showDeleteConfirmation(
+      title: 'حذف العنوان',
+      description: 'هل أنت متأكد من حذف عنوان "${address.label}"؟',
+      onConfirm: () {
+        controller.deleteAddress(address.id);
+      },
     );
   }
 

@@ -5,6 +5,7 @@ import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/utils/location_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -33,9 +34,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Worker? _addressWorker;
   Worker? _paymentWorker; // Also listen to payment method changes logic if needed, but keeping it simple for now.
 
+  GoogleMapController? _mapController;
+  Set<Marker> _markers = {};
+  bool _isBillExpanded = false;
+
   @override
   void dispose() {
     _addressWorker?.dispose();
+    _mapController?.dispose();
     super.dispose();
   }
 
@@ -49,7 +55,29 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _addressWorker = ever(addressController.activeAddress, (address) {
        if (address != null) {
          _calculatePrice(address);
+         _updateMapLocation(address);
        }
+    });
+  }
+
+  void _updateMapLocation(AddressModel address) {
+    if (_mapController == null) return;
+    
+    final latLng = LatLng(address.lat, address.long);
+    _mapController!.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: latLng, zoom: 15),
+      ),
+    );
+
+    setState(() {
+      _markers = {
+        Marker(
+          markerId: const MarkerId('delivery_location'),
+          position: latLng,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+        ),
+      };
     });
   }
 
@@ -107,13 +135,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             _buildOrderSummarySection(),
                             SizedBox(height: 24.h),
                             
-                            // Bill Details
-                            _buildBillDetailsSection(),
-                            SizedBox(height: 24.h), // Spacing after bill details
-                            // Delivery Address Section
-
-                            // Payment Method Section
-
+                            // Bill Details (Moved to bottom summary)
+                            // _buildBillDetailsSection(),
+                            // SizedBox(height: 24.h), 
                           ],
                         ),
                       ),
@@ -121,8 +145,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                 ),
               ),
-              // Bottom Button
-              _buildBottomButton(),
+              // Bottom Section (Includes Expandable Bill Details)
+              _buildBottomSection(),
             ],
           );
         }),
@@ -131,24 +155,77 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildHeaderSection() {
+    final activeAddress = addressController.activeAddress.value;
+    final initialPos = activeAddress != null 
+        ? LatLng(activeAddress.lat, activeAddress.long)
+        : const LatLng(32.8872, 13.1913); // Default Tripoli
+
     return Container(
-      // height: 120.h,
-      padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
+      height: 250.h,
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: const Color(0xFFE0DDDD), width: 1.w),
         ),
-        image: const DecorationImage(
-          image: AssetImage('assets/images/orders/order_checkout_bg.png'),
-          fit: BoxFit.cover,
-        ),
       ),
-      child: Column(
+      child: Stack(
         children: [
-          SvgPicture.asset("assets/svg/cart/map_group_icon.svg"),
-          SizedBox(height: 20.h),
-          _buildDeliveryAddressSection(),
-          // SizedBox(height: 24.h),
+          // Google Map Background
+          ClipRRect(
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: initialPos,
+                zoom: 15,
+              ),
+              onMapCreated: (controller) {
+                _mapController = controller;
+                if (activeAddress != null) {
+                  _updateMapLocation(activeAddress);
+                }
+              },
+              markers: _markers,
+              myLocationEnabled: false,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              compassEnabled: false,
+              scrollGesturesEnabled: false,
+              zoomGesturesEnabled: false,
+              tiltGesturesEnabled: false,
+              rotateGesturesEnabled: false,
+            ),
+          ),
+          // Overlay content
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withOpacity(0.0),
+                  Colors.white.withOpacity(0.2),
+                  Colors.white.withOpacity(0.8),
+                  Colors.white,
+                ],
+                stops: const [0.0, 0.3, 0.7, 1.0],
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                _buildDeliveryAddressSection(),
+              ],
+            ),
+          ),
+          // Floating Icon to match original design intent (optional)
+          Positioned(
+            top: 16.h,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: SvgPicture.asset("assets/svg/cart/map_group_icon.svg"),
+            ),
+          ),
         ],
       ),
     );
@@ -777,126 +854,196 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildBottomButton() {
+  Widget _buildBottomSection() {
     return Container(
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.only(top: 16.h, left: 24.w, right: 24.w, bottom: 24.h),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24.r),
+          topRight: Radius.circular(24.r),
+        ),
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor,
+            width: 0.761,
+          ),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            blurRadius: 20,
             offset: const Offset(0, -5),
           ),
         ],
       ),
       child: Obx(() {
+        final calculated = cartController.calculatedPrice.value;
+        final subtotal = calculated?.subtotal ?? widget.cart.totalPrice;
+        final total = calculated?.totalPrice ?? subtotal;
         final activeAddress = addressController.activeAddress.value;
         final hasAddress = activeAddress != null;
         
         final walletBalance = walletController.wallet.value?.balance ?? 0.0;
-        final calculated = cartController.calculatedPrice.value;
-        final orderTotal = calculated != null ? calculated.totalPrice : widget.cart.totalPrice;
-        final isWalletBalanceEnough = walletBalance >= orderTotal;
+        final isWalletBalanceEnough = walletBalance >= total;
         final isWalletSelected = selectedPaymentMethod == PaymentMethod.wallet;
 
-        return CustomButtonApp(
-          text: (isWalletSelected && !isWalletBalanceEnough) ? 'تعبئة المحفظة' : 'إتمام الطلب',
-          isLoading: cartController.isLoading,
-          isEnable: hasAddress,
-          onTap: hasAddress
-              ? () {
-                  if (isWalletSelected && !isWalletBalanceEnough) {
-                    Get.toNamed(AppRoutes.wallet);
-                    return;
-                  }
-                  final address = addressController.activeAddress.value;
-                  if (address != null) {
-                    String paymentStr = 'cash';
-                    if (selectedPaymentMethod == PaymentMethod.card) {
-                      paymentStr = 'gateway';
-                    } else if (selectedPaymentMethod == PaymentMethod.wallet) {
-                      paymentStr = 'wallet';
-                    }
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Bill Header (Toggle)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _isBillExpanded = !_isBillExpanded;
+                });
+              },
+              child: Container(
+                color: Colors.transparent,
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Chevron Icon (Left in RTL)
+                    Transform.rotate(
+                      angle: _isBillExpanded ? 3.14159 : 0,
+                      child: SvgPicture.asset(
+                        'assets/svg/cart/arrow-top.svg',
+                        width: 20.w,
+                        height: 20.h,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                    ),
+                    // Bill Title (Right in RTL)
+                    Text(
+                      'ملخص الفاتورة',
+                      style: TextStyle().textColorBold(
+                        fontSize: 14.sp,
+                        color: Theme.of(context).textTheme.titleMedium?.color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 12.h),
 
-                    cartController.placeOrder(
-                      restaurantId: widget.cart.restaurant.id!,
-                      addressId: address.id,
-                      deliveryAddress: address.address,
-                      deliveryLat: address.lat,
-                      deliveryLong: address.long,
-                      payment: paymentStr,
-                      notes: '',
-                    );
-                  }
-                }
-              : null,
-          color: const Color(0xFF7F22FE),
+            // Order Button
+            CustomButtonApp(
+              text: (isWalletSelected && !isWalletBalanceEnough) ? 'تعبئة المحفظة' : 'إتمام الطلب',
+              isLoading: cartController.isLoading,
+              isEnable: hasAddress,
+              childWidget: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (cartController.isLoading)
+                    const Center(child: CircularProgressIndicator(color: Colors.white))
+                  else
+                    Text(
+                      (isWalletSelected && !isWalletBalanceEnough) ? 'تعبئة المحفظة' : 'إتمام الطلب',
+                      style: TextStyle().textColorBold(
+                        fontSize: 16.sp,
+                        color: Colors.white,
+                      ),
+                    ),
+                  if (!cartController.isLoading)
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Text(
+                        '${total.toStringAsFixed(1)} د.ل',
+                        style: TextStyle().textColorBold(
+                          fontSize: 16.sp,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              onTap: hasAddress
+                  ? () {
+                      if (isWalletSelected && !isWalletBalanceEnough) {
+                        Get.toNamed(AppRoutes.wallet);
+                        return;
+                      }
+                      final address = addressController.activeAddress.value;
+                      if (address != null) {
+                        String paymentStr = 'cash';
+                        if (selectedPaymentMethod == PaymentMethod.card) {
+                          paymentStr = 'gateway';
+                        } else if (selectedPaymentMethod == PaymentMethod.wallet) {
+                          paymentStr = 'wallet';
+                        }
+
+                        cartController.placeOrder(
+                          restaurantId: widget.cart.restaurant.id!,
+                          addressId: address.id,
+                          deliveryAddress: address.address,
+                          deliveryLat: address.lat,
+                          deliveryLong: address.long,
+                          restaurantLat: widget.cart.restaurant.lat,
+                          restaurantLong: widget.cart.restaurant.long,
+                          payment: paymentStr,
+                          notes: '',
+                        );
+                      }
+                    }
+                  : null,
+              color: const Color(0xFF4D179A),
+            ),
+            
+            // Expandable Bill Details
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Column(
+                children: [
+                  SizedBox(height: 16.h),
+                  _buildBillRow("المجموع الفرعي", subtotal),
+                  if (calculated?.deliveryFee != null) ...[
+                    SizedBox(height: 12.h),
+                    _buildBillRow("التوصيل", calculated!.deliveryFee),
+                  ],
+                  if (calculated?.tax != null && calculated!.tax > 0) ...[
+                    SizedBox(height: 12.h),
+                    _buildBillRow("الضريبة", calculated!.tax),
+                  ],
+                  if(calculated?.deliveryFeeDetails != null && calculated!.deliveryFeeDetails!.isNight)
+                    Padding(
+                      padding: EdgeInsets.only(top: 12.h),
+                      child: Row(
+                        children: [
+                          Icon(Icons.nightlight_round, size: 14.sp, color: Colors.orange),
+                          SizedBox(width: 4.w),
+                          Text("توصيل ليلي", style: TextStyle(fontSize: 12.sp, color: Colors.orange)),
+                        ],
+                      ),
+                    ),
+                  SizedBox(height: 12.h),
+                  const Divider(height: 1),
+                  SizedBox(height: 12.h),
+                  _buildBillRow(
+                    "المجموع الكلي",
+                    total,
+                    isBold: true,
+                    fontSize: 16,
+                  ),
+                  SizedBox(height: 8.h),
+                ],
+              ),
+              crossFadeState: _isBillExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 300),
+            ),
+          ],
         );
       }),
     );
   }
 
-  Widget _buildBillDetailsSection() {
-    return Obx(() {
-      final calculated = cartController.calculatedPrice.value;
-      
-      if (cartController.isCalculatingPrice) {
-        return Center(
-          child: Padding(
-            padding: EdgeInsets.all(20.0),
-            child: CircularProgressIndicator(),
-          ),
-        );
-      }
-      
-      // Use fallback values if calculation is not yet available
-      final double subtotal = calculated?.subtotal ?? widget.cart.totalPrice;
-      final double deliveryFee = calculated?.deliveryFee ?? 0.0;
-      final double tax = calculated?.tax ?? 0.0;
-      final double total = calculated?.totalPrice ?? subtotal;
-      final bool hasCalculation = calculated != null;
-
-      return Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: Theme.of(context).dividerColor, width: 0.761),
-        ),
-        child: Column(
-          children: [
-            _buildBillRow("المجموع", subtotal),
-            SizedBox(height: 12.h),
-            _buildBillRow("التوصيل", deliveryFee, valueText: hasCalculation ? null : "--"),
-            SizedBox(height: 12.h),
-            if (hasCalculation || tax > 0) ...[
-               _buildBillRow("الضريبة", tax),
-               SizedBox(height: 16.h),
-            ] else ...[
-               // If no calculation yet, maybe skip tax or show -- 
-            ],
-
-            if(calculated?.deliveryFeeDetails != null && calculated!.deliveryFeeDetails!.isNight)
-             Padding(
-               padding: EdgeInsets.only(bottom: 12.h), // adjusted spacing
-               child: Row(
-                 children: [
-                   Icon(Icons.nightlight_round, size: 14.sp, color: Colors.orange),
-                   SizedBox(width: 4.w),
-                   Text("توصيل ليلي", style: TextStyle(fontSize: 12.sp, color: Colors.orange)),
-                 ],
-               ),
-             ),
-             
-            Divider(color: Theme.of(context).dividerColor),
-            SizedBox(height: 16.h),
-            _buildBillRow("الإجمالي الكلي", total, isBold: true, fontSize: 18),
-          ],
-        ),
-      );
-    });
-  }
+  // Remove old _buildBottomButton and _buildBillDetailsSection if they are no longer used
+  // I will keep _buildBillRow as it is useful for the expandable section.
 
   Widget _buildBillRow(String label, double amount, {bool isBold = false, double fontSize = 14, String? valueText}) {
       return Row(

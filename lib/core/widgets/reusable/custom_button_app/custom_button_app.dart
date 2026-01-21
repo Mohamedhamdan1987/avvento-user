@@ -85,6 +85,7 @@ class _CustomButtonAppState extends State<CustomButtonApp> {
             backgroundColor: widget.isFill
                 ? (widget.isEnable ? widget.color : const Color(0xFFE0E0E0))
                 : Colors.transparent,
+            overlayColor: Theme.of(context).highlightColor,
           ),
 
           child: (widget.isLoading)

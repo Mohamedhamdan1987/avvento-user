@@ -1,5 +1,6 @@
 import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/utils/logger.dart';
+import 'package:avvento/core/utils/show_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -96,10 +97,10 @@ class _DriverHomePageState extends State<DriverHomePage> {
     } catch (e) {
       if (mounted) setState(() => _isLoadingLocation = false);
       cprint("error in get location: $e");
-      Get.snackbar(
-        'خطأ',
-        'فشل في الحصول على الموقع الحالي',
-        snackPosition: SnackPosition.BOTTOM,
+      showSnackBar(
+        title: 'خطأ',
+        message: 'فشل في الحصول على الموقع الحالي',
+        isError: true,
       );
     }
   }

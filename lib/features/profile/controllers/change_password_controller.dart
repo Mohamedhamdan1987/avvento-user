@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import '../services/profile_service.dart';
 
 class ChangePasswordController extends GetxController {
@@ -20,23 +21,19 @@ class ChangePasswordController extends GetxController {
 
   Future<void> changePassword() async {
     if (newPasswordController.text != confirmPasswordController.text) {
-      Get.snackbar(
-        'خطأ',
-        'كلمة المرور الجديدة غير متطابقة',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+      showSnackBar(
+        title: 'خطأ',
+        message: 'كلمة المرور الجديدة غير متطابقة',
+        isError: true,
       );
       return;
     }
 
     if (newPasswordController.text.length < 6) {
-      Get.snackbar(
-        'خطأ',
-        'كلمة المرور يجب أن لا تقل عن 6 أحرف',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+      showSnackBar(
+        title: 'خطأ',
+        message: 'كلمة المرور يجب أن لا تقل عن 6 أحرف',
+        isError: true,
       );
       return;
     }
@@ -49,20 +46,16 @@ class ChangePasswordController extends GetxController {
       );
       
       Get.back();
-      Get.snackbar(
-        'نجاح',
-        'تم تغيير كلمة المرور بنجاح',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+      showSnackBar(
+        title: 'نجاح',
+        message: 'تم تغيير كلمة المرور بنجاح',
+        isSuccess: true,
       );
     } catch (e) {
-      Get.snackbar(
-        'خطأ',
-        'فشل تغيير كلمة المرور. يرجى التأكد من كلمة المرور الحالية.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+      showSnackBar(
+        title: 'خطأ',
+        message: 'فشل تغيير كلمة المرور. يرجى التأكد من كلمة المرور الحالية.',
+        isError: true,
       );
     } finally {
       isLoading.value = false;

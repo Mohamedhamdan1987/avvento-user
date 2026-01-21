@@ -1,6 +1,7 @@
 import 'package:avvento/features/client/address/models/address_model.dart';
 import 'package:avvento/features/client/address/services/address_service.dart';
 import 'package:get/get.dart';
+import '../../../../core/utils/show_snackbar.dart';
 
 class AddressController extends GetxController {
   final AddressService _addressService = AddressService();
@@ -25,7 +26,7 @@ class AddressController extends GetxController {
       final active = result.firstWhereOrNull((a) => a.isActive);
       activeAddress.value = active;
     } catch (e) {
-      Get.snackbar('خطأ', 'فشل في تحميل العناوين');
+      showSnackBar(message: 'فشل في تحميل العناوين', isError: true);
     } finally {
       isLoading.value = false;
     }
@@ -51,9 +52,9 @@ class AddressController extends GetxController {
       await _addressService.addAddress(newAddress);
       await fetchAddresses();
       Get.back(); // Return to list
-      Get.snackbar('نجاح', 'تم إضافة العنوان بنجاح');
+      showSnackBar(message: 'تم إضافة العنوان بنجاح', isSuccess: true);
     } catch (e) {
-      Get.snackbar('خطأ', 'فشل في إضافة العنوان');
+      showSnackBar(message: 'فشل في إضافة العنوان', isError: true);
     } finally {
       isLoading.value = false;
     }
@@ -65,7 +66,7 @@ class AddressController extends GetxController {
       await _addressService.setActiveAddress(id);
       await fetchAddresses();
     } catch (e) {
-      Get.snackbar('خطأ', 'فشل في تفعيل العنوان');
+      showSnackBar(message: 'فشل في تفعيل العنوان', isError: true);
     } finally {
       isLoading.value = false;
     }
@@ -76,9 +77,9 @@ class AddressController extends GetxController {
       isLoading.value = true;
       await _addressService.deleteAddress(id);
       addresses.removeWhere((a) => a.id == id);
-      Get.snackbar('نجاح', 'تم حذف العنوان بنجاح');
+      showSnackBar(message: 'تم حذف العنوان بنجاح', isSuccess: true);
     } catch (e) {
-      Get.snackbar('خطأ', 'فشل في حذف العنوان');
+      showSnackBar(message: 'فشل في حذف العنوان', isError: true);
     } finally {
       isLoading.value = false;
     }

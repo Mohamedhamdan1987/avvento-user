@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../../restaurants/models/favorite_restaurant_model.dart';
 import '../../restaurants/services/restaurants_service.dart';
+import '../../../../core/utils/show_snackbar.dart';
 
 class FavoritesController extends GetxController {
   final RestaurantsService _restaurantsService = RestaurantsService();
@@ -49,16 +50,16 @@ class FavoritesController extends GetxController {
         fetchFavoriteRestaurants();
       }
 
-      Get.snackbar(
-        'نجاح',
-        isFavorite ? 'تمت إضافة المطعم إلى المفضلة' : 'تمت إزالة المطعم من المفضلة',
-        snackPosition: SnackPosition.BOTTOM,
+      showSnackBar(
+        title: 'نجاح',
+        message: isFavorite ? 'تمت إضافة المطعم إلى المفضلة' : 'تمت إزالة المطعم من المفضلة',
+        isSuccess: true,
       );
     } catch (e) {
-      Get.snackbar(
-        'خطأ',
-        'فشل تحديث الحالة المفضلة',
-        snackPosition: SnackPosition.BOTTOM,
+      showSnackBar(
+        title: 'خطأ',
+        message: 'فشل تحديث الحالة المفضلة',
+        isError: true,
       );
     }
   }

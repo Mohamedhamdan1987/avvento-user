@@ -2,6 +2,7 @@ import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
@@ -297,9 +298,9 @@ class _DriverWalletPageState extends State<DriverWalletPage>
                 // Ideally this would be in the controller
                 try {
                   await controller.refreshWallet(); // Refresh after (mock) deposit
-                  Get.snackbar('نجاح', 'تم إيداع الرصيد بنجاح');
+                  showSnackBar(message: 'تم إيداع الرصيد بنجاح', isSuccess: true);
                 } catch (e) {
-                  Get.snackbar('خطأ', 'فشل في عملية الإيداع');
+                  showSnackBar(message: 'فشل في عملية الإيداع', isError: true);
                 }
               }
             },

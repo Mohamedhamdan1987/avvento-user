@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../models/order_model.dart';
 import '../services/orders_service.dart';
@@ -34,7 +35,7 @@ class OrdersController extends GetxController {
       ).toList());
       
     } catch (e) {
-      Get.snackbar('خطأ', 'فشل في تحميل الطلبات');
+      showSnackBar(message: 'فشل في تحميل الطلبات', isError: true);
     } finally {
       isLoading.value = false;
     }
@@ -58,27 +59,17 @@ class OrdersController extends GetxController {
         comment: comment,
         orderId: orderId,
       );
-      Get.snackbar(
-        'نجاح', 
-        'شكراً لتقييمك!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.successGreen,
-        colorText: AppColors.white,
-        margin: const EdgeInsets.all(15),
-        borderRadius: 10,
-        icon: const Icon(Icons.check_circle, color: AppColors.white),
+      showSnackBar(
+        title: 'نجاح',
+        message: 'شكراً لتقييمك!',
+        isSuccess: true,
       );
       return true;
     } catch (e) {
-      Get.snackbar(
-        'خطأ', 
-        'فشل في إرسال التقييم',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.error,
-        colorText: AppColors.white,
-        margin: const EdgeInsets.all(15),
-        borderRadius: 10,
-        icon: const Icon(Icons.error, color: AppColors.white),
+      showSnackBar(
+        title: 'خطأ',
+        message: 'فشل في إرسال التقييم',
+        isError: true,
       );
       return false;
     } finally {
@@ -98,27 +89,17 @@ class OrdersController extends GetxController {
         rating: rating,
         comment: comment,
       );
-      Get.snackbar(
-        'نجاح', 
-        'شكراً لتقييمك للسائق!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.successGreen,
-        colorText: AppColors.white,
-        margin: const EdgeInsets.all(15),
-        borderRadius: 10,
-        icon: const Icon(Icons.check_circle, color: AppColors.white),
+      showSnackBar(
+        title: 'نجاح',
+        message: 'شكراً لتقييمك للسائق!',
+        isSuccess: true,
       );
       return true;
     } catch (e) {
-      Get.snackbar(
-        'خطأ', 
-        'فشل في إرسال تقييم السائق',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.error,
-        colorText: AppColors.white,
-        margin: const EdgeInsets.all(15),
-        borderRadius: 10,
-        icon: const Icon(Icons.error, color: AppColors.white),
+      showSnackBar(
+        title: 'خطأ',
+        message: 'فشل في إرسال تقييم السائق',
+        isError: true,
       );
       return false;
     } finally {

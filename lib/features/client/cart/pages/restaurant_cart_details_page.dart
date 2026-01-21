@@ -10,6 +10,8 @@ import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import '../../../../core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import '../controllers/cart_controller.dart';
+import '../../../../core/utils/show_snackbar.dart';
+import '../../../../core/utils/app_dialogs.dart';
 import '../models/cart_model.dart';
 import '../../restaurants/models/menu_item_model.dart';
 
@@ -44,13 +46,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
         actions: [
           CustomIconButtonApp(
             onTap: () {
-              Get.defaultDialog(
+              AppDialogs.showDeleteConfirmation(
                 title: 'مسح السلة',
-                middleText: 'هل أنت متأكد من مسح جميع المنتجات من السلة؟',
-                textConfirm: 'مسح',
-                textCancel: 'إلغاء',
-                confirmTextColor: Colors.white,
-                buttonColor: Colors.red,
+                description: 'هل أنت متأكد من مسح جميع المنتجات من السلة؟',
+                confirmText: 'مسح',
                 onConfirm: () {
                   controller.clearCart(widget.cart.restaurant.id!);
                 },
@@ -123,94 +122,101 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
   }
 
   Widget _buildRestaurantHeader(RestaurantCartResponse currentCart) {
-    return Container(
-      padding: EdgeInsetsDirectional.only(start: 16.76.w, top: 1, bottom: 1 ),
-      height: 73.51.h,
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: Theme.of(context).dividerColor,
-          width: 0.761,
+    return InkWell(
+      onTap: () {
+        Get.to(() => RestaurantDetailsScreen(restaurantId: widget.cart.restaurant.restaurantId!!))?.then((value) {
+          controller.fetchRestaurantCart(widget.cart.restaurant.id!);
+        },);
+      },
+      child: Container(
+        padding: EdgeInsetsDirectional.only(start: 16.76.w, top: 1, bottom: 1 ),
+        height: 73.51.h,
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: Theme.of(context).dividerColor,
+            width: 0.761,
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          // Restaurant Logo (Right in RTL - was Right in Figma)
-          Container(
-            width: 40.w,
-            height: 40.h,
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: BorderRadius.circular(100.r),
-              border: Border.all(
-                color: Theme.of(context).dividerColor,
-                width: 0.761,
+        child: Row(
+          children: [
+            // Restaurant Logo (Right in RTL - was Right in Figma)
+            Container(
+              width: 40.w,
+              height: 40.h,
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: BorderRadius.circular(100.r),
+                border: Border.all(
+                  color: Theme.of(context).dividerColor,
+                  width: 0.761,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(100.r),
+                child: currentCart.restaurant.logo != null
+                    ? CachedNetworkImage(
+                        imageUrl: currentCart.restaurant.logo!,
+                        fit: BoxFit.cover,
+                      )
+                    : const Icon(Icons.restaurant, color: Colors.grey),
               ),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(100.r),
-              child: currentCart.restaurant.logo != null
-                  ? CachedNetworkImage(
-                      imageUrl: currentCart.restaurant.logo!,
-                      fit: BoxFit.cover,
-                    )
-                  : const Icon(Icons.restaurant, color: Colors.grey),
-            ),
-          ),
-          SizedBox(width: 12.w),
-          // Restaurant Info (Middle)
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  currentCart.restaurant.name!,
-                  style: TextStyle().textColorBold(
-                    fontSize: 14.sp,
-                    color: Theme.of(context).textTheme.titleMedium?.color,
+            SizedBox(width: 12.w),
+            // Restaurant Info (Middle)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    currentCart.restaurant.name!,
+                    style: TextStyle().textColorBold(
+                      fontSize: 14.sp,
+                      color: Theme.of(context).textTheme.titleMedium?.color,
+                    ),
                   ),
-                ),
-                SizedBox(height: 4.h),
-                Row(
-                  children: [
-                    SvgIcon(
-                      iconName: 'assets/svg/client/star_filled.svg',
-                      width: 12.w,
-                      height: 12.h,
-                      color: const Color(0xFFFBBF24),
-                    ),
-                    SizedBox(width: 3.w),
-                    Text(
-                      '(4808) 4.8',
-                      style: TextStyle().textColorNormal(
-                        fontSize: 12.sp,
-                        color: Theme.of(context).textTheme.bodySmall?.color,
+                  SizedBox(height: 4.h),
+                  Row(
+                    children: [
+                      SvgIcon(
+                        iconName: 'assets/svg/client/star_filled.svg',
+                        width: 12.w,
+                        height: 12.h,
+                        color: const Color(0xFFFBBF24),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 12.w),
-          // Back Arrow Button (Left in RTL - was Left in Figma)
-          CustomIconButtonApp(
-            // width: 16.w,
-            // height: 16.h,
-            onTap: () => Navigator.pop(context),
-            childWidget: Transform.rotate(
-              angle: 3.14159, // 180 degrees
-              child: SvgIcon(
-                iconName: 'assets/svg/arrow-right.svg',
-                width: 16.w,
-                height: 16.h,
-                color: Theme.of(context).iconTheme.color,
+                      SizedBox(width: 3.w),
+                      Text(
+                        '(4808) 4.8',
+                        style: TextStyle().textColorNormal(
+                          fontSize: 12.sp,
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            SizedBox(width: 12.w),
+            // Back Arrow Button (Left in RTL - was Left in Figma)
+            CustomIconButtonApp(
+              // width: 16.w,
+              // height: 16.h,
+              onTap: () => Navigator.pop(context),
+              childWidget: Transform.rotate(
+                angle: 3.14159, // 180 degrees
+                child: SvgIcon(
+                  iconName: 'assets/svg/arrow-right.svg',
+                  width: 16.w,
+                  height: 16.h,
+                  color: Theme.of(context).iconTheme.color,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -232,34 +238,29 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Delete Button (Right in RTL - was Right in Figma)
+              // Item Image (Left in RTL - was Left in Figma)
               Padding(
-                padding: EdgeInsetsDirectional.only(top: 16.h, start: 16.w),
-                child: GestureDetector(
-                  onTap: () {
-                    Get.defaultDialog(
-                      title: 'حذف المنتج',
-                      middleText: 'هل أنت متأكد من حذف هذا المنتج من السلة؟',
-                      textConfirm: 'حذف',
-                      textCancel: 'إلغاء',
-                      confirmTextColor: Colors.white,
-                      buttonColor: Colors.red,
-                      onConfirm: () {
-                        controller.removeItem(currentCart.restaurant.id!, index);
-                        Get.back();
-                      },
-                    );
-                  },
-                  child: SvgIcon(
-                    iconName: 'assets/svg/cart/delete.svg',
-                    width: 16.w,
-                    height: 16.h,
-                    // color: const Color(0xFF6B7280),
+                padding: EdgeInsetsDirectional.only(top: 22.h, end: 16.w),
+                child: Container(
+                  width: 80.w,
+                  height: 80.h,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.circular(14.r),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14.r),
+                    child: cartItem.item.image != null
+                        ? CachedNetworkImage(
+                      imageUrl: cartItem.item.image!,
+                      fit: BoxFit.cover,
+                    )
+                        : Container(color: Colors.grey[200]),
                   ),
                 ),
               ),
               SizedBox(width: 12.w),
-              // Item Details (Middle)
+// Item Details (Middle)
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(top: 16.h),
@@ -301,13 +302,14 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                           );
                         }
                         return Container(
-                          width: 120.w,
+                          width: 100.w,
                           height: 36.h,
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
                           decoration: BoxDecoration(
                             color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(14.r),
                             border: Border.all(
-                              color: Theme.of(context).dividerColor,
+                              color: Color(0xFFE5E7EB),
                               width: 0.761,
                             ),
                           ),
@@ -325,7 +327,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                                   );
                                 },
                                 child: Container(
-                                  width: 28.w,
+                                  // width: 28.w,
                                   height: 34.48.h,
                                   alignment: Alignment.center,
                                   child: SvgIcon(
@@ -357,22 +359,17 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                                     );
                                   }
                                   else {
-                                    Get.defaultDialog(
+                                    AppDialogs.showDeleteConfirmation(
                                       title: 'حذف المنتج',
-                                      middleText: 'هل أنت متأكد من حذف هذا المنتج من السلة؟',
-                                      textConfirm: 'حذف',
-                                      textCancel: 'إلغاء',
-                                      confirmTextColor: Colors.white,
-                                      buttonColor: Colors.red,
+                                      description: 'هل أنت متأكد من حذف هذا المنتج من السلة؟',
                                       onConfirm: () {
                                         controller.removeItem(currentCart.restaurant.id!, index);
-                                        Get.back();
                                       },
                                     );
                                   }
                                 },
                                 child: Container(
-                                  width: 28.w,
+                                  // width: 28.w,
                                   height: 34.48.h,
                                   alignment: Alignment.center,
                                   child: SvgIcon(
@@ -394,27 +391,29 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 ),
               ),
               SizedBox(width: 12.w),
-              // Item Image (Left in RTL - was Left in Figma)
+              // Delete Button (Right in RTL - was Right in Figma)
               Padding(
-                padding: EdgeInsetsDirectional.only(top: 22.h, end: 16.w),
-                child: Container(
-                  width: 80.w,
-                  height: 80.h,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    borderRadius: BorderRadius.circular(14.r),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14.r),
-                    child: cartItem.item.image != null
-                        ? CachedNetworkImage(
-                            imageUrl: cartItem.item.image!,
-                            fit: BoxFit.cover,
-                          )
-                        : Container(color: Colors.grey[200]),
+                padding: EdgeInsetsDirectional.only(top: 16.h, end: 16.w),
+                child: GestureDetector(
+                  onTap: () {
+                    AppDialogs.showDeleteConfirmation(
+                      title: 'حذف المنتج',
+                      description: 'هل أنت متأكد من حذف هذا المنتج من السلة؟',
+                      onConfirm: () {
+                        controller.removeItem(currentCart.restaurant.id!, index);
+                      },
+                    );
+                  },
+                  child: SvgIcon(
+                    iconName: 'assets/svg/cart/delete.svg',
+                    width: 16.w,
+                    height: 16.h,
+                    // color: const Color(0xFF6B7280),
                   ),
                 ),
               ),
+
+
             ],
           ),
         ],
@@ -1022,13 +1021,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                   onTap: () {
                     controller.addDrink(drink, quantity, notesController.text);
                     Get.back();
-                    Get.snackbar(
-                      'تمت الإضافة',
-                      'تم إضافة ${drink.name} إلى الطلب',
-                      snackPosition: SnackPosition.BOTTOM,
-                      backgroundColor: Colors.green,
-                      colorText: Colors.white,
-                      margin: EdgeInsets.all(16.w),
+                    showSnackBar(
+                      title: 'تمت الإضافة',
+                      message: 'تم إضافة ${drink.name} إلى الطلب',
+                      isSuccess: true,
                     );
                   },
                   color: const Color(0xFF7F22FE),

@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:avvento/core/theme/app_text_styles.dart';
+import 'package:avvento/core/utils/show_snackbar.dart';
+import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/features/client/restaurants/models/menu_item_model.dart';
 import 'package:avvento/features/client/restaurants/models/restaurant_model.dart';
 import 'package:avvento/features/client/restaurants/pages/category_menu_page.dart';
@@ -87,7 +89,11 @@ class RestaurantDetailsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: 50.h),
+
                     // Restaurant Stats Row
+                    _buildOpenStats(context),
+
+                    SizedBox(height: 14.h),
                     _buildStatsRow(context),
 
                     SizedBox(height: 14.h),
@@ -115,6 +121,225 @@ class RestaurantDetailsScreen extends StatelessWidget {
 
   // Profile picture refactored into RestaurantHeaderDelegate
 
+  Widget _buildOpenStats(BuildContext context) {
+    final isOpen = controller.restaurant?.isOpen ?? false;
+    
+    return InkWell(
+      onTap: () => _showOpeningHoursSheet(context),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24.w),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 8.w,
+                      height: 8.h,
+                      decoration: BoxDecoration(
+                        color: isOpen ? Colors.green : Colors.red,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isOpen ? Colors.green : Colors.red).withOpacity(0.4),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      isOpen ? 'مفتوح الآن' : 'مغلق حالياً',
+                      style: TextStyle().textColorBold(
+                        fontSize: 14.sp,
+                        color: Theme.of(context).textTheme.titleLarge?.color,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  isOpen ? 'يغلق الساعة 11:30 م' : 'يفتح الساعة 09:00 ص',
+                  style: TextStyle().textColorMedium(
+                    fontSize: 12.sp,
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  'مواعيد العمل',
+                  style: TextStyle().textColorMedium(
+                    fontSize: 12.sp,
+                    color: AppColors.purple,
+                  ),
+                ),
+                SizedBox(width: 4.w),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 20.w,
+                  color: AppColors.purple,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showOpeningHoursSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: Container(
+          padding: EdgeInsets.all(24.w),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle
+              Container(
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).dividerColor,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+              SizedBox(height: 24.h),
+              
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.purple.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: SvgIcon(
+                      iconName: 'assets/svg/client/restaurant_details/clock.svg',
+                      width: 24.w,
+                      height: 24.h,
+                      color: AppColors.purple,
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'مواعيد العمل',
+                          style: TextStyle().textColorBold(
+                            fontSize: 18.sp,
+                            color: Theme.of(context).textTheme.titleLarge?.color,
+                          ),
+                        ),
+                        Text(
+                          controller.restaurant?.name ?? '',
+                          style: TextStyle().textColorMedium(
+                            fontSize: 14.sp,
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close, color: Theme.of(context).textTheme.bodySmall?.color),
+                  ),
+                ],
+              ),
+              
+              SizedBox(height: 32.h),
+              
+              // Days List
+              _buildDayRow(context, 'السبت', '09:00 ص - 11:30 م', isCurrent: true),
+              _buildDayRow(context, 'الأحد', '09:00 ص - 11:30 م'),
+              _buildDayRow(context, 'الاثنين', '09:00 ص - 11:30 م'),
+              _buildDayRow(context, 'الثلاثاء', '09:00 ص - 11:30 م'),
+              _buildDayRow(context, 'الأربعاء', '09:00 ص - 11:30 م'),
+              _buildDayRow(context, 'الخميس', '09:00 ص - 12:30 ص'),
+              _buildDayRow(context, 'الجمعة', '01:00 م - 12:30 ص'),
+              
+              SizedBox(height: 32.h),
+              
+              // Close Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.purple,
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                  ),
+                  child: Text(
+                    'إغلاق',
+                    style: TextStyle().textColorBold(
+                      fontSize: 16.sp,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDayRow(BuildContext context, String day, String hours, {bool isCurrent = false}) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: isCurrent ? AppColors.purple.withOpacity(0.05) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12.r),
+        border: isCurrent ? Border.all(color: AppColors.purple.withOpacity(0.2)) : null,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            day,
+            style: TextStyle().textColorMedium(
+              fontSize: 14.sp,
+              color: isCurrent ? AppColors.purple : Theme.of(context).textTheme.titleMedium?.color,
+            ),
+          ),
+          Text(
+            hours,
+            style: TextStyle().textColorBold(
+              fontSize: 14.sp,
+              color: isCurrent ? AppColors.purple : Theme.of(context).textTheme.bodyMedium?.color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStatsRow(BuildContext context) {
     String distanceText = '--';
     String priceText = '--';
@@ -132,8 +357,8 @@ class RestaurantDetailsScreen extends StatelessWidget {
     }
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 34.w),
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      margin: EdgeInsets.symmetric(horizontal: 20.w),
+      padding: EdgeInsets.symmetric(horizontal: 0.w, vertical: 16.h),
       decoration: ShapeDecoration(
         color: const Color(0x11D9D9D9),
         shape: RoundedRectangleBorder(
@@ -191,7 +416,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
           iconName: icon,
           width: 16.w,
           height: 16.h,
-          color: Theme.of(context).iconTheme.color,
+          color: Theme.of(context).textTheme.bodySmall?.color,
         ),
         SizedBox(height: 4.h),
         Text(
@@ -740,6 +965,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
 
   Widget _buildQtyBtn({required IconData icon, required VoidCallback onTap}) {
     return InkWell(
+      borderRadius: BorderRadius.circular(10.r),
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.all(4.w),

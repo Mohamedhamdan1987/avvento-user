@@ -38,6 +38,7 @@ class _CustomIconButtonAppState extends State<CustomIconButtonApp> {
       borderColor:  widget.borderColor?? Colors.transparent,
       childWidget: widget.childWidget,
       color: widget.color ?? Colors.transparent,
+
       padding: widget.padding,
         textStyle: widget.textStyle,
 

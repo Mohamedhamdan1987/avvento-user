@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../core/utils/show_snackbar.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import '../../../core/widgets/reusable/custom_text_field.dart';
@@ -111,12 +112,10 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                                 return;
                               }
                               // TODO: Implement forget password
-                              Get.snackbar(
-                                'نجح',
-                                'سيتم إرسال رمز التحقق قريباً',
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: AppColors.drawerPurple.withOpacity(0.1),
-                                colorText: Theme.of(context).textTheme.bodyLarge?.color,
+                              showSnackBar(
+                                title: 'نجح',
+                                message: 'سيتم إرسال رمز التحقق قريباً',
+                                isSuccess: true,
                               );
                             },
                       isLoading: controller.isLoading,

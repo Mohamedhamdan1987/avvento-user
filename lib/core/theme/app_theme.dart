@@ -9,12 +9,12 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       primaryColor: AppColors.primary,
-      scaffoldBackgroundColor: Colors.white,
+      scaffoldBackgroundColor: AppColors.lightBackground,
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.primaryLight,
         surface: Colors.white,
-        background: Colors.white,
+        background: AppColors.lightBackground,
         error: AppColors.error,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
@@ -23,7 +23,7 @@ class AppTheme {
         onError: Colors.white,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.lightBackground,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),

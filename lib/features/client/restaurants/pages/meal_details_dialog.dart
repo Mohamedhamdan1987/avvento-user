@@ -401,16 +401,22 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
+                      color: Color(0xFFF9FAFB),
                       borderRadius: BorderRadius.circular(100.r),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.local_fire_department,
-                          size: 12.w,
-                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        // Icon(
+                        //   Icons.local_fire_department,
+                        //   size: 12.w,
+                        //   color: Theme.of(context).textTheme.bodySmall?.color,
+                        // ),
+                        SvgIcon(
+                          iconName: 'assets/svg/client/restaurant_details/fire_department.svg',
+                          // width: 12.w,
+                          // height: 12.h,
+                          // color: Theme.of(context).textTheme.bodySmall?.color,
                         ),
                         SizedBox(width: 4.w),
                         Text(
@@ -429,17 +435,17 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
+                  color: Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(100.r),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SvgIcon(
-                      iconName: 'assets/svg/client/restaurant_details/clock.svg',
-                      width: 12.w,
-                      height: 12.h,
-                      color: Theme.of(context).textTheme.bodySmall?.color,
+                      iconName: 'assets/svg/client/restaurant_details/clock2.svg',
+                      // width: 12.w,
+                      // height: 12.h,
+                      // color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
                     SizedBox(width: 4.w),
                     Text(
@@ -634,7 +640,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                   decoration: BoxDecoration(
                     color: isSelected ? const Color(0xFFF5F3FF) : Theme.of(context).cardColor,
                     border: Border.all(
-                      color: isSelected ? const Color(0xFF8E51FF) : Theme.of(context).dividerColor,
+                      color: isSelected ? const Color(0xFF8E51FF) : Color(0xFFF2F4F6),
                       width: isSelected ? 1.5.w : 0.76.w,
                     ),
                     borderRadius: BorderRadius.circular(16.r),
@@ -646,15 +652,15 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                         height: 24.h,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isSelected ? const Color(0xFF7F22FE) : Colors.transparent,
+                          // color: isSelected ? const Color(0xFF7F22FE) : Colors.transparent,
                           border: Border.all(
-                            color: isSelected ? const Color(0xFF7F22FE) : Theme.of(context).dividerColor,
+                            color: const Color(0xFF7F22FE) ,
                             width: 1.5.w,
                           ),
                         ),
-                        child: isSelected
-                            ? Icon(Icons.check, size: 14.w, color: Colors.white)
-                            : null,
+                        // child: isSelected
+                        //     ? Icon(Icons.check, size: 14.w, color: Colors.white)
+                        //     : null,
                       ),
                       SizedBox(width: 16.w),
                       Expanded(
@@ -678,6 +684,22 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
                             ),
                           ],
                         ),
+                      ),
+                      SizedBox(width: 16.w),
+                      Container(
+                        width: 24.w,
+                        height: 24.h,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isSelected ? const Color(0xFF7F22FE) : Colors.transparent,
+                          border: Border.all(
+                            color: isSelected ? const Color(0xFF7F22FE) : Theme.of(context).dividerColor,
+                            width: 1.5.w,
+                          ),
+                        ),
+                        child: isSelected
+                            ? Icon(Icons.check, size: 14.w, color: Colors.white)
+                            : null,
                       ),
                     ],
                   ),

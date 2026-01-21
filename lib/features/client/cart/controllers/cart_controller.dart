@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../restaurants/services/restaurants_service.dart';
 import '../models/cart_model.dart';
@@ -6,6 +7,7 @@ import '../models/calculate_price_model.dart';
 import '../../orders/services/orders_service.dart';
 import '../../orders/models/order_model.dart';
 import '../../restaurants/models/menu_item_model.dart';
+import '../../../../core/enums/order_status.dart';
 
 class CartController extends GetxController {
   final RestaurantsService _restaurantsService = RestaurantsService();
@@ -104,7 +106,7 @@ class CartController extends GetxController {
       fetchAllCarts(); 
     } catch (e) {
       print('Error updating quantity: $e');
-      Get.snackbar('خطأ', 'فشل تحديث الكمية');
+      showSnackBar(message: 'فشل تحديث الكمية', isError: true);
     } finally {
       _updatingItemIndex.value = -1;
     }
@@ -119,7 +121,7 @@ class CartController extends GetxController {
       fetchAllCarts();
     } catch (e) {
       print('Error removing item: $e');
-      Get.snackbar('خطأ', 'فشل حذف المنتج');
+      showSnackBar(message: 'فشل حذف المنتج', isError: true);
     }
   }
 
@@ -136,11 +138,11 @@ class CartController extends GetxController {
       _detailedCart.value = null;
       await fetchAllCarts();
       
-      Get.snackbar('نجاح', 'تم مسح السلة بنجاح');
+      showSnackBar(message: 'تم مسح السلة بنجاح', isSuccess: true);
     } catch (e) {
       print('Error clearing cart: $e');
       if (Get.isOverlaysOpen) Get.back(); // Close dialog on error too
-      Get.snackbar('خطأ', 'فشل مسح السلة');
+      showSnackBar(message: 'فشل مسح السلة', isError: true);
     } finally {
       _isLoading.value = false;
     }
@@ -214,6 +216,8 @@ class CartController extends GetxController {
     required String deliveryAddress,
     required double deliveryLat,
     required double deliveryLong,
+    double? restaurantLat,
+    double? restaurantLong,
     required String payment,
     String? paymentGatewayTransactionId,
     String? notes,
@@ -244,15 +248,29 @@ class CartController extends GetxController {
       _detailedCart.value = null;
       await fetchAllCarts();
       
-      Get.snackbar('نجاح', 'تم إرسال طلبك بنجاح');
+      showSnackBar(message: 'تم إرسال طلبك بنجاح', isSuccess: true);
       
-      // Navigate to order details or success page
-      // For now, let's just go back to the restaurants list or orders page
-      Get.offAllNamed(AppRoutes.clientNavBar); 
+      // Navigate to order tracking page
+      if (restaurantLat != null && restaurantLong != null) {
+        Get.offNamed(
+          AppRoutes.orderTrackingMap,
+          arguments: {
+            'userLat': deliveryLat,
+            'userLong': deliveryLong,
+            'restaurantLat': restaurantLat,
+            'restaurantLong': restaurantLong,
+            'orderId': order.id,
+            'status': OrderStatus.fromString(order.status),
+          },
+        );
+      } else {
+        // Fallback if coordinates missing
+        Get.offAllNamed(AppRoutes.clientNavBar); 
+      }
     } catch (e) {
       _errorMessage.value = 'فشل إتمام الطلب';
       print('Error placing order: $e');
-      Get.snackbar('خطأ', 'فشل إرسال الطلب، يرجى المحاولة مرة أخرى');
+      showSnackBar(message: 'فشل إرسال الطلب، يرجى المحاولة مرة أخرى', isError: true);
     } finally {
       _isLoading.value = false;
     }

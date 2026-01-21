@@ -70,7 +70,7 @@ class AuthController extends GetxController {
         } else {
           Get.offAllNamed(AppRoutes.clientNavBar);
         }
-        showSnackBar(title: 'نجح', message: 'تم تسجيل الدخول بنجاح');
+        showSnackBar(title: 'نجح', message: 'تم تسجيل الدخول بنجاح', isSuccess: true);
       } else {
         // Check if error is PHONE_NOT_VERIFIED
         if (result.errorCode == 'PHONE_NOT_VERIFIED' ||
@@ -87,6 +87,7 @@ class AuthController extends GetxController {
           showSnackBar(
             title: 'خطأ',
             message: result.errorMessage ?? 'فشل تسجيل الدخول',
+            isError: true,
           );
         }
       }
@@ -114,7 +115,7 @@ class AuthController extends GetxController {
       ErrorHandler.handleError(failure);
     } catch (e) {
       // Handle other errors
-      showSnackBar(title: 'خطأ', message: 'حدث خطأ غير متوقع: ${e.toString()}');
+      showSnackBar(title: 'خطأ', message: 'حدث خطأ غير متوقع: ${e.toString()}', isError: true);
     } finally {
       _isLoading.value = false;
     }
@@ -159,7 +160,7 @@ class AuthController extends GetxController {
           } else {
             Get.offAllNamed(AppRoutes.clientNavBar);
           }
-          showSnackBar(title: 'نجح', message: 'تم إنشاء الحساب بنجاح');
+          showSnackBar(title: 'نجح', message: 'تم إنشاء الحساب بنجاح', isSuccess: true);
         }
       } else {
         // Registration might have succeeded but returned error due to phone verification
@@ -198,7 +199,7 @@ class AuthController extends GetxController {
       ErrorHandler.handleError(failure);
     } catch (e) {
       // Handle other errors
-      showSnackBar(title: 'خطأ', message: 'حدث خطأ غير متوقع: ${e.toString()}');
+      showSnackBar(title: 'خطأ', message: 'حدث خطأ غير متوقع: ${e.toString()}', isError: true);
     } finally {
       _isLoading.value = false;
     }
@@ -227,12 +228,13 @@ class AuthController extends GetxController {
         } else {
           Get.offAllNamed(AppRoutes.clientNavBar);
         }
-        showSnackBar(title: 'نجح', message: 'تم التحقق من رقم الهاتف بنجاح');
+        showSnackBar(title: 'نجح', message: 'تم التحقق من رقم الهاتف بنجاح', isSuccess: true);
       } else {
         // Verification failed - show error message from API
         showSnackBar(
           title: 'خطأ',
           message: result.errorMessage ?? 'فشل التحقق من رمز OTP',
+          isError: true,
         );
       }
     } on DioException catch (e) {
@@ -241,7 +243,7 @@ class AuthController extends GetxController {
       ErrorHandler.handleError(failure);
     } catch (e) {
       // Handle other errors
-      showSnackBar(title: 'خطأ', message: 'حدث خطأ غير متوقع: ${e.toString()}');
+      showSnackBar(title: 'خطأ', message: 'حدث خطأ غير متوقع: ${e.toString()}', isError: true);
     } finally {
       _isLoading.value = false;
     }
@@ -265,18 +267,20 @@ class AuthController extends GetxController {
         showSnackBar(
           title: 'نجح',
           message: result.message ?? 'تم إرسال رمز التحقق بنجاح',
+          isSuccess: true,
         );
       } else {
         showSnackBar(
           title: 'خطأ',
           message: result.errorMessage ?? 'فشل إرسال رمز التحقق',
+          isError: true,
         );
       }
     } on DioException catch (e) {
       final failure = ApiException.handleException(e);
       ErrorHandler.handleError(failure);
     } catch (e) {
-      showSnackBar(title: 'خطأ', message: 'حدث خطأ غير متوقع: ${e.toString()}');
+      showSnackBar(title: 'خطأ', message: 'حدث خطأ غير متوقع: ${e.toString()}', isError: true);
     } finally {
       _isLoading.value = false;
     }
@@ -298,18 +302,20 @@ class AuthController extends GetxController {
         showSnackBar(
           title: 'نجح',
           message: result.message ?? 'تم إعادة تعيين كلمة المرور بنجاح',
+          isSuccess: true,
         );
       } else {
         showSnackBar(
           title: 'خطأ',
           message: result.errorMessage ?? 'فشل إعادة تعيين كلمة المرور',
+          isError: true,
         );
       }
     } on DioException catch (e) {
       final failure = ApiException.handleException(e);
       ErrorHandler.handleError(failure);
     } catch (e) {
-      showSnackBar(title: 'خطأ', message: 'حدث خطأ غير متوقع: ${e.toString()}');
+      showSnackBar(title: 'خطأ', message: 'حدث خطأ غير متوقع: ${e.toString()}', isError: true);
     } finally {
       _isLoading.value = false;
     }
@@ -331,7 +337,7 @@ class AuthController extends GetxController {
       await Future.delayed(const Duration(milliseconds: 100));
       Get.deleteAll(force: true);
     } catch (e) {
-      showSnackBar(title: 'خطأ', message: 'حدث خطأ أثناء تسجيل الخروج');
+      showSnackBar(title: 'خطأ', message: 'حدث خطأ أثناء تسجيل الخروج', isError: true);
     }
   }
 }

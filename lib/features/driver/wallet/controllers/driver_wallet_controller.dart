@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import '../../../wallet/models/wallet_model.dart';
 import '../../../wallet/services/wallet_service.dart';
 
@@ -23,7 +24,7 @@ class DriverWalletController extends GetxController {
       wallet.value = walletData;
       transactions.value = walletData.transactions;
     } catch (e) {
-      Get.snackbar('خطأ', 'فشل في تحميل بيانات المحفظة');
+      showSnackBar(message: 'فشل في تحميل بيانات المحفظة', isError: true);
     } finally {
       isLoading.value = false;
     }

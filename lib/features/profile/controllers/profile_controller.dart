@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart' as dio;
 import '../models/user_profile_model.dart';
@@ -94,18 +95,20 @@ class ProfileController extends GetxController {
       }
 
       await _profileService.updateProfile(data);
-      Get.snackbar('نجاح', 'تم تحديث الملف الشخصي بنجاح',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white);
+      showSnackBar(
+        title: 'نجاح',
+        message: 'تم تحديث الملف الشخصي بنجاح',
+        isSuccess: true,
+      );
       
       fetchProfile();
       Get.back();
     } catch (e) {
-      Get.snackbar('خطأ', 'فشل تحديث الملف الشخصي: $e',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white);
+      showSnackBar(
+        title: 'خطأ',
+        message: 'فشل تحديث الملف الشخصي: $e',
+        isError: true,
+      );
     } finally {
       isUpdating.value = false;
     }

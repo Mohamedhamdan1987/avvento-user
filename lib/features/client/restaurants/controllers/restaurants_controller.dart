@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import '../models/restaurant_model.dart';
 import '../models/best_restaurant_model.dart';
 import '../models/story_model.dart';
@@ -115,11 +116,7 @@ class RestaurantsController extends GetxController {
       _currentPage.value = response.pagination.page;
     } catch (e) {
       _errorMessage.value = 'فشل تحميل المطاعم: ${e.toString()}';
-      Get.snackbar(
-        'خطأ',
-        _errorMessage.value,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      showSnackBar(message: _errorMessage.value, isError: true);
     } finally {
       _isLoading.value = false;
     }
@@ -146,11 +143,7 @@ class RestaurantsController extends GetxController {
       _currentPage.value = response.pagination.page;
     } catch (e) {
       _errorMessage.value = 'فشل تحميل المزيد من المطاعم: ${e.toString()}';
-      Get.snackbar(
-        'خطأ',
-        _errorMessage.value,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      showSnackBar(message: _errorMessage.value, isError: true);
     } finally {
       _isLoadingMore.value = false;
     }
@@ -208,10 +201,10 @@ class RestaurantsController extends GetxController {
         _restaurants.refresh();
       }
       
-      Get.snackbar(
-        'نجاح',
-        isFavorite ? 'تمت إضافة المطعم إلى المفضلة' : 'تمت إزالة المطعم من المفضلة',
-        snackPosition: SnackPosition.BOTTOM,
+      showSnackBar(
+        title: 'نجاح',
+        message: isFavorite ? 'تمت إضافة المطعم إلى المفضلة' : 'تمت إزالة المطعم من المفضلة',
+        isSuccess: true,
       );
     } catch (e) {
       // Revert on error
@@ -221,10 +214,10 @@ class RestaurantsController extends GetxController {
         _restaurants.refresh();
       }
       
-      Get.snackbar(
-        'خطأ',
-        'فشل تحديث الحالة المفضلة',
-        snackPosition: SnackPosition.BOTTOM,
+      showSnackBar(
+        title: 'خطأ',
+        message: 'فشل تحديث الحالة المفضلة',
+        isError: true,
       );
     }
   }
@@ -247,10 +240,10 @@ class RestaurantsController extends GetxController {
         _bestRestaurants.refresh();
       }
       
-      Get.snackbar(
-        'نجاح',
-        isFavorite ? 'تمت إضافة المطعم إلى المفضلة' : 'تمت إزالة المطعم من المفضلة',
-        snackPosition: SnackPosition.BOTTOM,
+      showSnackBar(
+        title: 'نجاح',
+        message: isFavorite ? 'تمت إضافة المطعم إلى المفضلة' : 'تمت إزالة المطعم من المفضلة',
+        isSuccess: true,
       );
     } catch (e) {
       // Revert on error
@@ -260,10 +253,10 @@ class RestaurantsController extends GetxController {
         _bestRestaurants.refresh();
       }
       
-      Get.snackbar(
-        'خطأ',
-        'فشل تحديث الحالة المفضلة',
-        snackPosition: SnackPosition.BOTTOM,
+      showSnackBar(
+        title: 'خطأ',
+        message: 'فشل تحديث الحالة المفضلة',
+        isError: true,
       );
     }
   }

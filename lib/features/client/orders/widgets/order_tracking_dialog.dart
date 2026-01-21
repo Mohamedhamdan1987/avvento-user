@@ -28,90 +28,88 @@ class OrderTrackingDialog extends StatelessWidget {
           topRight: Radius.circular(32.r),
         ),
       ),
-      child: Flexible(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Drag Handle
-              Container(
-                margin: EdgeInsets.only(top: 12.h),
-                width: 48.w,
-                height: 6.h,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).dividerColor,
-                  borderRadius: BorderRadius.circular(3.r),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag Handle
+            Container(
+              margin: EdgeInsets.only(top: 12.h),
+              width: 48.w,
+              height: 6.h,
+              decoration: BoxDecoration(
+                color: Theme.of(context).dividerColor,
+                borderRadius: BorderRadius.circular(3.r),
+              ),
+            ),
+
+            SizedBox(height: 8.h),
+
+            // Scrollable Content
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: Column(
+                        children: [
+                          Text(
+                            _getStatusTitle(),
+                            style: TextStyle().textColorBold(
+                              fontSize: 20.sp,
+                              color: Theme.of(context).textTheme.titleLarge?.color,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            'طلبك رقم #$orderId',
+                            style: TextStyle().textColorNormal(
+                              fontSize: 12.sp,
+                              color: Theme.of(context).textTheme.bodySmall?.color,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    // Animation Section
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: _buildAnimationSection(context),
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    // Timeline
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: _buildTimeline(context),
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    // Driver Info (if applicable)
+                    if (status == OrderStatus.onTheWay ||
+                        status == OrderStatus.awaitingDelivery)
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: _buildDriverInfo(context),
+                      ),
+
+                    SizedBox(height: 24.h),
+                  ],
                 ),
               ),
-
-              SizedBox(height: 8.h),
-
-              // Scrollable Content
-              ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Header
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.w),
-                        child: Column(
-                          children: [
-                            Text(
-                              _getStatusTitle(),
-                              style: TextStyle().textColorBold(
-                                fontSize: 20.sp,
-                                color: Theme.of(context).textTheme.titleLarge?.color,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              'طلبك رقم #$orderId',
-                              style: TextStyle().textColorNormal(
-                                fontSize: 12.sp,
-                                color: Theme.of(context).textTheme.bodySmall?.color,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      SizedBox(height: 24.h),
-
-                      // Animation Section
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.w),
-                        child: _buildAnimationSection(context),
-                      ),
-
-                      SizedBox(height: 24.h),
-
-                      // Timeline
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.w),
-                        child: _buildTimeline(context),
-                      ),
-
-                      SizedBox(height: 24.h),
-
-                      // Driver Info (if applicable)
-                      if (status == OrderStatus.onTheWay ||
-                          status == OrderStatus.awaitingDelivery)
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 24.w),
-                          child: _buildDriverInfo(context),
-                        ),
-
-                      SizedBox(height: 24.h),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

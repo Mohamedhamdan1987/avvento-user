@@ -55,22 +55,8 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
   }
 
   void _setupMap() {
-    // Test coordinates - two points close to each other in Tripoli, Libya
-    // Point 1: User location (test)
-    final testUserLat = 32.8872;
-    final testUserLong = 13.1913;
-    
-    // Point 2: Restaurant location (test) - about 1 km away
-    final testRestaurantLat = 32.8950;
-    final testRestaurantLong = 13.2000;
-    
-    // Use test coordinates for now (you can replace with actual coordinates later)
-    final userLocation = LatLng(testUserLat, testUserLong);
-    final restaurantLocation = LatLng(testRestaurantLat, testRestaurantLong);
-    
-    // TODO: Replace test coordinates with actual coordinates:
-    // final userLocation = LatLng(widget.userLat, widget.userLong);
-    // final restaurantLocation = LatLng(widget.restaurantLat, widget.restaurantLong);
+    final userLocation = LatLng(widget.userLat, widget.userLong);
+    final restaurantLocation = LatLng(widget.restaurantLat, widget.restaurantLong);
 
     setState(() {
       // Create markers
@@ -80,7 +66,7 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
           position: userLocation,
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
           infoWindow: const InfoWindow(
-            title: 'موقعك الحالي (اختبار)',
+            title: 'موقعك الحالي',
           ),
         ),
         Marker(
@@ -88,7 +74,7 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
           position: restaurantLocation,
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
           infoWindow: const InfoWindow(
-            title: 'موقع المطعم (اختبار)',
+            title: 'موقع المطعم',
           ),
         ),
       };
@@ -96,30 +82,21 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
   }
 
   Future<void> _loadRoute() async {
-    // Test coordinates
-    final testUserLat = 32.8872;
-    final testUserLong = 13.1913;
-    final testRestaurantLat = 32.8950;
-    final testRestaurantLong = 13.2000;
-    
-    // TODO: Replace test coordinates with actual coordinates:
-    // final userLat = widget.userLat;
-    // final userLong = widget.userLong;
-    // final restaurantLat = widget.restaurantLat;
-    // final restaurantLong = widget.restaurantLong;
+    final userLat = widget.userLat;
+    final userLong = widget.userLong;
+    final restaurantLat = widget.restaurantLat;
+    final restaurantLong = widget.restaurantLong;
 
     try {
       // Get route polyline from Google Directions API
       final routePoints = await PolylineUtils.getRoutePolyline(
-        originLat: testUserLat,
-        originLng: testUserLong,
-        destLat: testRestaurantLat,
-        destLng: testRestaurantLong,
+        originLat: userLat,
+        originLng: userLong,
+        destLat: restaurantLat,
+        destLng: restaurantLong,
       );
 
       print('🟢 [OrderTrackingMap] Received ${routePoints.length} route points');
-      print('🟢 [OrderTrackingMap] First point: ${routePoints.first}');
-      print('🟢 [OrderTrackingMap] Last point: ${routePoints.last}');
 
       if (mounted) {
         setState(() {
@@ -129,7 +106,7 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
               points: routePoints,
               color: AppColors.primary,
               width: 5,
-              geodesic: false, // Set to false when using actual route
+              geodesic: false,
               jointType: JointType.round,
             ),
           };
@@ -151,8 +128,8 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
             Polyline(
               polylineId: const PolylineId('route'),
               points: [
-                LatLng(testUserLat, testUserLong),
-                LatLng(testRestaurantLat, testRestaurantLong),
+                LatLng(userLat, userLong),
+                LatLng(restaurantLat, restaurantLong),
               ],
               color: AppColors.primary,
               width: 5,
@@ -177,25 +154,16 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
   void _fitBounds() {
     if (_mapController == null) return;
 
-    // Test coordinates - same as in _setupMap
-    final testUserLat = 32.8872;
-    final testUserLong = 13.1913;
-    final testRestaurantLat = 32.8950;
-    final testRestaurantLong = 13.2000;
+    final userLat = widget.userLat;
+    final userLong = widget.userLong;
+    final restaurantLat = widget.restaurantLat;
+    final restaurantLong = widget.restaurantLong;
 
     // Calculate bounds with padding
-    final minLat = testUserLat < testRestaurantLat
-        ? testUserLat
-        : testRestaurantLat;
-    final maxLat = testUserLat > testRestaurantLat
-        ? testUserLat
-        : testRestaurantLat;
-    final minLng = testUserLong < testRestaurantLong
-        ? testUserLong
-        : testRestaurantLong;
-    final maxLng = testUserLong > testRestaurantLong
-        ? testUserLong
-        : testRestaurantLong;
+    final minLat = userLat < restaurantLat ? userLat : restaurantLat;
+    final maxLat = userLat > restaurantLat ? userLat : restaurantLat;
+    final minLng = userLong < restaurantLong ? userLong : restaurantLong;
+    final maxLng = userLong > restaurantLong ? userLong : restaurantLong;
 
     final bounds = LatLngBounds(
       southwest: LatLng(minLat, minLng),
@@ -203,7 +171,7 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
     );
 
     _mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(bounds, 100.0), // Reduced padding for better view
+      CameraUpdate.newLatLngBounds(bounds, 100.0),
     );
   }
 
@@ -234,11 +202,10 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
             onMapCreated: _onMapCreated,
             initialCameraPosition: CameraPosition(
               target: LatLng(
-                // Test coordinates center
-                (32.8872 + 32.8950) / 2,
-                (13.1913 + 13.2000) / 2,
+                (widget.userLat + widget.restaurantLat) / 2,
+                (widget.userLong + widget.restaurantLong) / 2,
               ),
-              zoom: 15, // Increased zoom to see route details better
+              zoom: 15,
             ),
             polylines: _polylines,
             markers: _markers,

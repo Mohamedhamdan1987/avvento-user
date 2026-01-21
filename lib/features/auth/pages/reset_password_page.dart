@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../core/utils/show_snackbar.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import '../../../core/widgets/reusable/custom_text_field.dart';
@@ -309,12 +310,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                               if (_formKey.currentState!.validate()) {
                                 final otp = _getOtpCode();
                                 if (otp.length != 6) {
-                                  Get.snackbar(
-                                    'خطأ',
-                                    'يرجى إدخال رمز التحقق كاملاً',
-                                    snackPosition: SnackPosition.BOTTOM,
-                                    backgroundColor: AppColors.error.withOpacity(0.1),
-                                    colorText: AppColors.error,
+                                  showSnackBar(
+                                    title: 'خطأ',
+                                    message: 'يرجى إدخال رمز التحقق كاملاً',
+                                    isError: true,
                                   );
                                   return;
                                 }

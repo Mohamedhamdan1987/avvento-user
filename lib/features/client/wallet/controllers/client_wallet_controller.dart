@@ -1,6 +1,7 @@
 import 'package:avvento/core/widgets/webview/SmartWebView.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../../core/constants/app_constants.dart';
 
@@ -29,7 +30,7 @@ class ClientWalletController extends GetxController {
       wallet.value = walletData;
       transactions.value = walletData.transactions;
     } catch (e) {
-      Get.snackbar('خطأ', 'فشل في تحميل بيانات المحفظة');
+      showSnackBar(message: 'فشل في تحميل بيانات المحفظة', isError: true);
     } finally {
       isLoading.value = false;
     }
@@ -44,9 +45,9 @@ class ClientWalletController extends GetxController {
       isLoading.value = true;
       await _walletService.deposit(amount: amount, description: 'إيداع رصيد من قبل العميل');
       await fetchWalletData();
-      Get.snackbar('نجاح', 'تم إيداع الرصيد بنجاح');
+      showSnackBar(message: 'تم إيداع الرصيد بنجاح', isSuccess: true);
     } catch (e) {
-      Get.snackbar('خطأ', 'فشل في إيداع الرصيد');
+      showSnackBar(message: 'فشل في إيداع الرصيد', isError: true);
     } finally {
       isLoading.value = false;
     }
@@ -101,7 +102,7 @@ class ClientWalletController extends GetxController {
         ),
         closeWhenUrlContains: 'payment-success',
         onClose: () {
-           Get.snackbar('نجاح', 'تمت عملية الدفع بنجاح');
+           showSnackBar(message: 'تمت عملية الدفع بنجاح', isSuccess: true);
            refreshWallet();
         },
       ));
@@ -111,7 +112,7 @@ class ClientWalletController extends GetxController {
       }
 
     } catch (e) {
-      Get.snackbar('خطأ', 'حدث خطأ أثناء بدء الدفع: $e');
+      showSnackBar(message: 'حدث خطأ أثناء بدء الدفع: $e', isError: true);
     } finally {
       // isLoading.value = false;
     }

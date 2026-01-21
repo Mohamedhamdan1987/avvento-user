@@ -1,3 +1,4 @@
+import 'package:avvento/core/utils/show_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -135,7 +136,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                       text: 'حفظ العنوان',
                       onTap: () {
                         if (_labelController.text.isEmpty || _addressController.text.isEmpty) {
-                          Get.snackbar('تنبیه', 'يرجى إكمال جميع الحقول');
+                          showSnackBar(message: 'يرجى إكمال جميع الحقول', title: 'تنبیه');
                           return;
                         }
                         controller.addAddress(

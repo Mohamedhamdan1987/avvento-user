@@ -172,33 +172,21 @@ class _StoryViewPageState extends State<StoryViewPage> {
 
             // Custom Header
             if(widget.stories.isNotEmpty && _currentIndex >= 0 && _currentIndex < widget.stories.length)
-            Positioned(
-              top: 50.h,
-              left: 16.w,
-              right: 16.w,
+            PositionedDirectional(
+              width: MediaQuery.of(context).size.width ,
+              top: 80.h,
+              // start: 16.w,
+              // end: 16.w,
             child: Row(
               children: [
-                Container(
-                  width: 40.w,
-                  height: 40.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 1.5,
-                    ),
-                  ),
-                  child: ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: widget.stories[_currentIndex].restaurant.logo, // Safely access using index
-                      fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.white),
-                    ),
-                  ),
-                ),
                 SizedBox(width: 8.w),
+                IconButton(
+                  onPressed: () => Get.back(),
+                  icon: const Icon(Icons.close, color: Colors.white),
+                ),
+                const Spacer(),
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       widget.stories[_currentIndex].restaurant.name,
@@ -233,11 +221,27 @@ class _StoryViewPageState extends State<StoryViewPage> {
                     ),
                   ],
                 ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () => Get.back(),
-                  icon: const Icon(Icons.close, color: Colors.white),
+                SizedBox(width: 8.w),
+                Container(
+                  width: 40.w,
+                  height: 40.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: widget.stories[_currentIndex].restaurant.logo, // Safely access using index
+                      fit: BoxFit.cover,
+                      errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.white),
+                    ),
+                  ),
                 ),
+                SizedBox(width: 16.w),
+
               ],
             ),
           ),
@@ -283,9 +287,25 @@ class _StoryViewPageState extends State<StoryViewPage> {
   }
 
   String _formatDate(DateTime date) {
-    // Format: 10:30 AM | 31 Dec 2025
-    final timeFormat = intl.DateFormat('h:mm a');
-    final dateFormat = intl.DateFormat('d MMM yyyy');
-    return '${timeFormat.format(date)} | ${dateFormat.format(date)}';
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays >= 7) {
+      return intl.DateFormat('d MMM yyyy').format(date);
+    } else if (difference.inDays >= 1) {
+      if (difference.inDays == 1) return 'منذ يوم';
+      if (difference.inDays == 2) return 'منذ يومين';
+      return 'منذ ${difference.inDays} أيام';
+    } else if (difference.inHours >= 1) {
+      if (difference.inHours == 1) return 'منذ ساعة';
+      if (difference.inHours == 2) return 'منذ ساعتين';
+      return 'منذ ${difference.inHours} ساعة';
+    } else if (difference.inMinutes >= 1) {
+      if (difference.inMinutes == 1) return 'منذ دقيقة';
+      if (difference.inMinutes == 2) return 'منذ دقيقتين';
+      return 'منذ ${difference.inMinutes} دقيقة';
+    } else {
+      return 'الآن';
+    }
   }
 }

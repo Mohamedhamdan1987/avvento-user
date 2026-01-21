@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/utils/show_snackbar.dart';
 import '../models/driver_order_model.dart';
+import '../models/driver_dashboard_model.dart';
 import '../services/driver_orders_service.dart';
 import '../widgets/active_order_view.dart';
 import '../widgets/new_order_request_modal.dart';
@@ -22,6 +23,7 @@ class DriverOrdersController extends GetxController {
   final RxDouble _todayEarnings = 0.0.obs;
   final RxBool _showActiveOrders = true.obs;
   final RxInt _activeOrderPageIndex = 0.obs;
+  final Rx<DriverDashboardModel?> _dashboardData = Rx<DriverDashboardModel?>(null);
 
   List<DriverOrderModel> get nearbyOrders => _nearbyOrders;
   List<DriverOrderModel> get myOrders => _myOrders;
@@ -33,6 +35,7 @@ class DriverOrdersController extends GetxController {
   double get todayEarnings => _todayEarnings.value;
   bool get showActiveOrders => _showActiveOrders.value;
   int get activeOrderPageIndex => _activeOrderPageIndex.value;
+  DriverDashboardModel? get dashboardData => _dashboardData.value;
 
   // Toggle driver availability
   void toggleAvailability() {
@@ -107,6 +110,32 @@ class DriverOrdersController extends GetxController {
         showSnackBar(
           title: 'خطأ',
           message: result.message ?? 'فشل في جلب طلباتي',
+        );
+      }
+    } catch (e) {
+      showSnackBar(
+        title: 'خطأ',
+        message: 'حدث خطأ غير متوقع: ${e.toString()}',
+      );
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  // Fetch dashboard data
+  Future<void> fetchDashboardData() async {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _isLoading.value = true;
+    });
+    try {
+      final result = await _ordersService.getDashboardData();
+
+      if (result.success && result.data != null) {
+        _dashboardData.value = result.data!;
+      } else {
+        showSnackBar(
+          title: 'خطأ',
+          message: result.message ?? 'فشل في جلب بيانات لوحة التحكم',
         );
       }
     } catch (e) {

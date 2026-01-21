@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/network/api_response.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/driver_order_model.dart';
+import '../models/driver_dashboard_model.dart';
 
 class DriverOrdersService {
   final DioClient _dioClient = DioClient.instance;
@@ -180,6 +181,29 @@ class DriverOrdersService {
       return ApiResponse(
         success: true,
         data: null,
+      );
+    } on DioException catch (e) {
+      return ApiResponse(
+        success: false,
+        message: e.response?.data?['message']?.toString() ?? 'حدث خطأ في الاتصال',
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'حدث خطأ غير متوقع: ${e.toString()}',
+      );
+    }
+  }
+
+  // Get driver dashboard data
+  Future<ApiResponse<DriverDashboardModel>> getDashboardData() async {
+    try {
+      final response = await _dioClient.get('/delivery/dashboard');
+      final data = response.data;
+      final dashboard = DriverDashboardModel.fromJson(data as Map<String, dynamic>);
+      return ApiResponse(
+        success: true,
+        data: dashboard,
       );
     } on DioException catch (e) {
       return ApiResponse(

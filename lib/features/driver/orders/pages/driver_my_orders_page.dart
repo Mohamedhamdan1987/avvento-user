@@ -36,7 +36,10 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
 
   Future<void> _fetchOrders() async {
     final controller = Get.find<DriverOrdersController>();
-    await controller.fetchMyOrders();
+    await Future.wait([
+      controller.fetchMyOrders(),
+      controller.fetchDashboardData(),
+    ]);
   }
 
   @override
@@ -45,50 +48,54 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Directionality(
         textDirection: TextDirection.rtl,
-        child: Column(
-          children: [
-            // Header Section
-            _buildHeaderSection(),
+        child: RefreshIndicator(
+          onRefresh: _fetchOrders,
+          child: Column(
+            children: [
+              // Header Section
+              _buildHeaderSection(),
 
-            // Content Section
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 24.h),
-                    // Performance Card
-                    Padding(
-                      padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                      child: const DriverPerformanceCard(),
-                    ),
-                    SizedBox(height: 24.h),
-
-                    // Earnings Summary Card
-                    Padding(
-                      padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                      child: DriverEarningsSummaryCard(
-                        selectedPeriod: _selectedPeriod,
-                        onPeriodChanged: (period) {
-                          setState(() {
-                            _selectedPeriod = period;
-                          });
-                        },
+              // Content Section
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 24.h),
+                      // Performance Card
+                      Padding(
+                        padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+                        child: const DriverPerformanceCard(),
                       ),
-                    ),
-                    SizedBox(height: 24.h),
+                      SizedBox(height: 24.h),
 
-                    // Latest Activities Section
-                    Padding(
-                      padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                      child: _buildLatestActivitiesSection(),
-                    ),
-                    SizedBox(height: 24.h),
-                  ],
+                      // Earnings Summary Card
+                      Padding(
+                        padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+                        child: DriverEarningsSummaryCard(
+                          selectedPeriod: _selectedPeriod,
+                          onPeriodChanged: (period) {
+                            setState(() {
+                              _selectedPeriod = period;
+                            });
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 24.h),
+
+                      // Latest Activities Section
+                      Padding(
+                        padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+                        child: _buildLatestActivitiesSection(),
+                      ),
+                      SizedBox(height: 24.h),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -192,10 +199,8 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
   Widget _buildLatestActivitiesSection() {
     return GetX<DriverOrdersController>(
       builder: (controller) {
-        final completedOrders = controller.myOrders
-            // .where((order) => order.status.toLowerCase() == 'delivered')
-            .toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Sort by newest first
+        final dashboard = controller.dashboardData;
+        final activities = dashboard?.recentActivities ?? [];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,7 +216,7 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
             SizedBox(height: 16.h),
 
             // Activities List
-            if (completedOrders.isEmpty)
+            if (activities.isEmpty)
               Center(
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 40.h),
@@ -235,7 +240,7 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
                 ),
               )
             else
-              ...completedOrders.take(5).map((order) {
+              ...activities.take(10).map((order) {
                 return Padding(
                   padding: EdgeInsets.only(bottom: 12.h),
                   child: DriverRecentActivityItem(order: order),

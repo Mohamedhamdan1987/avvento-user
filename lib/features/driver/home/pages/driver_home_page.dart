@@ -9,10 +9,8 @@ import 'package:geolocator/geolocator.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/enums/order_status.dart';
 import '../../../../core/services/notification_service.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import '../controllers/driver_orders_controller.dart';
-import '../widgets/orders_list_bottom_sheet.dart';
+import '../widgets/active_order_view.dart';
 
 class DriverHomePage extends StatefulWidget {
   const DriverHomePage({super.key});
@@ -174,166 +172,179 @@ class _DriverHomePageState extends State<DriverHomePage> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
+                stops: const [0.0, 0.7, 1.0],
                 colors: [
-                  Theme.of(context).scaffoldBackgroundColor.withOpacity(0.9),
+                  Theme.of(context).scaffoldBackgroundColor,
+                  Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95),
                   Theme.of(context).scaffoldBackgroundColor.withOpacity(0.0),
                 ],
               ),
             ),
             padding: EdgeInsetsDirectional.only(
-              start: 16.w,
-              end: 16.w,
-              top: 48.h,
-              bottom: 0,
+              start: 20.w,
+              end: 20.w,
+              top: MediaQuery.of(context).padding.top + 12.h,
+              bottom: 20.h,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Right side: Earnings and availability
+                // Right side: Availability toggle - Icon only
                 Obx(() {
                   final controller = Get.find<DriverOrdersController>();
-                  return Row(
-                    children: [
-                      // Availability toggle
-                      Container(
-                        padding: EdgeInsetsDirectional.only(
-                          start: 0.76.w,
-                          end: 8.75.w,
-                          top: 0.76.h,
-                          bottom: 0.76.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
-                          border: Border.all(
-                            color: Theme.of(context).dividerColor,
-                            width: 0.76.w,
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  
+                  return GestureDetector(
+                    onTap: () => controller.toggleAvailability(),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      width: 48.w,
+                      height: 26.h,
+                      decoration: BoxDecoration(
+                        color: controller.isAvailable
+                            ? AppColors.primary
+                            : isDark
+                                ? const Color(0xFF374151)
+                                : const Color(0xFFE5E7EB),
+                        borderRadius: BorderRadius.circular(13.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark
+                                ? Colors.black.withOpacity(0.3)
+                                : Colors.black.withOpacity(0.06),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                          borderRadius: BorderRadius.circular(100.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: () => controller.toggleAvailability(),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                width: 39.w,
-                                height: 18.h,
-                                decoration: BoxDecoration(
-                                  color: controller.isAvailable
-                                      ? AppColors.primary
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(100.r),
-                                  border: Border.all(
-                                    color: controller.isAvailable
-                                        ? AppColors.primary
-                                        : Theme.of(context).dividerColor,
-                                    width: 0.76.w,
+                        ],
+                      ), 
+
+
+                      
+                      child: Stack(
+                        children: [
+                          AnimatedPositionedDirectional(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            start: controller.isAvailable ? 3.w : 19.w,
+                            top: 3.h,
+                            child: Container(
+                              width: 20.w,
+                              height: 20.h,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 3,
+                                    offset: const Offset(0, 1),
                                   ),
-                                ),
-                                child: Stack(
-                                  children: [
-                                    AnimatedPositionedDirectional(
-                                      duration: const Duration(milliseconds: 200),
-                                      start: controller.isAvailable ? 0.49.w : 21.23.w,
-                                      top: 0.49.h,
-                                      child: Container(
-                                        width: 16.w,
-                                        height: 16.h,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                ],
                               ),
                             ),
-                            SizedBox(width: 12.w),
-                            Text(
-                              controller.isAvailable ? 'متاح' : 'غير متاح',
-                              style: const TextStyle().textColorBold(
-                                fontSize: 12,
-                                color: Theme.of(context).textTheme.bodyMedium?.color ?? AppColors.textPlaceholder,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      SizedBox(width: 12.w),
-
-                      // Earnings card
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16.w,
-                          vertical: 8.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
-                          border: Border.all(
-                            color: Theme.of(context).dividerColor,
-                            width: 0.76.w,
                           ),
-                          borderRadius: BorderRadius.circular(100.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'أرباح اليوم',
-                              style: const TextStyle().textColorNormal(
-                                fontSize: 10,
-                                color: AppColors.textPlaceholder, // Keep placeholder color or use hintColor
-                              ),
-                            ),
-                            SizedBox(height: 2.h),
-                            Text(
-                              '${controller.todayEarnings.toStringAsFixed(2)} د.ل',
-                              style: const TextStyle().textColorBold(
-                                fontSize: 14,
-                                color: Theme.of(context).textTheme.bodyLarge?.color,
-                              ),
-                            ),
-                          ],
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
+                  );
+                }),
+
+                // Center: Earnings card - without label
+                Obx(() {
+                  final controller = Get.find<DriverOrdersController>();
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  
+                  return Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 8.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(
+                        color: Theme.of(context).dividerColor,
+                        width: 0.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDark
+                              ? Colors.black.withOpacity(0.3)
+                              : Colors.black.withOpacity(0.06),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(3.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          child: Icon(
+                            Icons.account_balance_wallet_rounded,
+                            size: 18.r,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        SizedBox(width: 10.w),
+                        Text(
+                          '${controller.todayEarnings.toStringAsFixed(2)} د.ل',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'IBMPlexSansArabic',
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 }),
 
                 // Left side: Notification icon
-                CustomIconButtonApp(
-                  width: 40.w,
-                  height: 40.h,
-                  radius: 100.r,
-                  color: Theme.of(context).cardColor,
-                  borderColor: Theme.of(context).dividerColor,
-                  onTap: () {
-                    Get.toNamed(AppRoutes.notifications);
-
-                  },
-                  childWidget: Icon(
-                    Icons.notifications_outlined,
-                    size: 20.r,
-                    color: Theme.of(context).iconTheme.color,
+                Container(
+                  width: 48.w,
+                  height: 48.h,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Theme.of(context).dividerColor,
+                      width: 0.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.black.withOpacity(0.3)
+                            : Colors.black.withOpacity(0.06),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        Get.toNamed(AppRoutes.notifications);
+                      },
+                      borderRadius: BorderRadius.circular(100.r),
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.notifications_outlined,
+                          size: 22.r,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],

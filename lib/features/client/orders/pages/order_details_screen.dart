@@ -1,4 +1,5 @@
 import 'package:avvento/core/theme/app_text_styles.dart';
+import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
@@ -22,83 +23,25 @@ class OrderDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
+      appBar: CustomAppBar(title: 'تفاصيل الطلب',),
       body: Directionality(
         textDirection: TextDirection.rtl,
-        child: Column(
-          children: [
-            // Header Section
-            _buildHeaderSection(context),
-            
-            // Content Section
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Order Card
-                      _buildOrderCard(),
-                    ],
-                  ),
-                ),
-              ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Order Card
+                _buildOrderCard(),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHeaderSection(BuildContext context) {
-    return Container(
-      height: 82.h,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 1,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(width: 32.w),
-              Text(
-                'تفاصيل الطلب',
-                style: const TextStyle().textColorBold(
-                  fontSize: 18.sp,
-                  color: Color(0xFF101828),
-                ),
-              ),
-              CustomIconButtonApp(
-                width: 32.w,
-                height: 32.h,
-                radius: 100.r,
-                color: Colors.transparent,
-                onTap: () {
-                  Navigator.pop(context);
-                },
-                childWidget: SvgIcon(
-                  iconName: 'assets/svg/arrow-right.svg',
-                  width: 20.w,
-                  height: 20.h,
-                  color: const Color(0xFF101828),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildOrderCard() {
     return Container(
@@ -390,18 +333,46 @@ class OrderDetailsScreen extends StatelessWidget {
         ),
         SizedBox(height: 12.h),
         ...order.items.map((item) => Padding(
-          padding: EdgeInsets.only(bottom: 8.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          padding: EdgeInsets.only(bottom: 16.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '${item.quantity}x عنصر', // item model doesn't have name, using generic or maybe itemId
-                style: const TextStyle().textColorNormal(fontSize: 14.sp, color: Color(0xFF4A5565)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${item.quantity}x ${item.name}', 
+                      style: const TextStyle().textColorNormal(fontSize: 14.sp, color: Color(0xFF101828)),
+                    ),
+                  ),
+                  Text(
+                    '${item.totalPrice} د.ل',
+                    style: const TextStyle().textColorBold(fontSize: 14.sp, color: Color(0xFF101828)),
+                  ),
+                ],
               ),
-              Text(
-                '${item.totalPrice} د.ل',
-                style: const TextStyle().textColorBold(fontSize: 14.sp, color: Color(0xFF101828)),
-              ),
+              if (item.selectedVariations.isNotEmpty) ...[
+                SizedBox(height: 4.h),
+                Text(
+                  'التفضيلات: ${item.selectedVariations.join(', ')}',
+                  style: const TextStyle().textColorNormal(fontSize: 12.sp, color: Color(0xFF667085)),
+                ),
+              ],
+              if (item.selectedAddOns.isNotEmpty) ...[
+                SizedBox(height: 4.h),
+                Text(
+                  'الإضافات: ${item.selectedAddOns.join(', ')}',
+                  style: const TextStyle().textColorNormal(fontSize: 12.sp, color: Color(0xFF667085)),
+                ),
+              ],
+               if (item.notes.isNotEmpty) ...[
+                SizedBox(height: 4.h),
+                Text(
+                  'ملاحظات: ${item.notes}',
+                  style: const TextStyle().textColorNormal(fontSize: 12.sp, color: Color(0xFF667085)),
+                ),
+              ],
             ],
           ),
         )),

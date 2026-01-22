@@ -7,6 +7,8 @@ class OrderItem {
   final double unitPrice;
   final double totalPrice;
   final String id;
+  final String name;
+  final String? image;
 
   OrderItem({
     required this.itemId,
@@ -17,6 +19,8 @@ class OrderItem {
     required this.unitPrice,
     required this.totalPrice,
     required this.id,
+    required this.name,
+    this.image,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -24,9 +28,18 @@ class OrderItem {
     // Also check for 'drink' key as fallback if 'item' is missing (for drinks added to order)
     dynamic itemData = json['item'] ?? json['drink'];
     
-    final itemId = itemData is Map 
-        ? (itemData as Map<String, dynamic>)['_id'] as String
-        : (itemData as String? ?? '');
+    String itemId = '';
+    String name = 'Unknown Item';
+    String? image;
+
+    if (itemData is Map) {
+      final map = itemData as Map<String, dynamic>;
+      itemId = map['_id'] as String? ?? '';
+      name = (map['name'] as String?) ?? (map['nameAr'] as String?) ?? (map['nameEn'] as String?) ?? 'Unknown Item';
+      image = map['image'] as String?;
+    } else if (itemData is String) {
+      itemId = itemData;
+    }
         
     return OrderItem(
       itemId: itemId,
@@ -37,6 +50,8 @@ class OrderItem {
       unitPrice: (json['unitPrice'] as num?)?.toDouble() ?? 0.0,
       totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0.0,
       id: json['_id'] as String? ?? '',
+      name: name,
+      image: image,
     );
   }
 }

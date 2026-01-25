@@ -27,6 +27,7 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       height: 73.h,
       decoration: BoxDecoration(
@@ -39,7 +40,9 @@ class BottomNavBar extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.05),
             blurRadius: 20.r,
             offset: Offset(0, -5.h),
           ),
@@ -69,7 +72,12 @@ class BottomNavBar extends StatelessWidget {
     required int index,
     required bool isActive,
   }) {
-    final inactiveColor = Theme.of(context).unselectedWidgetColor ?? const Color(0xFF99A1AF);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inactiveColor = isDark
+        ? const Color(0xFF9CA3AF)
+        : const Color(0xFF99A1AF);
+    // Use lighter primary color in dark theme for better contrast
+    final activeColor = isDark ? AppColors.primaryLight : AppColors.primary;
     return GestureDetector(
       onTap: () => onTap(index),
       child: Container(
@@ -82,14 +90,14 @@ class BottomNavBar extends StatelessWidget {
               iconName: iconName,
               width: 24.w,
               height: 24.h,
-              color: isActive ? AppColors.primary : inactiveColor,
+              color: isActive ? activeColor : inactiveColor,
             ),
             SizedBox(height: 4.h),
             Container(
               height: 4.h,
               width: 32.w,
               decoration: BoxDecoration(
-                color: isActive ? AppColors.primary : Colors.transparent,
+                color: isActive ? activeColor : Colors.transparent,
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
@@ -98,7 +106,7 @@ class BottomNavBar extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 10.sp,
-                color: isActive ? AppColors.primary : inactiveColor,
+                color: isActive ? activeColor : inactiveColor,
               ),
             ),
           ],

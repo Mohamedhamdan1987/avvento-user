@@ -1,5 +1,6 @@
 import 'package:avvento/core/enums/order_status.dart';
 import 'package:avvento/core/utils/logger.dart';
+import 'package:avvento/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -38,9 +39,261 @@ class DriverOrdersController extends GetxController {
   DriverDashboardModel? get dashboardData => _dashboardData.value;
 
   // Toggle driver availability
-  void toggleAvailability() {
-    _isAvailable.value = !_isAvailable.value;
-    // TODO: Send availability status to backend
+  Future<void> toggleAvailability() async {
+    final currentStatus = _isAvailable.value;
+    final isStoppingWork = currentStatus;
+
+    // Get theme detection
+    final isDarkMode = Get.isDarkMode;
+    final dialogBg = isDarkMode ? const Color(0xFF1A1A1A) : Colors.white;
+    final textPrimary = isDarkMode ? Colors.white : const Color(0xFF101828);
+    final textSecondary =
+        isDarkMode ? const Color(0xFFB0B0B0) : const Color(0xFF4A5565);
+    final infoBgColor =
+        isDarkMode ? const Color(0xFF2A2A2A) : const Color(0xFFF9FAFB);
+    final infoBorderColor =
+        isDarkMode ? const Color(0xFF3A3A3A) : const Color(0xFFE5E7EB);
+    final outlineButtonColor =
+        isDarkMode ? const Color(0xFF4A4A4A) : const Color(0xFFE5E7EB);
+
+    // Show enhanced confirmation dialog with dark theme support
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            color: dialogBg,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with icon and title
+              Container(
+                decoration: BoxDecoration(
+                  color: (isStoppingWork
+                          ? AppColors.error
+                          : AppColors.primary)
+                      .withOpacity(isDarkMode ? 0.15 : 0.1),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Column(
+                  children: [
+                    // Icon
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isStoppingWork ? AppColors.error : AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isStoppingWork ? Icons.pause_circle : Icons.play_circle,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Title
+                    Text(
+                      'تأكيد تغيير الحالة',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Status indicator
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: (isStoppingWork
+                                ? AppColors.error
+                                : AppColors.primary)
+                            .withOpacity(isDarkMode ? 0.15 : 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        isStoppingWork ? 'التوقف عن العمل' : 'بدء العمل',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isStoppingWork ? AppColors.error : AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Message
+                    Text(
+                      isStoppingWork
+                          ? 'هل أنت متأكد أنك تريد التوقف عن العمل؟'
+                          : 'هل أنت متأكد أنك تريد بدء العمل؟',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Additional info
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: infoBgColor,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: infoBorderColor,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 18,
+                            color: isStoppingWork ? AppColors.error : AppColors.primary,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              isStoppingWork
+                                  ? 'لن تتلقى أي طلبات جديدة أثناء توقفك'
+                                  : 'ستبدأ بتلقي طلبات جديدة الآن',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Action buttons
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: Row(
+                  children: [
+                    // Cancel button
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: outlineButtonColor,
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Text(
+                          'إلغاء',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Confirm button
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Get.back(); // Close dialog
+                          // Proceed with toggle
+                          _isAvailable.value = !_isAvailable.value;
+                          try {
+                            final result =
+                                await _ordersService.toggleWorkingStatus();
+
+                            if (result.success && result.data != null) {
+                              final newStatus = result.data!['newStatus'] as String;
+                              _isAvailable.value = newStatus == 'working';
+
+                              final message = result.data!['message'] as String? ??
+                                  (newStatus == 'working'
+                                      ? 'أنت الآن في وضع العمل - سيتم إرسال الطلبات الجديدة لك'
+                                      : 'أنت الآن متوقف - لن تتلقى طلبات جديدة');
+
+                              showSnackBar(
+                                message: message,
+                                isSuccess: true,
+                              );
+                            } else {
+                              // Revert on failure
+                              _isAvailable.value = !_isAvailable.value;
+                              showSnackBar(
+                                title: 'خطأ',
+                                message: result.message ?? 'فشل في تغيير حالة العمل',
+                              );
+                            }
+                          } catch (e) {
+                            // Revert on error
+                            _isAvailable.value = !_isAvailable.value;
+                            showSnackBar(
+                              title: 'خطأ',
+                              message: 'حدث خطأ غير متوقع: ${e.toString()}',
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isStoppingWork
+                              ? AppColors.error
+                              : AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          isStoppingWork ? 'نعم، توقف' : 'نعم، ابدأ',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   // Toggle active orders visibility

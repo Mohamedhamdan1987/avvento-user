@@ -217,4 +217,29 @@ class DriverOrdersService {
       );
     }
   }
+
+  // Toggle driver working status (working/stopped)
+  Future<ApiResponse<Map<String, dynamic>>> toggleWorkingStatus() async {
+    try {
+      final response = await _dioClient.post(
+        '/delivery/working-status/toggle',
+      );
+
+      final data = response.data as Map<String, dynamic>;
+      return ApiResponse(
+        success: true,
+        data: data,
+      );
+    } on DioException catch (e) {
+      return ApiResponse(
+        success: false,
+        message: e.response?.data?['message']?.toString() ?? 'حدث خطأ في الاتصال',
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'حدث خطأ غير متوقع: ${e.toString()}',
+      );
+    }
+  }
 }

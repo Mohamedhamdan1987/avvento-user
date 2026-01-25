@@ -10,7 +10,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/enums/order_status.dart';
 import '../../../../core/services/notification_service.dart';
 import '../controllers/driver_orders_controller.dart';
-import '../widgets/active_order_view.dart';
 import '../widgets/orders_list_bottom_sheet.dart';
 
 class DriverHomePage extends StatefulWidget {
@@ -204,7 +203,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                       width: 48.w,
                       height: 26.h,
                       decoration: BoxDecoration(
-                        color: controller.isAvailable
+                        color: controller.isAvailable 
                             ? AppColors.primary
                             : isDark
                                 ? const Color(0xFF374151)

@@ -1,12 +1,13 @@
 import '../enums/order_status.dart';
-
 class AppConstants {
   // App Info
   static const String appName = 'We Pay';
   static const String appVersion = '1.0.0';
 
   // API Configuration
-  static const String baseUrl = 'https://avvento-server.onrender.com/';
+  // static const String baseUrl = 'https://avvento-server.onrender.com/';
+  static const String baseUrl = 'http://localhost:3000/';
+
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
   static const Duration sendTimeout = Duration(seconds: 30);

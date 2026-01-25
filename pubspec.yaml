@@ -39,6 +39,7 @@ dependencies:
 
   # Network
   dio: ^5.4.0
+  socket_io_client: ^2.0.3+1
   # Local Storage
   get_storage: ^2.1.1
   hive: ^2.2.3

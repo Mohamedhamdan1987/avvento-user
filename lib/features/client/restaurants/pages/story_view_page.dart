@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
 import 'package:story_view/story_view.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -28,6 +30,9 @@ class _StoryViewPageState extends State<StoryViewPage> {
   int _currentIndex = 0;
   bool _isLoading = true;
   final Map<String, int> _lovesDelta = {};
+  final TextEditingController _replyController = TextEditingController();
+  final FocusNode _replyFocusNode = FocusNode();
+
 
   @override
   void initState() {
@@ -121,8 +126,11 @@ class _StoryViewPageState extends State<StoryViewPage> {
   @override
   void dispose() {
     _storyController.dispose();
+    _replyController.dispose();
+    _replyFocusNode.dispose();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +197,7 @@ class _StoryViewPageState extends State<StoryViewPage> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      widget.stories[_currentIndex].restaurant.name,
+                      widget.stories[_currentIndex].restaurant?.name ?? '',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -234,7 +242,7 @@ class _StoryViewPageState extends State<StoryViewPage> {
                   ),
                   child: ClipOval(
                     child: CachedNetworkImage(
-                      imageUrl: widget.stories[_currentIndex].restaurant.logo, // Safely access using index
+                      imageUrl: widget.stories[_currentIndex].restaurant?.logo ?? '', // Safely access using index
                       fit: BoxFit.cover,
                       errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.white),
                     ),
@@ -246,13 +254,91 @@ class _StoryViewPageState extends State<StoryViewPage> {
             ),
           ),
 
-          // Love Button
+          // Love & Reply Section
           if(widget.stories.isNotEmpty && _currentIndex >= 0 && _currentIndex < widget.stories.length)
           Positioned(
-            bottom: 30.h,
-            left: 16.w,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 30.h,
+            left: 20.w,
+            right: 20.w,
             child: Row(
               children: [
+                Expanded(
+                  child: Container(
+                    height: 54.h,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(27.r),
+                      border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.w),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(27.r),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: TextField(
+                          controller: _replyController,
+                          focusNode: _replyFocusNode,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14.sp,
+                            fontFamily: 'IBMPlexSansArabic',
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'رد على القصة...',
+                            hintStyle: TextStyle(
+                              color: Colors.white.withOpacity(0.6),
+                              fontSize: 14.sp,
+                              fontFamily: 'IBMPlexSansArabic',
+                            ),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            filled: false,
+                            suffixIcon: Padding(
+                              padding: EdgeInsetsDirectional.only(end: 8.w),
+                              child: IconButton(
+                                icon: Icon(Icons.send_rounded, color: Colors.white, size: 22.w),
+                                onPressed: () async {
+                                  if (_replyController.text.trim().isNotEmpty) {
+                                    final story = widget.stories[_currentIndex];
+                                    final message = _replyController.text.trim();
+                                    
+                                    _replyController.clear();
+                                    _replyFocusNode.unfocus();
+                                    _storyController.play();
+
+                                    await Get.find<RestaurantsController>().replyToStory(story.id, message);
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                          onTap: () {
+                            _storyController.pause();
+                          },
+                          onSubmitted: (value) async {
+                             if (value.trim().isNotEmpty) {
+                                  final story = widget.stories[_currentIndex];
+                                  
+                                  _replyController.clear();
+                                  _storyController.play();
+
+                                  await Get.find<RestaurantsController>().replyToStory(story.id, value.trim());
+                                }
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
                 GestureDetector(
                   onTap: () async {
                     final story = widget.stories[_currentIndex];
@@ -265,21 +351,32 @@ class _StoryViewPageState extends State<StoryViewPage> {
                     await Get.find<RestaurantsController>().loveStory(story.id);
                   },
                   child: Container(
-                    padding: EdgeInsets.all(8.w),
+                    width: 54.w,
+                    height: 54.w,
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.white.withOpacity(0.12),
                       shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.w),
                     ),
-                    child: const Icon(
-                      Icons.favorite,
-                      color: Colors.red,
-                      size: 24,
+                    child: ClipOval(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Center(
+                          child: Icon(
+                            Icons.favorite_rounded,
+                            color: const Color(0xFFFB2C36), // Notification Red from AppColors
+                            size: 26.w,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
           ),
+
+
         ],
         ),
       ),

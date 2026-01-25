@@ -8,6 +8,7 @@ import '../models/sub_category_model.dart';
 import '../../cart/models/cart_model.dart';
 import '../models/favorite_restaurant_model.dart';
 import '../models/best_restaurant_model.dart';
+import '../models/restaurant_schedule_model.dart';
 
 class RestaurantsService {
   final DioClient _dioClient = DioClient.instance;
@@ -143,16 +144,16 @@ class RestaurantsService {
     }
   }
 
-  /// Fetch restaurant stories
-  Future<List<Story>> getStories() async {
-    // try {
-      final response = await _dioClient.get('/stories');
+  /// Fetch restaurant stories grouped by restaurant
+  Future<List<RestaurantStoryGroup>> getStories() async {
+    try {
+      final response = await _dioClient.get('/stories/restaurants-with-active');
       
       final responseData = response.data as List<dynamic>;
-      return responseData.map((item) => Story.fromJson(item as Map<String, dynamic>)).toList();
-    // } on DioException {
-    //   rethrow;
-    // }
+      return responseData.map((item) => RestaurantStoryGroup.fromJson(item as Map<String, dynamic>)).toList();
+    } on DioException {
+      rethrow;
+    }
   }
 
   /// Add item to favorites
@@ -301,4 +302,29 @@ class RestaurantsService {
       rethrow;
     }
   }
+
+  /// Fetch restaurant schedule
+  Future<RestaurantSchedule> getRestaurantSchedule(String restaurantId) async {
+    try {
+      final response = await _dioClient.get('/restaurants/$restaurantId/schedule');
+      return RestaurantSchedule.fromJson(response.data as Map<String, dynamic>);
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Reply to a story
+  Future<Map<String, dynamic>> replyToStory(String storyId, String message) async {
+    try {
+      final response = await _dioClient.post(
+        '/stories/$storyId/reply',
+        data: {'message': message},
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException {
+      rethrow;
+    }
+  }
 }
+
+

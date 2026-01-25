@@ -329,15 +329,15 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                     ? 10
                                     : controller.stories.length,
                                 itemBuilder: (context, index) {
-                                  final story = controller.stories[index];
+                                  final storyGroup = controller.stories[index];
                                   return Padding(
                                     padding: EdgeInsetsDirectional.only(end: 12.w),
                                     child: GestureDetector(
                                       onTap: () {
                                         Get.to(
                                               () => StoryViewPage(
-                                            stories: controller.stories,
-                                            initialIndex: index,
+                                            stories: storyGroup.stories,
+                                            initialIndex: 0,
                                           ),
                                         );
                                       },
@@ -356,7 +356,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                             padding: const EdgeInsets.all(2),
                                             child: ClipOval(
                                               child: CachedNetworkImage(
-                                                imageUrl: story.restaurant.logo,
+                                                imageUrl: storyGroup.restaurant.logo,
                                                 fit: BoxFit.cover,
                                                 errorWidget:
                                                     (context, url, error) =>
@@ -368,7 +368,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                           SizedBox(
                                             width: 70.w,
                                             child: Text(
-                                              story.restaurant.name,
+                                              storyGroup.restaurant.name,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               textAlign: TextAlign.center,

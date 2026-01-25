@@ -37,7 +37,7 @@ class CartController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchAllCarts();
+    Future.microtask(() => fetchAllCarts());
   }
 
   Future<void> fetchAllCarts() async {
@@ -150,6 +150,30 @@ class CartController extends GetxController {
 
   void refreshCarts() {
     fetchAllCarts();
+  }
+
+  /// Helper to find an item index in a specific restaurant's cart
+  int getItemIndexInCart(String restaurantId, String itemId) {
+    final cart = _carts.firstWhereOrNull((c) => c.restaurant.restaurantId == restaurantId || c.restaurant.id == restaurantId);
+    if (cart == null) return -1;
+    return cart.items.indexWhere((i) => i.item.id == itemId);
+  }
+
+  /// Helper to get an item's quantity in a specific restaurant's cart
+  int getItemQuantityInCart(String restaurantId, String itemId) {
+    final cart = _carts.firstWhereOrNull((c) => c.restaurant.restaurantId == restaurantId || c.restaurant.id == restaurantId);
+    if (cart == null) return 0;
+    final item = cart.items.firstWhereOrNull((i) => i.item.id == itemId);
+    return item?.quantity ?? 0;
+  }
+
+  /// Helper to update quantity using restaurantId and itemIndex
+  Future<void> updateCartItemQuantity(String restaurantId, int itemIndex, int quantity) async {
+    await updateQuantity(
+      restaurantId: restaurantId,
+      itemIndex: itemIndex,
+      quantity: quantity,
+    );
   }
 
   // Temporary drinks management

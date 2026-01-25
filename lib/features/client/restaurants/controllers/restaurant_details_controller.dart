@@ -7,6 +7,7 @@ import '../models/menu_item_model.dart';
 import '../models/sub_category_model.dart';
 import '../services/restaurants_service.dart';
 import '../../cart/controllers/cart_controller.dart';
+import '../models/restaurant_schedule_model.dart';
 
 class RestaurantDetailsController extends GetxController {
   final RestaurantsService _restaurantsService = RestaurantsService();
@@ -17,6 +18,7 @@ class RestaurantDetailsController extends GetxController {
   // Observable state
   final RxList<MenuCategory> _categories = <MenuCategory>[].obs;
   final Rxn<Restaurant> _restaurant = Rxn<Restaurant>();
+  final Rxn<RestaurantSchedule> _schedule = Rxn<RestaurantSchedule>();
   final RxList<SubCategory> _subCategories = <SubCategory>[].obs;
   final RxList<MenuItem> _allItems = <MenuItem>[].obs;
   final RxList<MenuItem> _filteredItems = <MenuItem>[].obs;
@@ -26,6 +28,7 @@ class RestaurantDetailsController extends GetxController {
   
   final RxBool _isLoadingRestaurantDetails = false.obs;
   final RxBool _isLoadingCategories = false.obs;
+  final RxBool _isLoadingSchedule = false.obs;
   final RxBool _isLoadingSubCategories = false.obs;
   final RxBool _isLoadingItems = false.obs;
   final RxBool _isAddingToCart = false.obs;
@@ -34,6 +37,7 @@ class RestaurantDetailsController extends GetxController {
   // Getters
   List<MenuCategory> get categories => _categories;
   Restaurant? get restaurant => _restaurant.value;
+  RestaurantSchedule? get schedule => _schedule.value;
   List<SubCategory> get subCategories => _subCategories;
   List<MenuItem> get allItems => _allItems;
   List<MenuItem> get items => _filteredItems;
@@ -42,6 +46,7 @@ class RestaurantDetailsController extends GetxController {
   String get selectedSubCategoryId => _selectedSubCategoryId.value;
   
   bool get isLoadingRestaurantDetails => _isLoadingRestaurantDetails.value;
+  bool get isLoadingSchedule => _isLoadingSchedule.value;
   bool get isLoadingCategories => _isLoadingCategories.value;
   bool get isLoadingSubCategories => _isLoadingSubCategories.value;
   bool get isLoadingItems => _isLoadingItems.value;
@@ -52,13 +57,18 @@ class RestaurantDetailsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchInitialData();
+    Future.microtask(() => fetchInitialData());
   }
 
   Future<void> fetchInitialData() async {
     await getRestaurantDetails();
-    await fetchCategories();
-    await fetchItems();
+    if (restaurant != null) {
+      await Future.wait([
+        fetchCategories(),
+        fetchItems(),
+        fetchSchedule(),
+      ]);
+    }
   }
 
   bool isItemFavorite(String itemId) {
@@ -107,10 +117,23 @@ class RestaurantDetailsController extends GetxController {
     }
   }
 
+  Future<void> fetchSchedule() async {
+    try {
+      _isLoadingSchedule.value = true;
+      final schedule = await _restaurantsService.getRestaurantSchedule(restaurantId);
+      _schedule.value = schedule;
+    } catch (e) {
+      print('Error fetching schedule: $e');
+    } finally {
+      _isLoadingSchedule.value = false;
+    }
+  }
+
   Future<void> fetchCategories() async {
     try {
       _isLoadingCategories.value = true;
       _errorMessage.value = '';
+      if (restaurant == null) return;
       final categories = await _restaurantsService.getMenuCategories(restaurant!.user.id);
       _categories.assignAll(categories);
     } catch (e) {
@@ -124,6 +147,7 @@ class RestaurantDetailsController extends GetxController {
     try {
       _isLoadingItems.value = true;
       _errorMessage.value = '';
+      if (restaurant == null) return;
       final items = await _restaurantsService.getMenuItems(restaurant!.user.id);
       
       // Sort items based on category order
@@ -186,7 +210,7 @@ class RestaurantDetailsController extends GetxController {
 
   void _filterItems() {
     // If no subcategory is selected, show all items (or filter by category if that was intended, 
-    // but user said "All items has no relation to category selection")
+    // but user said "All Items has no relation to category selection")
     // Let's assume subcategory selection DOES filter items.
     
     if (_selectedSubCategoryId.value.isEmpty) {

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../constants/app_constants.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/logging_interceptor.dart';
+import 'interceptors/connectivity_interceptor.dart';
 
 class DioClient {
   static final DioClient instance = DioClient._internal();
@@ -23,8 +24,9 @@ class DioClient {
 
     // Add interceptors
     _dio.interceptors.addAll([
-      AuthInterceptor(),
+      ConnectivityInterceptor(),
       LoggingInterceptor(),
+      AuthInterceptor(),
     ]);
   }
 

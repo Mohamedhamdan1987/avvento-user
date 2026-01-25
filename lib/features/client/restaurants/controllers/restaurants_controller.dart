@@ -22,7 +22,7 @@ class RestaurantsController extends GetxController {
   final RxBool _isLoadingBest = false.obs;
   
   // Stories observable state
-  final RxList<Story> _stories = <Story>[].obs;
+  final RxList<RestaurantStoryGroup> _stories = <RestaurantStoryGroup>[].obs;
   final RxBool _isLoadingStories = false.obs;
   
   // User location (you can update this with actual GPS location)
@@ -47,7 +47,7 @@ class RestaurantsController extends GetxController {
   double? get userLong => _userLong.value;
   
   // Stories getters
-  List<Story> get stories => _stories;
+  List<RestaurantStoryGroup> get stories => _stories;
   bool get isLoadingStories => _isLoadingStories.value;
 
   @override
@@ -57,37 +57,38 @@ class RestaurantsController extends GetxController {
     _userLat.value = 32.8872;
     _userLong.value = 13.1913;
     
-    fetchRestaurants();
-    fetchRestaurants();
-    fetchBestRestaurants();
-    fetchStories();
+    Future.microtask(() {
+      fetchRestaurants();
+      fetchBestRestaurants();
+      fetchStories();
+    });
   }
 
   /// Fetch best restaurants
   Future<void> fetchBestRestaurants() async {
-    // try {
+    try {
       _isLoadingBest.value = true;
       final restaurants = await _restaurantsService.getBestRestaurants();
       _bestRestaurants.assignAll(restaurants);
-    // } catch (e) {
-    //   print('Failed to fetch best restaurants: $e');
-    // } finally {
-    //   _isLoadingBest.value = false;
-    // }
+    } catch (e) {
+      print('Failed to fetch best restaurants: $e');
+    } finally {
+      _isLoadingBest.value = false;
+    }
   }
 
   /// Fetch stories
   Future<void> fetchStories() async {
-    // try {
+    try {
       _isLoadingStories.value = true;
       final stories = await _restaurantsService.getStories();
       _stories.assignAll(stories);
-    // } catch (e) {
-    //   // Silently fail for now or log error
-    //   print('Failed to fetch stories: $e');
-    // } finally {
-    //   _isLoadingStories.value = false;
-    // }
+    } catch (e) {
+      // Silently fail for now or log error
+      print('Failed to fetch stories: $e');
+    } finally {
+      _isLoadingStories.value = false;
+    }
   }
 
   /// Fetch restaurants (initial load or refresh)
@@ -269,5 +270,26 @@ class RestaurantsController extends GetxController {
       print('Failed to view story: $e');
     }
   }
+
+  /// Reply to a story
+  Future<bool> replyToStory(String storyId, String message) async {
+    try {
+      await _restaurantsService.replyToStory(storyId, message);
+      showSnackBar(
+        title: 'نجاح',
+        message: 'تم إرسال الرد بنجاح',
+        isSuccess: true,
+      );
+      return true;
+    } catch (e) {
+      showSnackBar(
+        title: 'خطأ',
+        message: 'فشل إرسال الرد',
+        isError: true,
+      );
+      return false;
+    }
+  }
 }
+
 

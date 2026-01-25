@@ -5,8 +5,8 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // API Configuration
-  // static const String baseUrl = 'https://avvento-server.onrender.com/';
-  static const String baseUrl = 'http://localhost:3000/';
+  static const String baseUrl = 'https://avvento-server.onrender.com/';
+  // static const String baseUrl = 'http://10.0.2.2:3000/';
 
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);

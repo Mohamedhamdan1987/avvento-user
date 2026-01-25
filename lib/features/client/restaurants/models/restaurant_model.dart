@@ -40,25 +40,53 @@ class RestaurantUser {
   });
 
   factory RestaurantUser.fromJson(Map<String, dynamic> json) {
+    // Handle both 'user' object and 'host' object formats
+    final String id = json['_id'] ?? json['id'] ?? json['hostId'] ?? '';
+    final String name = json['name'] ?? json['hostName'] ?? '';
+    final String username = json['username'] ?? json['hostUsername'] ?? '';
+    final String email = json['email'] ?? json['hostEmail'] ?? '';
+    final String phone = json['phone'] ?? json['hostPhone'] ?? '';
+    final String role = json['role'] ?? json['hostRole'] ?? '';
+    final bool isVerified = json['isVerified'] ?? json['hostVerified'] ?? false;
+    final bool isActive = json['isActive'] ?? json['hostActive'] ?? false;
+    final String address = json['address'] ?? json['hostAddress'] ?? '';
+    
+    double lat = 0.0;
+    double long = 0.0;
+    
+    if (json['lat'] != null) lat = (json['lat'] as num).toDouble();
+    if (json['long'] != null) long = (json['long'] as num).toDouble();
+    
+    // Check if location is nested (common in 'host' object)
+    if (json['hostLocation'] != null) {
+      final loc = json['hostLocation'] as Map<String, dynamic>;
+      if (loc['lat'] != null) lat = (loc['lat'] as num).toDouble();
+      if (loc['long'] != null) long = (loc['long'] as num).toDouble();
+    } else if (json['location'] != null) {
+      final loc = json['location'] as Map<String, dynamic>;
+      if (loc['lat'] != null) lat = (loc['lat'] as num).toDouble();
+      if (loc['long'] != null) long = (loc['long'] as num).toDouble();
+    }
+
     return RestaurantUser(
-      id: json['_id'] as String,
-      name: json['name'] as String,
-      username: json['username'] as String,
-      email: json['email'] as String,
-      phone: json['phone'] as String,
-      role: json['role'] as String,
-      isVerified: json['isVerified'] as bool? ?? false,
-      isActive: json['isActive'] as bool? ?? false,
-      address: json['address'] as String,
-      lat: (json['lat'] as num).toDouble(),
-      long: (json['long'] as num).toDouble(),
+      id: id,
+      name: name,
+      username: username,
+      email: email,
+      phone: phone,
+      role: role,
+      isVerified: isVerified,
+      isActive: isActive,
+      address: address,
+      lat: lat,
+      long: long,
       backgroundImage: json['backgroundImage'] as String?,
       logo: json['logo'] as String?,
-      ownerName: json['ownerName'] as String,
-      description: json['description'] as String,
-      deliveryStatus: json['deliveryStatus'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      ownerName: json['ownerName'] ?? '',
+      description: json['description'] ?? '',
+      deliveryStatus: json['deliveryStatus'] ?? '',
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : DateTime.now(),
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : DateTime.now(),
     );
   }
 
@@ -122,20 +150,44 @@ class Restaurant {
   });
 
   factory Restaurant.fromJson(Map<String, dynamic> json) {
+    // Handle both 'user' and 'host' keys
+    Map<String, dynamic>? userData = json['user'] as Map<String, dynamic>?;
+    if (userData == null && json['host'] != null) {
+      userData = json['host'] as Map<String, dynamic>;
+    }
+    
+    // Fallback to top-level fields if nested user/host is missing but some fields are present
+    if (userData == null) {
+      userData = json; 
+    }
+
+    double lat = 0.0;
+    double long = 0.0;
+    
+    if (json['lat'] != null) lat = (json['lat'] as num).toDouble();
+    if (json['long'] != null) long = (json['long'] as num).toDouble();
+    
+    // Check if location is nested
+    if (json['location'] != null) {
+       final loc = json['location'] as Map<String, dynamic>;
+       if (loc['lat'] != null) lat = (loc['lat'] as num).toDouble();
+       if (loc['long'] != null) long = (loc['long'] as num).toDouble();
+    }
+
     return Restaurant(
-      id: json['_id'] as String,
-      user: RestaurantUser.fromJson(json['user'] as Map<String, dynamic>),
-      name: json['name'] as String,
-      address: json['address'] as String,
-      lat: (json['lat'] as num).toDouble(),
-      long: (json['long'] as num).toDouble(),
+      id: json['_id'] ?? json['id'] ?? '',
+      user: RestaurantUser.fromJson(userData),
+      name: json['name'] ?? '',
+      address: json['address'] ?? '',
+      lat: lat,
+      long: long,
       backgroundImage: json['backgroundImage'] as String?,
       logo: json['logo'] as String?,
-      ownerName: json['ownerName'] as String,
-      description: json['description'] as String,
-      phone: json['phone'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      ownerName: json['ownerName'] ?? '',
+      description: json['description'] ?? '',
+      phone: json['phone'] ?? '',
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : DateTime.now(),
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : DateTime.now(),
       isFavorite: json['isFavorite'] as bool? ?? false,
       isOpen: json['isOpen'] as bool? ?? false
     );

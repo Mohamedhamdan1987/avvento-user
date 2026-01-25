@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/enums/order_status.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../core/services/socket_service.dart';
 import '../controllers/driver_orders_controller.dart';
 import '../widgets/orders_list_bottom_sheet.dart';
 
@@ -37,6 +38,12 @@ class _DriverHomePageState extends State<DriverHomePage> {
   }
 
   void _initializeController() {
+    if (!Get.isRegistered<SocketService>()) {
+      Get.put(SocketService());
+    }
+    final socketService = Get.find<SocketService>();
+    socketService.connectToNotifications();
+
     if (!Get.isRegistered<DriverOrdersController>()) {
       Get.put(DriverOrdersController());
     }

@@ -24,10 +24,10 @@ class SocketService extends GetxService {
   }
 
   void _loadUserData() {
-    final userData = box.read('user');
+    final userData = box.read<Map<String, dynamic>>(AppConstants.userKey);
     if (userData != null) {
       userRole = userData['role'];
-      userId = userData['_id'];
+      userId = userData['id'];
       AppLogger.debug('👤 User data loaded: role=$userRole, userId=$userId', 'SocketService');
     } else {
       AppLogger.debug('⚠️ No user data found in storage', 'SocketService');
@@ -36,11 +36,24 @@ class SocketService extends GetxService {
 
   /// Connect to notifications namespace with provided token
   void connectWithToken(String token) {
+    if (isConnected.value && _notificationSocket != null && _notificationSocket!.connected) {
+      AppLogger.debug('🔌 Socket already connected, skipping redundant connection', 'SocketService');
+      return;
+    }
+
+    _loadUserData(); // Ensure we have the latest user role and ID before connecting
+
     AppLogger.debug('🔌 Connecting socket with provided token...', 'SocketService');
-    AppLogger.debug('Token: ${token.substring(0, 30)}...', 'SocketService');
+    AppLogger.debug('Token: ${token.substring(0, token.length > 30 ? 30 : token.length)}...', 'SocketService');
+
+    // Remove trailing slash from baseUrl if it exists to avoid double slash
+    String baseUrl = AppConstants.baseUrl;
+    if (baseUrl.endsWith('/')) {
+      baseUrl = baseUrl.substring(0, baseUrl.length - 1);
+    }
 
     _notificationSocket = IO.io(
-      '${AppConstants.baseUrl}notifications',
+      '$baseUrl/notifications',
       IO.OptionBuilder()
           .setTransports(['websocket', 'polling'])
           .setAuth({'token': token})
@@ -53,14 +66,14 @@ class SocketService extends GetxService {
           .build(),
     );
 
-    AppLogger.debug('📡 Socket instance created for URL: ${AppConstants.baseUrl}notifications', 'SocketService');
-    AppLogger.debug('📡 Socket ID: ${_notificationSocket?.id}', 'SocketService');
+    AppLogger.debug('📡 Socket instance created for URL: $baseUrl/notifications', 'SocketService');
+    // Note: Socket ID will be null until connection is established
     _setupNotificationHandlers();
   }
 
   /// Connect to notifications namespace for real-time order updates
   void connectToNotifications() {
-    final token = box.read('token');
+    final token = box.read(AppConstants.tokenKey);
     
     AppLogger.debug('📋 Checking token availability...', 'SocketService');
     AppLogger.debug('Token exists: ${token != null}', 'SocketService');
@@ -76,7 +89,7 @@ class SocketService extends GetxService {
   void _setupNotificationHandlers() {
     if (_notificationSocket == null) return;
 
-    AppLogger.debug('⚙️ Setting up socket notification handlers...', 'SocketService');
+    AppLogger.debug('⚙️ Setting up socket notification handlers for role: $userRole', 'SocketService');
 
     // Connection handlers
     _notificationSocket!.onConnect((_) {
@@ -186,7 +199,7 @@ class SocketService extends GetxService {
   /// Refresh connection (useful when token expires)
   void refreshConnection() {
     disconnect();
-    final newToken = box.read('token');
+    final newToken = box.read(AppConstants.tokenKey);
     if (newToken != null) {
       connectToNotifications();
     }

@@ -58,10 +58,13 @@ class LoggingInterceptor extends Interceptor {
       }
     } else {
       // Real errors (500, network issues, etc.) should be logged as errors
+      final isConnectivityError = err.type == DioExceptionType.connectionError || 
+                                  err.type == DioExceptionType.connectionTimeout;
+      
       AppLogger.error(
         'ERROR[${statusCode}] => PATH: ${err.requestOptions.path}',
-        err,
-        err.stackTrace,
+        isConnectivityError ? err.message : err,
+        isConnectivityError ? null : err.stackTrace,
         'Dio',
       );
       if (err.response?.data != null) {

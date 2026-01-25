@@ -23,6 +23,21 @@ class ApiException {
         );
 
       case DioExceptionType.connectionError:
+        final errorMsg = error.error.toString();
+        if (errorMsg.contains('No network connection') || 
+            errorMsg.contains('No internet access')) {
+          return NetworkFailure(
+            AppConstants.networkErrorMessage,
+            code: 'NO_INTERNET',
+          );
+        }
+        if (error.message?.contains('Connection refused') == true || 
+            errorMsg.contains('Connection refused')) {
+          return ServerFailure(
+            'لا يمكن الاتصال بالسيرفر، تأكد من تشغيل السيرفر المحلي',
+            code: 'CONNECTION_REFUSED',
+          );
+        }
         return NetworkFailure(
           AppConstants.networkErrorMessage,
           code: 'CONNECTION_ERROR',

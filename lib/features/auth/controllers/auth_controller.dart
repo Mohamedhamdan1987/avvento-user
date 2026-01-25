@@ -6,7 +6,6 @@ import '../../../core/error/api_exception.dart';
 import '../../../core/error/error_handler.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/utils/show_snackbar.dart';
-import '../../../core/services/socket_service.dart';
 import '../models/login_request_model.dart';
 import '../models/register_request_model.dart';
 import '../models/user_model.dart';
@@ -65,16 +64,6 @@ class AuthController extends GetxController {
         await _storage.write(AppConstants.userKey, result.data!.user.toJson());
 
         print("Cached User: ${result.data!.user.toJson()}");
-        // Initialize Socket for delivery drivers
-        if (result.data!.user.role == 'delivery') {
-          // Initialize socket connection after login with token directly
-          if (!Get.isRegistered<SocketService>()) {
-            Get.put(SocketService());
-          }
-          final socketService = Get.find<SocketService>();
-          // Pass token directly - no need to wait for storage
-          socketService.connectWithToken(result.data!.token!);
-        }
 
         // Navigate based on user type
         if (result.data!.user.role == 'delivery') {

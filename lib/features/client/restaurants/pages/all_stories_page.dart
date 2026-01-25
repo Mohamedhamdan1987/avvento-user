@@ -6,7 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 class AllStoriesPage extends StatelessWidget {
-  final List<Story> stories;
+  final List<RestaurantStoryGroup> stories;
 
   const AllStoriesPage({super.key, required this.stories});
 
@@ -27,12 +27,12 @@ class AllStoriesPage extends StatelessWidget {
         ),
         itemCount: stories.length,
         itemBuilder: (context, index) {
-          final story = stories[index];
+          final storyGroup = stories[index];
           return GestureDetector(
             onTap: () {
               Get.to(() => StoryViewPage(
-                stories: stories,
-                initialIndex: index,
+                stories: storyGroup.stories,
+                initialIndex: 0,
               ));
             },
             child: Column(
@@ -50,7 +50,7 @@ class AllStoriesPage extends StatelessWidget {
                   padding: const EdgeInsets.all(2),
                   child: ClipOval(
                     child: CachedNetworkImage(
-                      imageUrl: story.restaurant.logo,
+                      imageUrl: storyGroup.restaurant.logo,
                       fit: BoxFit.cover,
                       errorWidget: (context, url, error) => const Icon(Icons.error),
                     ),
@@ -58,7 +58,7 @@ class AllStoriesPage extends StatelessWidget {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  story.restaurant.name,
+                  storyGroup.restaurant.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,

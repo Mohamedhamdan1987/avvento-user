@@ -1,9 +1,10 @@
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:get_storage/get_storage.dart';
 import 'package:get/get.dart';
-import 'package:flutter/material.dart';
 import '../utils/logger.dart';
 import '../constants/app_constants.dart';
+import '../enums/order_status.dart';
+import 'notification_service.dart';
 
 class SocketService extends GetxService {
   late IO.Socket? _notificationSocket;
@@ -115,6 +116,17 @@ class SocketService extends GetxService {
       final notification = Map<String, dynamic>.from(data);
       AppLogger.debug('📬 New notification: $notification', 'SocketService');
       notifications.insert(0, notification);
+      
+      // If it's an order notification, show it with progress
+      if (notification['type'] == 'order' && notification['orderStatus'] != null) {
+        final status = OrderStatus.fromString(notification['orderStatus']);
+        _showOrderStatusNotification(
+          orderId: notification['orderId'] ?? '',
+          status: status,
+          title: notification['title'],
+          body: notification['body'],
+        );
+      }
     });
 
     // ============ DELIVERY DRIVER ONLY ============
@@ -161,6 +173,12 @@ class SocketService extends GetxService {
             '✅ Order ${updateData['orderId']} removed (cancelled)',
             'SocketService',
           );
+          
+          // Show notification for cancelled order
+          _showOrderStatusNotification(
+            orderId: updateData['orderId'],
+            status: OrderStatus.cancelled,
+          );
         } else {
           // Update order status in list if exists
           final index = availableOrders.indexWhere(
@@ -174,7 +192,30 @@ class SocketService extends GetxService {
               'SocketService',
             );
           }
+          
+          // Show notification with progress for status update
+          final status = OrderStatus.fromString(updateData['status']);
+          _showOrderStatusNotification(
+            orderId: updateData['orderId'],
+            status: status,
+          );
         }
+      });
+    }
+
+    // ============ CLIENT ONLY ============
+    if (userRole == 'client') {
+      // 🟡 ORDER STATUS UPDATE - Order status changed for client's order
+      _notificationSocket!.on('order-status-update', (data) {
+        final updateData = Map<String, dynamic>.from(data);
+        AppLogger.debug('🔄 Client order status update: $updateData', 'SocketService');
+
+        // Show notification with progress for status update
+        final status = OrderStatus.fromString(updateData['status']);
+        _showOrderStatusNotification(
+          orderId: updateData['orderId'],
+          status: status,
+        );
       });
     }
 
@@ -186,6 +227,25 @@ class SocketService extends GetxService {
         notifications.insert(0, notification);
       });
     }
+  }
+
+  /// Show order status notification with progress bar
+  void _showOrderStatusNotification({
+    required String orderId,
+    required OrderStatus status,
+    String? title,
+    String? body,
+  }) {
+    // Generate default title and body if not provided
+    final notificationTitle = title ?? 'تحديث الطلب #${orderId.substring(0, 8)}';
+    final notificationBody = body ?? 'حالة الطلب: ${status.label}';
+    
+    NotificationService.instance.showOrderNotification(
+      orderId: orderId,
+      title: notificationTitle,
+      body: notificationBody,
+      status: status,
+    );
   }
 
   /// Disconnect all sockets

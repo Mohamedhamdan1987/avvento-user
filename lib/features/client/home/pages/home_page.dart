@@ -9,7 +9,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/enums/order_status.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../core/services/socket_service.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/reusable/custom_text_field.dart';
 import 'package:avvento/features/client/address/controllers/address_controller.dart';
@@ -74,6 +76,14 @@ class _HomePageContentState extends State<_HomePageContent> {
     
     // Update FCM token on server
     NotificationService.instance.updateTokenOnServer();
+    
+    // Connect to socket for real-time order updates
+    try {
+      final socketService = Get.find<SocketService>();
+      socketService.connectToNotifications();
+    } catch (e) {
+      // SocketService not initialized yet
+    }
   }
 
   @override
@@ -90,10 +100,132 @@ class _HomePageContentState extends State<_HomePageContent> {
     });
   }
 
+  /// Show test notification dialog (DEBUG ONLY)
+  void _showTestNotificationDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: Padding(
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                '🧪 اختبار إشعارات الطلبات',
+                style: TextStyle().textColorBold(
+                  fontSize: 18.sp,
+                  color: Theme.of(context).textTheme.titleLarge?.color,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 24.h),
+              
+              // Test single status buttons
+              Text(
+                'اختبار حالة معينة:',
+                style: TextStyle().textColorMedium(
+                  fontSize: 14.sp,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              
+              Wrap(
+                spacing: 8.w,
+                runSpacing: 8.h,
+                children: OrderStatus.values.map((status) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      NotificationService.instance.showTestOrderNotification(status);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: status == OrderStatus.cancelled 
+                          ? Colors.red 
+                          : status == OrderStatus.delivered 
+                              ? Colors.green 
+                              : AppColors.purple,
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                    child: Text(
+                      status.label,
+                      style: TextStyle().textColorMedium(
+                        fontSize: 10.sp,
+                        color: Colors.white,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              
+              SizedBox(height: 24.h),
+              
+              // Test all statuses button
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  NotificationService.instance.showTestAllStatusesNotification();
+                },
+                icon: const Icon(Icons.play_arrow, color: Colors.white),
+                label: Text(
+                  'اختبار جميع الحالات (تلقائي)',
+                  style: TextStyle().textColorBold(
+                    fontSize: 14.sp,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+              ),
+              
+              SizedBox(height: 12.h),
+              
+              Text(
+                '⚠️ هذا الزر للاختبار فقط - احذفه قبل النشر',
+                style: TextStyle().textColorMedium(
+                  fontSize: 10.sp,
+                  color: Colors.red,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              SizedBox(height: 16.h),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      // Test notification button (DEBUG ONLY - Remove in production)
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showTestNotificationDialog(context),
+        backgroundColor: AppColors.purple,
+        icon: const Icon(Icons.notifications_active, color: Colors.white),
+        label: Text(
+          'اختبار الإشعارات',
+          style: TextStyle().textColorBold(fontSize: 12.sp, color: Colors.white),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       body: Column(
         children: [
           // Header with gradient background

@@ -435,7 +435,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
           _buildStatItem(
             context,
             icon: 'assets/svg/client/restaurant_details/clock.svg',
-            value: '25 دقيقة', // This could be dynamic if restaurant has preparation time
+            value: '${controller.restaurant!.averagePreparationTimeMinutes} دقيقة',
             label: 'التحضير',
           ),
           Container(width: 1.w, height: 32.h, color: Color(0xFFF3F4F6)),
@@ -456,7 +456,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
           _buildStatItem(
             context,
             icon: 'assets/svg/client/restaurant_details/inactive_star_icon.svg',
-            value: '4.8',
+            value: controller.restaurant!.averageRatingDisplay,
             label: 'التقييم',
           ),
         ],
@@ -851,91 +851,30 @@ class RestaurantDetailsScreen extends StatelessWidget {
         child: Row(
           children: [
             // Item Image with Add Button
-            Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.bottomCenter,
-              children: [
-                GestureDetector(
-                   onTap: () {
-                    _showMealDetails(context, item);
-                  },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20.r),
-                    child: Container(
-                      width: 96.w,
-                      height: 96.h,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                      child: (item.image?.isNotEmpty ?? false)
-                          ? CachedNetworkImage(
-                              imageUrl: item.image!,
-                              width: 96.w,
-                              height: 96.h,
-                              fit: BoxFit.cover,
-                            )
-                          : Icon(Icons.fastfood, size: 40.w, color: Colors.grey),
-                    ),
+            GestureDetector(
+              onTap: () {
+                _showMealDetails(context, item);
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20.r),
+                child: Container(
+                  width: 96.w,
+                  height: 96.h,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
                   ),
+                  child: (item.image?.isNotEmpty ?? false)
+                      ? CachedNetworkImage(
+                    imageUrl: item.image!,
+                    width: 96.w,
+                    height: 96.h,
+                    fit: BoxFit.cover,
+                  )
+                      : Icon(Icons.fastfood, size: 40.w, color: Colors.grey),
                 ),
-                // Add/Quantity Button Overlay
-                Positioned(
-                  bottom: -13.h,
-                  child: quantity > 0
-                      ? Container(
-                          height: 32.h,
-                          padding: EdgeInsets.symmetric(horizontal: 8.w),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF101828),
-                            borderRadius: BorderRadius.circular(100.r),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: () => _updateQuantity(context, item, quantity - 1),
-                                child: Icon(Icons.remove, color: Colors.white, size: 16.w),
-                              ),
-                              SizedBox(width: 8.w),
-                              Text(
-                                '$quantity',
-                                style: TextStyle().textColorBold(fontSize: 14.sp, color: Colors.white),
-                              ),
-                              SizedBox(width: 8.w),
-                              GestureDetector(
-                                onTap: () => _updateQuantity(context, item, quantity + 1),
-                                child: Icon(Icons.add, color: Colors.white, size: 16.w),
-                              ),
-                            ],
-                          ),
-                        )
-                      : CustomIconButtonApp(
-                          width: 32.w,
-                          height: 32.h,
-                          radius: 100.r,
-                          color: const Color(0xFF101828),
-                          onTap: () {
-                            if (item.variations.isEmpty && item.addOns.isEmpty) {
-                              controller.addToCart(
-                                itemId: item.id,
-                                quantity: 1,
-                                selectedVariations: [],
-                                selectedAddOns: [],
-                              );
-                            } else {
-                              _showMealDetails(context, item);
-                            }
-                          },
-                          childWidget: SvgIcon(
-                            iconName: 'assets/svg/plus-solid.svg',
-                            width: 16.w,
-                            height: 16.h,
-                            color: Colors.white,
-                          ),
-                        ),
-                ),
-              ],
+              ),
             ),
+
 
             SizedBox(width: 12.w),
 
@@ -961,7 +900,58 @@ class RestaurantDetailsScreen extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        _buildFavoriteButton(item),
+                        quantity > 0
+                            ? Container(
+                          height: 28.h,
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF101828),
+                            borderRadius: BorderRadius.circular(100.r),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () => _updateQuantity(context, item, quantity - 1),
+                                child: Icon(Icons.remove, color: Colors.white, size: 16.w),
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                '$quantity',
+                                style: TextStyle().textColorBold(fontSize: 14.sp, color: Colors.white),
+                              ),
+                              SizedBox(width: 8.w),
+                              GestureDetector(
+                                onTap: () => _updateQuantity(context, item, quantity + 1),
+                                child: Icon(Icons.add, color: Colors.white, size: 16.w),
+                              ),
+                            ],
+                          ),
+                        )
+                            : CustomIconButtonApp(
+                          width: 32.w,
+                          height: 32.h,
+                          radius: 100.r,
+                          color: const Color(0xFF101828),
+                          onTap: () {
+                            if (item.variations.isEmpty && item.addOns.isEmpty) {
+                              controller.addToCart(
+                                itemId: item.id,
+                                quantity: 1,
+                                selectedVariations: [],
+                                selectedAddOns: [],
+                              );
+                            } else {
+                              _showMealDetails(context, item);
+                            }
+                          },
+                          childWidget: SvgIcon(
+                            iconName: 'assets/svg/plus-solid.svg',
+                            width: 16.w,
+                            height: 16.h,
+                            color: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
                     Text(

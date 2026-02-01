@@ -154,7 +154,7 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(100.r),
                       child: Image.asset(
-                        'assets/app_logo.png',
+                        'assets/avvento.PNG',
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(

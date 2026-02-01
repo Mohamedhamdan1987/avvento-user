@@ -114,6 +114,50 @@ class RestaurantUser {
   }
 }
 
+/// Rating info from API (statistics.rating or top-level).
+class RestaurantRating {
+  final double average;
+  final int totalRatings;
+
+  RestaurantRating({required this.average, required this.totalRatings});
+
+  factory RestaurantRating.fromJson(Map<String, dynamic>? json) {
+    if (json == null) return RestaurantRating(average: 0, totalRatings: 0);
+    return RestaurantRating(
+      average: (json['average'] as num?)?.toDouble() ?? 0,
+      totalRatings: (json['totalRatings'] as int?) ?? 0,
+    );
+  }
+
+  /// Display string e.g. "4.00"
+  String get display => average.toStringAsFixed(2);
+}
+
+/// Statistics from API (statistics object).
+class RestaurantStatistics {
+  final RestaurantRating rating;
+  final int averagePreparationTime;
+
+  RestaurantStatistics({
+    required this.rating,
+    required this.averagePreparationTime,
+  });
+
+  factory RestaurantStatistics.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      return RestaurantStatistics(
+        rating: RestaurantRating(average: 0, totalRatings: 0),
+        averagePreparationTime: 0,
+      );
+    }
+    final ratingJson = json['rating'] as Map<String, dynamic>?;
+    return RestaurantStatistics(
+      rating: RestaurantRating.fromJson(ratingJson),
+      averagePreparationTime: (json['averagePreparationTime'] as int?) ?? 0,
+    );
+  }
+}
+
 class Restaurant {
   final String id;
   final RestaurantUser user;
@@ -130,6 +174,10 @@ class Restaurant {
   final DateTime updatedAt;
   final bool isFavorite;
   final bool isOpen;
+  final RestaurantStatistics? statistics;
+  /// Top-level rating from API (used when statistics is null or for backward compat).
+  final String? averageRatingString;
+  final int? totalRatingsTopLevel;
 
   Restaurant({
     required this.id,
@@ -147,7 +195,25 @@ class Restaurant {
     required this.updatedAt,
     this.isFavorite = false,
     this.isOpen = false,
+    this.statistics,
+    this.averageRatingString,
+    this.totalRatingsTopLevel,
   });
+
+  /// Average rating for display (from statistics or top-level).
+  String get averageRatingDisplay {
+    if (statistics != null && statistics!.rating.totalRatings > 0) {
+      return statistics!.rating.display;
+    }
+    if (averageRatingString != null && averageRatingString!.isNotEmpty) {
+      return averageRatingString!;
+    }
+    return '0.00';
+  }
+
+  /// Preparation time in minutes (from statistics).
+  int get averagePreparationTimeMinutes =>
+      statistics?.averagePreparationTime ?? 0;
 
   factory Restaurant.fromJson(Map<String, dynamic> json) {
     // Handle both 'user' and 'host' keys
@@ -174,6 +240,13 @@ class Restaurant {
        if (loc['long'] != null) long = (loc['long'] as num).toDouble();
     }
 
+    final statisticsJson = json['statistics'] as Map<String, dynamic>?;
+    final RestaurantStatistics? statistics = statisticsJson != null
+        ? RestaurantStatistics.fromJson(statisticsJson)
+        : null;
+    final String? averageRatingString = json['averageRating']?.toString();
+    final int? totalRatingsTopLevel = json['totalRatings'] as int?;
+
     return Restaurant(
       id: json['_id'] ?? json['id'] ?? '',
       user: RestaurantUser.fromJson(userData),
@@ -189,7 +262,10 @@ class Restaurant {
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : DateTime.now(),
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : DateTime.now(),
       isFavorite: json['isFavorite'] as bool? ?? false,
-      isOpen: json['isOpen'] as bool? ?? false
+      isOpen: json['isOpen'] as bool? ?? false,
+      statistics: statistics,
+      averageRatingString: averageRatingString,
+      totalRatingsTopLevel: totalRatingsTopLevel,
     );
   }
 
@@ -210,6 +286,12 @@ class Restaurant {
       'updatedAt': updatedAt.toIso8601String(),
       'isFavorite': isFavorite,
       'isOpen': isOpen,
+      if (statistics != null) 'statistics': {
+        'rating': {'average': statistics!.rating.average, 'totalRatings': statistics!.rating.totalRatings},
+        'averagePreparationTime': statistics!.averagePreparationTime,
+      },
+      'averageRating': averageRatingDisplay,
+      'totalRatings': totalRatingsTopLevel ?? statistics?.rating.totalRatings,
     };
   }
 
@@ -229,7 +311,9 @@ class Restaurant {
     DateTime? updatedAt,
     bool? isFavorite,
     bool? isOpen,
-
+    RestaurantStatistics? statistics,
+    String? averageRatingString,
+    int? totalRatingsTopLevel,
   }) {
     return Restaurant(
       id: id ?? this.id,
@@ -247,6 +331,9 @@ class Restaurant {
       updatedAt: updatedAt ?? this.updatedAt,
       isFavorite: isFavorite ?? this.isFavorite,
       isOpen: isOpen ?? this.isOpen,
+      statistics: statistics ?? this.statistics,
+      averageRatingString: averageRatingString ?? this.averageRatingString,
+      totalRatingsTopLevel: totalRatingsTopLevel ?? this.totalRatingsTopLevel,
     );
   }
 }

@@ -9,9 +9,41 @@ import '../../cart/models/cart_model.dart';
 import '../models/favorite_restaurant_model.dart';
 import '../models/best_restaurant_model.dart';
 import '../models/restaurant_schedule_model.dart';
+import '../models/category_selection_model.dart';
 
 class RestaurantsService {
   final DioClient _dioClient = DioClient.instance;
+
+  /// Fetch categories for selection (filter chips)
+  Future<List<CategorySelection>> getCategoriesSelection() async {
+    try {
+      final response = await _dioClient.get('/categories/selection');
+      final list = response.data as List<dynamic>;
+      return list
+          .map((e) => CategorySelection.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Fetch restaurants by category with pagination
+  Future<RestaurantsResponse> getRestaurantsByCategory(
+    String categoryId, {
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      final response = await _dioClient.get(
+        '/restaurants/category/$categoryId',
+        queryParameters: {'page': page, 'limit': limit},
+      );
+      final responseData = response.data as Map<String, dynamic>;
+      return RestaurantsResponse.fromJson(responseData);
+    } on DioException {
+      rethrow;
+    }
+  }
 
   /// Fetch restaurants with pagination and search
   Future<RestaurantsResponse> getRestaurants({
@@ -20,10 +52,7 @@ class RestaurantsService {
     String? search,
   }) async {
     try {
-      final queryParameters = <String, dynamic>{
-        'page': page,
-        'limit': limit,
-      };
+      final queryParameters = <String, dynamic>{'page': page, 'limit': limit};
 
       if (search != null && search.isNotEmpty) {
         queryParameters['search'] = search;
@@ -60,7 +89,7 @@ class RestaurantsService {
         '/restaurants/best',
         queryParameters: queryParameters,
       );
-      
+
       final responseData = response.data as Map<String, dynamic>;
       // Based on JSON structure: { "restaurants": [...] }
       final list = (responseData['restaurants'] as List<dynamic>)
@@ -77,7 +106,11 @@ class RestaurantsService {
     try {
       final response = await _dioClient.get('/restaurants/favorites/my');
       final responseData = response.data as List<dynamic>;
-      return responseData.map((item) => FavoriteRestaurant.fromJson(item as Map<String, dynamic>)).toList();
+      return responseData
+          .map(
+            (item) => FavoriteRestaurant.fromJson(item as Map<String, dynamic>),
+          )
+          .toList();
     } on DioException {
       rethrow;
     }
@@ -96,10 +129,14 @@ class RestaurantsService {
   /// Fetch restaurant categories
   Future<List<MenuCategory>> getMenuCategories(String restaurantId) async {
     // try {
-      final response = await _dioClient.get('/menu/restaurants/$restaurantId/categories');
-      
-      final responseData = response.data as List<dynamic>;
-      return responseData.map((item) => MenuCategory.fromJson(item as Map<String, dynamic>)).toList();
+    final response = await _dioClient.get(
+      '/menu/restaurants/$restaurantId/categories',
+    );
+
+    final responseData = response.data as List<dynamic>;
+    return responseData
+        .map((item) => MenuCategory.fromJson(item as Map<String, dynamic>))
+        .toList();
     // } on DioException {
     //   rethrow;
     // }
@@ -124,9 +161,11 @@ class RestaurantsService {
         '/menu/restaurants/$restaurantId/items',
         queryParameters: queryParameters,
       );
-      
+
       final responseData = response.data as List<dynamic>;
-      return responseData.map((item) => MenuItem.fromJson(item as Map<String, dynamic>)).toList();
+      return responseData
+          .map((item) => MenuItem.fromJson(item as Map<String, dynamic>))
+          .toList();
     } on DioException {
       rethrow;
     }
@@ -135,10 +174,14 @@ class RestaurantsService {
   /// Fetch subcategories for a category
   Future<List<SubCategory>> getSubCategories(String categoryId) async {
     try {
-      final response = await _dioClient.get('/menu/categories/$categoryId/subcategories');
-      
+      final response = await _dioClient.get(
+        '/menu/categories/$categoryId/subcategories',
+      );
+
       final responseData = response.data as List<dynamic>;
-      return responseData.map((item) => SubCategory.fromJson(item as Map<String, dynamic>)).toList();
+      return responseData
+          .map((item) => SubCategory.fromJson(item as Map<String, dynamic>))
+          .toList();
     } on DioException {
       rethrow;
     }
@@ -148,9 +191,14 @@ class RestaurantsService {
   Future<List<RestaurantStoryGroup>> getStories() async {
     try {
       final response = await _dioClient.get('/stories/restaurants-with-active');
-      
+
       final responseData = response.data as List<dynamic>;
-      return responseData.map((item) => RestaurantStoryGroup.fromJson(item as Map<String, dynamic>)).toList();
+      return responseData
+          .map(
+            (item) =>
+                RestaurantStoryGroup.fromJson(item as Map<String, dynamic>),
+          )
+          .toList();
     } on DioException {
       rethrow;
     }
@@ -187,7 +235,9 @@ class RestaurantsService {
   /// Toggle restaurant favorite status
   Future<bool> toggleFavorite(String restaurantId) async {
     try {
-      final response = await _dioClient.post('/restaurants/$restaurantId/favorite');
+      final response = await _dioClient.post(
+        '/restaurants/$restaurantId/favorite',
+      );
       return response.data['isFavorite'] as bool? ?? false;
     } on DioException {
       rethrow;
@@ -203,13 +253,16 @@ class RestaurantsService {
     String? notes,
   }) async {
     try {
-      await _dioClient.post('/cart/items', data: {
-        'itemId': itemId,
-        'quantity': quantity,
-        'selectedVariations': selectedVariations,
-        'selectedAddOns': selectedAddOns,
-        'notes': notes ?? '',
-      });
+      await _dioClient.post(
+        '/cart/items',
+        data: {
+          'itemId': itemId,
+          'quantity': quantity,
+          'selectedVariations': selectedVariations,
+          'selectedAddOns': selectedAddOns,
+          'notes': notes ?? '',
+        },
+      );
     } on DioException {
       rethrow;
     }
@@ -220,7 +273,12 @@ class RestaurantsService {
     try {
       final response = await _dioClient.get('/cart/all');
       final responseData = response.data as List<dynamic>;
-      return responseData.map((item) => RestaurantCartResponse.fromJson(item as Map<String, dynamic>)).toList();
+      return responseData
+          .map(
+            (item) =>
+                RestaurantCartResponse.fromJson(item as Map<String, dynamic>),
+          )
+          .toList();
     } on DioException {
       rethrow;
     }
@@ -230,7 +288,9 @@ class RestaurantsService {
   Future<RestaurantCartResponse> getRestaurantCart(String restaurantId) async {
     try {
       final response = await _dioClient.get('/cart/restaurant/$restaurantId');
-      return RestaurantCartResponse.fromJson(response.data as Map<String, dynamic>);
+      return RestaurantCartResponse.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     } on DioException {
       rethrow;
     }
@@ -244,21 +304,30 @@ class RestaurantsService {
     String? notes,
   }) async {
     try {
-      final response = await _dioClient.patch('/cart/restaurant/$restaurantId/items/$itemIndex', data: {
-        'quantity': quantity,
-        if (notes != null) 'notes': notes,
-      });
-      return RestaurantCartResponse.fromJson(response.data as Map<String, dynamic>);
+      final response = await _dioClient.patch(
+        '/cart/restaurant/$restaurantId/items/$itemIndex',
+        data: {'quantity': quantity, if (notes != null) 'notes': notes},
+      );
+      return RestaurantCartResponse.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     } on DioException {
       rethrow;
     }
   }
 
   /// Remove item from cart
-  Future<RestaurantCartResponse> removeCartItem(String restaurantId, int itemIndex) async {
+  Future<RestaurantCartResponse> removeCartItem(
+    String restaurantId,
+    int itemIndex,
+  ) async {
     try {
-      final response = await _dioClient.delete('/cart/restaurant/$restaurantId/items/$itemIndex');
-      return RestaurantCartResponse.fromJson(response.data as Map<String, dynamic>);
+      final response = await _dioClient.delete(
+        '/cart/restaurant/$restaurantId/items/$itemIndex',
+      );
+      return RestaurantCartResponse.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     } on DioException {
       rethrow;
     }
@@ -286,9 +355,13 @@ class RestaurantsService {
   /// Fetch restaurant drinks
   Future<List<MenuItem>> getDrinks(String restaurantId) async {
     try {
-      final response = await _dioClient.get('/drinks/restaurants/$restaurantId');
+      final response = await _dioClient.get(
+        '/drinks/restaurants/$restaurantId',
+      );
       final responseData = response.data as List<dynamic>;
-      return responseData.map((item) => MenuItem.fromJson(item as Map<String, dynamic>)).toList();
+      return responseData
+          .map((item) => MenuItem.fromJson(item as Map<String, dynamic>))
+          .toList();
     } on DioException {
       rethrow;
     }
@@ -306,7 +379,9 @@ class RestaurantsService {
   /// Fetch restaurant schedule
   Future<RestaurantSchedule> getRestaurantSchedule(String restaurantId) async {
     try {
-      final response = await _dioClient.get('/restaurants/$restaurantId/schedule');
+      final response = await _dioClient.get(
+        '/restaurants/$restaurantId/schedule',
+      );
       return RestaurantSchedule.fromJson(response.data as Map<String, dynamic>);
     } on DioException {
       rethrow;
@@ -314,7 +389,10 @@ class RestaurantsService {
   }
 
   /// Reply to a story
-  Future<Map<String, dynamic>> replyToStory(String storyId, String message) async {
+  Future<Map<String, dynamic>> replyToStory(
+    String storyId,
+    String message,
+  ) async {
     try {
       final response = await _dioClient.post(
         '/stories/$storyId/reply',
@@ -326,5 +404,3 @@ class RestaurantsService {
     }
   }
 }
-
-

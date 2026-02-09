@@ -3,6 +3,7 @@ import '../../../../core/utils/show_snackbar.dart';
 import '../models/restaurant_model.dart';
 import '../models/best_restaurant_model.dart';
 import '../models/story_model.dart';
+import '../models/category_selection_model.dart';
 import '../services/restaurants_service.dart';
 
 class RestaurantsController extends GetxController {
@@ -16,15 +17,20 @@ class RestaurantsController extends GetxController {
   final RxInt _currentPage = 1.obs;
   final RxInt _totalPages = 1.obs;
   final RxString _errorMessage = ''.obs;
-  
+
   // Best Restaurants state
   final RxList<BestRestaurant> _bestRestaurants = <BestRestaurant>[].obs;
   final RxBool _isLoadingBest = false.obs;
-  
+
   // Stories observable state
   final RxList<RestaurantStoryGroup> _stories = <RestaurantStoryGroup>[].obs;
   final RxBool _isLoadingStories = false.obs;
-  
+
+  // Categories for selection (filter chips)
+  final RxList<CategorySelection> _categories = <CategorySelection>[].obs;
+  final Rx<String?> _selectedCategoryId = Rx<String?>(null);
+  final RxBool _isLoadingCategories = false.obs;
+
   // User location (you can update this with actual GPS location)
   final Rx<double?> _userLat = Rx<double?>(null);
   final Rx<double?> _userLong = Rx<double?>(null);
@@ -39,16 +45,21 @@ class RestaurantsController extends GetxController {
   String get errorMessage => _errorMessage.value;
   bool get hasMore => _currentPage.value < _totalPages.value;
   bool get hasError => _errorMessage.value.isNotEmpty;
-  
+
   // Best Restaurants getters
   List<BestRestaurant> get bestRestaurants => _bestRestaurants;
   bool get isLoadingBest => _isLoadingBest.value;
   double? get userLat => _userLat.value;
   double? get userLong => _userLong.value;
-  
+
   // Stories getters
   List<RestaurantStoryGroup> get stories => _stories;
   bool get isLoadingStories => _isLoadingStories.value;
+
+  // Categories getters
+  List<CategorySelection> get categories => _categories;
+  String? get selectedCategoryId => _selectedCategoryId.value;
+  bool get isLoadingCategories => _isLoadingCategories.value;
 
   @override
   void onInit() {
@@ -56,12 +67,34 @@ class RestaurantsController extends GetxController {
     // Default location (Tripoli) for testing
     _userLat.value = 32.8872;
     _userLong.value = 13.1913;
-    
+
     Future.microtask(() {
+      fetchCategories();
       fetchRestaurants();
       fetchBestRestaurants();
       fetchStories();
     });
+  }
+
+  /// Fetch categories for filter chips
+  Future<void> fetchCategories() async {
+    try {
+      _isLoadingCategories.value = true;
+      final list = await _restaurantsService.getCategoriesSelection();
+      _categories.assignAll(list);
+    } catch (e) {
+      print('Failed to fetch categories: $e');
+    } finally {
+      _isLoadingCategories.value = false;
+    }
+  }
+
+  /// Select category (null = "الكل" / all)
+  Future<void> selectCategory(String? categoryId) async {
+    if (_selectedCategoryId.value == categoryId) return;
+    _selectedCategoryId.value = categoryId;
+    _currentPage.value = 1;
+    await fetchRestaurants(refresh: true);
   }
 
   /// Fetch best restaurants
@@ -101,11 +134,21 @@ class RestaurantsController extends GetxController {
       _isLoading.value = true;
       _errorMessage.value = '';
 
-      final response = await _restaurantsService.getRestaurants(
-        page: _currentPage.value,
-        limit: 10,
-        search: _searchQuery.value.isEmpty ? null : _searchQuery.value,
-      );
+      final RestaurantsResponse response;
+      final categoryId = _selectedCategoryId.value;
+      if (categoryId != null && categoryId.isNotEmpty) {
+        response = await _restaurantsService.getRestaurantsByCategory(
+          categoryId,
+          page: _currentPage.value,
+          limit: 10,
+        );
+      } else {
+        response = await _restaurantsService.getRestaurants(
+          page: _currentPage.value,
+          limit: 10,
+          search: _searchQuery.value.isEmpty ? null : _searchQuery.value,
+        );
+      }
 
       if (refresh) {
         _restaurants.value = response.data;
@@ -132,12 +175,22 @@ class RestaurantsController extends GetxController {
       _errorMessage.value = '';
 
       final nextPage = _currentPage.value + 1;
+      final categoryId = _selectedCategoryId.value;
 
-      final response = await _restaurantsService.getRestaurants(
-        page: nextPage,
-        limit: 10,
-        search: _searchQuery.value.isEmpty ? null : _searchQuery.value,
-      );
+      final RestaurantsResponse response;
+      if (categoryId != null && categoryId.isNotEmpty) {
+        response = await _restaurantsService.getRestaurantsByCategory(
+          categoryId,
+          page: nextPage,
+          limit: 10,
+        );
+      } else {
+        response = await _restaurantsService.getRestaurants(
+          page: nextPage,
+          limit: 10,
+          search: _searchQuery.value.isEmpty ? null : _searchQuery.value,
+        );
+      }
 
       _restaurants.addAll(response.data);
       _totalPages.value = response.pagination.totalPages;
@@ -190,21 +243,29 @@ class RestaurantsController extends GetxController {
       // Optimistic update
       final index = _restaurants.indexWhere((r) => r.id == restaurant.id);
       if (index != -1) {
-        _restaurants[index] = restaurant.copyWith(isFavorite: !restaurant.isFavorite);
+        _restaurants[index] = restaurant.copyWith(
+          isFavorite: !restaurant.isFavorite,
+        );
         _restaurants.refresh();
       }
 
-      final isFavorite = await _restaurantsService.toggleFavorite(restaurant.id);
-      
+      final isFavorite = await _restaurantsService.toggleFavorite(
+        restaurant.id,
+      );
+
       // Update with actual result from server
       if (index != -1) {
-        _restaurants[index] = _restaurants[index].copyWith(isFavorite: isFavorite);
+        _restaurants[index] = _restaurants[index].copyWith(
+          isFavorite: isFavorite,
+        );
         _restaurants.refresh();
       }
-      
+
       showSnackBar(
         title: 'نجاح',
-        message: isFavorite ? 'تمت إضافة المطعم إلى المفضلة' : 'تمت إزالة المطعم من المفضلة',
+        message: isFavorite
+            ? 'تمت إضافة المطعم إلى المفضلة'
+            : 'تمت إزالة المطعم من المفضلة',
         isSuccess: true,
       );
     } catch (e) {
@@ -214,7 +275,7 @@ class RestaurantsController extends GetxController {
         _restaurants[index] = restaurant;
         _restaurants.refresh();
       }
-      
+
       showSnackBar(
         title: 'خطأ',
         message: 'فشل تحديث الحالة المفضلة',
@@ -229,21 +290,29 @@ class RestaurantsController extends GetxController {
       // Optimistic update
       final index = _bestRestaurants.indexWhere((r) => r.id == restaurant.id);
       if (index != -1) {
-        _bestRestaurants[index] = restaurant.copyWith(isFavorite: !restaurant.isFavorite);
+        _bestRestaurants[index] = restaurant.copyWith(
+          isFavorite: !restaurant.isFavorite,
+        );
         _bestRestaurants.refresh();
       }
 
-      final isFavorite = await _restaurantsService.toggleFavorite(restaurant.id);
-      
+      final isFavorite = await _restaurantsService.toggleFavorite(
+        restaurant.id,
+      );
+
       // Update with actual result from server
       if (index != -1) {
-        _bestRestaurants[index] = _bestRestaurants[index].copyWith(isFavorite: isFavorite);
+        _bestRestaurants[index] = _bestRestaurants[index].copyWith(
+          isFavorite: isFavorite,
+        );
         _bestRestaurants.refresh();
       }
-      
+
       showSnackBar(
         title: 'نجاح',
-        message: isFavorite ? 'تمت إضافة المطعم إلى المفضلة' : 'تمت إزالة المطعم من المفضلة',
+        message: isFavorite
+            ? 'تمت إضافة المطعم إلى المفضلة'
+            : 'تمت إزالة المطعم من المفضلة',
         isSuccess: true,
       );
     } catch (e) {
@@ -253,7 +322,7 @@ class RestaurantsController extends GetxController {
         _bestRestaurants[index] = restaurant;
         _bestRestaurants.refresh();
       }
-      
+
       showSnackBar(
         title: 'خطأ',
         message: 'فشل تحديث الحالة المفضلة',
@@ -282,14 +351,8 @@ class RestaurantsController extends GetxController {
       );
       return true;
     } catch (e) {
-      showSnackBar(
-        title: 'خطأ',
-        message: 'فشل إرسال الرد',
-        isError: true,
-      );
+      showSnackBar(title: 'خطأ', message: 'فشل إرسال الرد', isError: true);
       return false;
     }
   }
 }
-
-

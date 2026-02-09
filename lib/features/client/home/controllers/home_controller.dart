@@ -36,6 +36,18 @@ class HomeController extends GetxController {
     }
   }
 
+  /// Refresh data without showing full loading screen (for pull-to-refresh)
+  Future<void> refreshData() async {
+    try {
+      await Future.wait([
+        fetchFeaturedRestaurants(),
+        fetchFavoriteRestaurants(),
+      ]);
+    } catch (e) {
+      print('Error refreshing home data: $e');
+    }
+  }
+
   Future<void> fetchFeaturedRestaurants() async {
     try {
       final response = await _restaurantsService.getRestaurants(limit: 5);

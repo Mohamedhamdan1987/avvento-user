@@ -13,11 +13,13 @@ class OrdersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(OrdersController());
+    final controller = Get.isRegistered<OrdersController>()
+        ? Get.find<OrdersController>()
+        : Get.put(OrdersController());
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: CustomAppBar(title: 'طلبات',),
+      appBar: CustomAppBar(title: 'طلبات'),
       body: DefaultTabController(
         length: 2,
         child: Directionality(
@@ -26,7 +28,6 @@ class OrdersPage extends StatelessWidget {
             children: [
               // Header Section
               // _buildHeaderSection(context),
-
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: _buildTabSwitcher(context),
@@ -53,11 +54,18 @@ class OrdersPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long_outlined, size: 80.r, color: Colors.grey[300]),
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 80.r,
+            color: Colors.grey[300],
+          ),
           SizedBox(height: 16.h),
           Text(
             'لا توجد طلبات حالياً',
-            style: const TextStyle().textColorBold(fontSize: 16.sp, color: Colors.grey),
+            style: const TextStyle().textColorBold(
+              fontSize: 16.sp,
+              color: Colors.grey,
+            ),
           ),
         ],
       ),
@@ -92,91 +100,98 @@ class OrdersPage extends StatelessWidget {
         labelStyle: TextStyle(
           fontSize: 14.sp,
           fontWeight: FontWeight.bold,
-          fontFamily: 'Cairo', // Assuming Cairo is the app font, otherwise rely on default
+          fontFamily:
+              'Cairo', // Assuming Cairo is the app font, otherwise rely on default
         ),
         tabs: [
           Tab(
-            child: Obx(() => Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('جاري التنفيذ'),
-                if (controller.activeOrders.isNotEmpty) ...[
-                  SizedBox(width: 8.w),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFB2C36),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${controller.activeOrders.length}',
-                        style: const TextStyle().textColorBold(
-                          fontSize: 10.sp,
-                          color: Colors.white,
+            child: Obx(
+              () => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('جاري التنفيذ'),
+                  if (controller.activeOrders.isNotEmpty) ...[
+                    SizedBox(width: 8.w),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 6.w,
+                        vertical: 2.h,
+                      ),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFB2C36),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${controller.activeOrders.length}',
+                          style: const TextStyle().textColorBold(
+                            fontSize: 10.sp,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
-            )),
+              ),
+            ),
           ),
-          const Tab(
-            text: 'السابقة',
-          ),
+          const Tab(text: 'السابقة'),
         ],
       ),
     );
   }
 
-  Widget _buildOrdersList(BuildContext context, OrdersController controller, {required bool isPrevious}) {
+  Widget _buildOrdersList(
+    BuildContext context,
+    OrdersController controller, {
+    required bool isPrevious,
+  }) {
     return Obx(() {
-      if (controller.isLoading.value && 
-          controller.activeOrders.isEmpty && 
+      if (controller.isLoading.value &&
+          controller.activeOrders.isEmpty &&
           controller.previousOrders.isEmpty) {
         return const Center(child: CircularProgressIndicator());
       }
 
-      final currentList = isPrevious ? controller.previousOrders : controller.activeOrders;
+      final currentList = isPrevious
+          ? controller.previousOrders
+          : controller.activeOrders;
 
       return RefreshIndicator(
         onRefresh: controller.refreshOrders,
-        child: currentList.isEmpty 
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-              itemCount: currentList.length,
-              itemBuilder: (context, index) {
-                final order = currentList[index];
-                
-                if (isPrevious) {
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 16.h),
-                    child: PreviousOrderCard(
-                      order: order,
-                      onTap: () {
-                        // Navigate to details if needed
-                      },
-                    ),
-                  );
-                } else {
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 16.h),
-                    child: GestureDetector(
-                      onTap: () {
-                        Get.to(() => OrderDetailsScreen(order: order));
-                      },
-                      child: CurrentOrderCard(
+        child: currentList.isEmpty
+            ? _buildEmptyState()
+            : ListView.builder(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+                itemCount: currentList.length,
+                itemBuilder: (context, index) {
+                  final order = currentList[index];
+
+                  if (isPrevious) {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: PreviousOrderCard(
                         order: order,
+                        onTap: () {
+                          // Navigate to details if needed
+                        },
                       ),
-                    ),
-                  );
-                }
-              },
-            ),
+                    );
+                  } else {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: GestureDetector(
+                        onTap: () {
+                          Get.to(() => OrderDetailsScreen(order: order));
+                        },
+                        child: CurrentOrderCard(order: order),
+                      ),
+                    );
+                  }
+                },
+              ),
       );
     });
   }
 }
-

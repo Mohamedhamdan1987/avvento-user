@@ -1,5 +1,4 @@
 import 'package:avvento/core/routes/app_routes.dart';
-import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import 'package:avvento/core/widgets/reusable/svg_icon.dart';
@@ -13,6 +12,7 @@ import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../controllers/restaurants_controller.dart';
+import '../models/category_selection_model.dart';
 import '../../favorites/controllers/favorites_controller.dart';
 import '../../../../core/utils/location_utils.dart';
 import '../../address/controllers/address_controller.dart';
@@ -90,17 +90,19 @@ class RestaurantsPage extends GetView<RestaurantsController> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, ),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomIconButtonApp(
-                      color:  Color(0xFFF9FAFB),
-                      childWidget: SvgIcon(
-                        iconName: 'assets/svg/arrow-right.svg',
-                        color: Theme.of(context).textTheme.titleLarge?.color ?? AppColors.textDark,
-                      ),
-                      onTap: () => Get.back(),
+                    color: Color(0xFFF9FAFB),
+                    childWidget: SvgIcon(
+                      iconName: 'assets/svg/arrow-right.svg',
+                      color:
+                          Theme.of(context).textTheme.titleLarge?.color ??
+                          AppColors.textDark,
+                    ),
+                    onTap: () => Get.back(),
                   ),
                   InkWell(
                     borderRadius: BorderRadius.circular(12),
@@ -121,31 +123,32 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                           ),
                           Row(
                             children: [
-                              Obx(() => Text(
-                                "${addressController.activeAddress.value?.label} - ${addressController.activeAddress.value?.address}" ,
-                                style: const TextStyle().textColorLight(
-                                  fontSize: 12,
-                                  color: const Color(0xFF101727),
+                              Obx(
+                                () => Text(
+                                  "${addressController.activeAddress.value?.label} - ${addressController.activeAddress.value?.address}",
+                                  style: const TextStyle().textColorLight(
+                                    fontSize: 12,
+                                    color: const Color(0xFF101727),
+                                  ),
                                 ),
-                              )),
+                              ),
 
                               SvgIcon(iconName: "assets/svg/arrow_down.svg"),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
                   ),
                   CustomIconButtonApp(
-                    color:  Color(0xFFF9FAFB),
-                      childWidget: SvgIcon(
-                        iconName: "assets/svg/wallet/wallet.svg",
-                      ),
-                      onTap: () {
-                        Get.toNamed(AppRoutes.wallet);
-                      }
+                    color: Color(0xFFF9FAFB),
+                    childWidget: SvgIcon(
+                      iconName: "assets/svg/wallet/wallet.svg",
+                    ),
+                    onTap: () {
+                      Get.toNamed(AppRoutes.wallet);
+                    },
                   ),
-        
                 ],
               ),
             ),
@@ -195,7 +198,45 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                 ),
               ),
             ),
-        
+            // Category chips
+            Obx(() {
+              if (controller.isLoadingCategories &&
+                  controller.categories.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return SizedBox(
+                height: 50.h,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 8.w),
+                      child: _CategoryChip(
+                        label: 'الكل',
+                        icon: '🍽️',
+                        imageUrl: null,
+                        isSelected: controller.selectedCategoryId == null,
+                        onTap: () => controller.selectCategory(null),
+                      ),
+                    ),
+                    ...controller.categories.map(
+                      (CategorySelection cat) => Padding(
+                        padding: EdgeInsets.only(left: 8.w),
+                        child: _CategoryChip(
+                          label: cat.name,
+                          icon: cat.icon,
+                          imageUrl: cat.image,
+                          isSelected: controller.selectedCategoryId == cat.id,
+                          onTap: () => controller.selectCategory(cat.id),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+            SizedBox(height: 8.h),
             // Restaurants List
             Expanded(
               child: Obx(() {
@@ -203,7 +244,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                 if (controller.isLoading && controller.restaurants.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
-        
+
                 // Error state
                 if (controller.hasError && controller.restaurants.isEmpty) {
                   return Center(
@@ -230,24 +271,31 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                     ),
                   );
                 }
-        
+
                 // Empty state
                 if (controller.restaurants.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.restaurant, size: 64, color: Colors.grey[400]),
+                        Icon(
+                          Icons.restaurant,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'لا توجد مطاعم',
-                          style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ],
                     ),
                   );
                 }
-        
+
                 // Restaurants list
                 return RefreshIndicator(
                   onRefresh: controller.refreshRestaurants,
@@ -257,288 +305,312 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Restaurant Stories Section
-                        if (controller.stories.isNotEmpty)
-                          ...[
-                            Padding(
-                              padding: EdgeInsetsDirectional.only(
-                                start: 24.w,
-                                top: 16.h,
-                                bottom: 8.h,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      SvgIcon(
-                                        iconName: "assets/svg/client/fire.svg",
-                                        color: const Color(0xFFFFA800),
-                                        width: 24.w,
-                                        height: 24.h,
+                        if (controller.stories.isNotEmpty) ...[
+                          Padding(
+                            padding: EdgeInsetsDirectional.only(
+                              start: 24.w,
+                              top: 16.h,
+                              bottom: 8.h,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    SvgIcon(
+                                      iconName: "assets/svg/client/fire.svg",
+                                      color: const Color(0xFFFFA800),
+                                      width: 24.w,
+                                      height: 24.h,
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      'ستوري المطاعم',
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).textTheme.titleLarge?.color,
+                                        fontSize: 18,
+                                        fontFamily: 'IBM Plex Sans Arabic',
+                                        fontWeight: FontWeight.w700,
+                                        height: 1.56,
+                                      ).textColorBold(),
+                                    ),
+                                  ],
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Get.to(
+                                      () => AllStoriesPage(
+                                        stories: controller.stories,
                                       ),
-                                      SizedBox(width: 4.w),
-                                      Text(
-                                        'ستوري المطاعم',
-                                        style:  TextStyle(
-                                          color: Theme.of(context).textTheme.titleLarge?.color,
-                                          fontSize: 18,
-                                          fontFamily: 'IBM Plex Sans Arabic',
-                                          fontWeight: FontWeight.w700,
-                                          height: 1.56,
-                                        ).textColorBold(),
-                                      ),
-                                    ],
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: EdgeInsetsDirectional.only(
+                                      end: 24.w,
+                                    ),
+                                    child: Text(
+                                      'مشاهدة الكل',
+                                      style:
+                                          const TextStyle(
+                                            color: Color(0xFF7F22FE),
+                                            fontSize: 12,
+                                            fontFamily: 'IBM Plex Sans Arabic',
+                                            fontWeight: FontWeight.w700,
+                                            height: 1.33,
+                                          ).textColorBold(
+                                            color: const Color(0xFF7F22FE),
+                                          ),
+                                    ),
                                   ),
-                                  GestureDetector(
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Stories List (Horizontal)
+                          SizedBox(
+                            height: 100.h,
+                            child: ListView.builder(
+                              padding: EdgeInsets.symmetric(horizontal: 24.w),
+                              scrollDirection: Axis.horizontal,
+                              // Limit to 10 stories maximum on the main page
+                              itemCount: controller.stories.length > 10
+                                  ? 10
+                                  : controller.stories.length,
+                              itemBuilder: (context, index) {
+                                final storyGroup = controller.stories[index];
+                                return Padding(
+                                  padding: EdgeInsetsDirectional.only(
+                                    end: 12.w,
+                                  ),
+                                  child: GestureDetector(
                                     onTap: () {
                                       Get.to(
-                                            () => AllStoriesPage(
-                                          stories: controller.stories,
+                                        () => StoryViewPage(
+                                          stories: storyGroup.stories,
+                                          initialIndex: 0,
                                         ),
                                       );
                                     },
-                                    child: Padding(
-                                      padding: EdgeInsetsDirectional.only(end: 24.w),
-                                      child: Text(
-                                        'مشاهدة الكل',
-                                        style:
-                                        const TextStyle(
-                                          color: Color(0xFF7F22FE),
-                                          fontSize: 12,
-                                          fontFamily: 'IBM Plex Sans Arabic',
-                                          fontWeight: FontWeight.w700,
-                                          height: 1.33,
-                                        ).textColorBold(
-                                          color: const Color(0xFF7F22FE),
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          width: 60.w,
+                                          height: 60.w,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: const Color(0xFF7F22FE),
+                                              width: 2,
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.all(2),
+                                          child: ClipOval(
+                                            child: CachedNetworkImage(
+                                              imageUrl:
+                                                  storyGroup.restaurant.logo,
+                                              fit: BoxFit.cover,
+                                              errorWidget:
+                                                  (context, url, error) =>
+                                                      const Icon(Icons.error),
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-        
-                            // Stories List (Horizontal)
-                            SizedBox(
-                              height: 100.h,
-                              child: ListView.builder(
-                                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                                scrollDirection: Axis.horizontal,
-                                // Limit to 10 stories maximum on the main page
-                                itemCount: controller.stories.length > 10
-                                    ? 10
-                                    : controller.stories.length,
-                                itemBuilder: (context, index) {
-                                  final storyGroup = controller.stories[index];
-                                  return Padding(
-                                    padding: EdgeInsetsDirectional.only(end: 12.w),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Get.to(
-                                              () => StoryViewPage(
-                                            stories: storyGroup.stories,
-                                            initialIndex: 0,
-                                          ),
-                                        );
-                                      },
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            width: 60.w,
-                                            height: 60.w,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color: const Color(0xFF7F22FE),
-                                                width: 2,
-                                              ),
-                                            ),
-                                            padding: const EdgeInsets.all(2),
-                                            child: ClipOval(
-                                              child: CachedNetworkImage(
-                                                imageUrl: storyGroup.restaurant.logo,
-                                                fit: BoxFit.cover,
-                                                errorWidget:
-                                                    (context, url, error) =>
-                                                const Icon(Icons.error),
-                                              ),
+                                        SizedBox(height: 4.h),
+                                        SizedBox(
+                                          width: 70.w,
+                                          child: Text(
+                                            storyGroup.restaurant.name,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
-                                          SizedBox(height: 4.h),
-                                          SizedBox(
-                                            width: 70.w,
-                                            child: Text(
-                                              storyGroup.restaurant.name,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-        
-                          ],
-        
-                        if (controller.restaurants.isNotEmpty)
-                          ...[
-                            Padding(
-                              padding: EdgeInsetsDirectional.only(
-                                start: 24.w,
-                                top: 16.h,
-                                bottom: 8.h,
-                              ),
-                              child: Row(
-                                children: [
-                                  SvgIcon(
-                                    iconName: "assets/svg/client/fire.svg",
-                                    color: const Color(0xFFFFA800),
-                                    width: 24.w,
-                                    height: 24.h,
-                                  ),
-                                  SizedBox(width: 4.w),
-                                  Text(
-                                    'المميزة',
-                                    style: const TextStyle().textColorBold(
-                                      color: Theme.of(context).textTheme.titleLarge?.color,
-                                      fontSize: 18.sp,
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ],
-                              ),
+                                );
+                              },
                             ),
-                            // Featured Restaurants (Horizontal)
-                            SizedBox(
-                              height: 215.h,
-                              child: ListView.builder(
-                                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                                scrollDirection: Axis.horizontal,
-                                itemCount: controller.restaurants.length,
-                                itemBuilder: (context, index) {
-                                  final restaurant = controller.restaurants[index];
-                                  return SizedBox(
-                                    width: MediaQuery.of(context).size.width * 0.88,
-                                    child: Padding(
-                                      padding: EdgeInsetsDirectional.only(end: 12.w),
-                                      child: RestaurantCard(restaurant: restaurant),
-                                    ),
-                                  );
-                                },
-                              ),
+                          ),
+                        ],
+
+                        if (controller.restaurants.isNotEmpty) ...[
+                          Padding(
+                            padding: EdgeInsetsDirectional.only(
+                              start: 24.w,
+                              top: 16.h,
+                              bottom: 8.h,
                             ),
-                          ],
-        
-        
-                        if (controller.bestRestaurants.isNotEmpty)
-                          ...[
-                            Padding(
-                              padding: EdgeInsetsDirectional.only(
-                                start: 24.w,
-                                top: 16.h,
-                                bottom: 8.h,
-                              ),
-                              child: Text(
-                                'الأكثر شعبية',
-                                style: const TextStyle().textColorBold(
-                                  color: Theme.of(context).textTheme.titleLarge?.color,
-                                  fontSize: 18.sp,
+                            child: Row(
+                              children: [
+                                SvgIcon(
+                                  iconName: "assets/svg/client/fire.svg",
+                                  color: const Color(0xFFFFA800),
+                                  width: 24.w,
+                                  height: 24.h,
                                 ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  'المميزة',
+                                  style: const TextStyle().textColorBold(
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.titleLarge?.color,
+                                    fontSize: 18.sp,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Featured Restaurants (Horizontal)
+                          SizedBox(
+                            height: 215.h,
+                            child: ListView.builder(
+                              padding: EdgeInsets.symmetric(horizontal: 24.w),
+                              scrollDirection: Axis.horizontal,
+                              itemCount: controller.restaurants.length,
+                              itemBuilder: (context, index) {
+                                final restaurant =
+                                    controller.restaurants[index];
+                                return SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.88,
+                                  child: Padding(
+                                    padding: EdgeInsetsDirectional.only(
+                                      end: 12.w,
+                                    ),
+                                    child: RestaurantCard(
+                                      restaurant: restaurant,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+
+                        if (controller.bestRestaurants.isNotEmpty) ...[
+                          Padding(
+                            padding: EdgeInsetsDirectional.only(
+                              start: 24.w,
+                              top: 16.h,
+                              bottom: 8.h,
+                            ),
+                            child: Text(
+                              'الأكثر شعبية',
+                              style: const TextStyle().textColorBold(
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.titleLarge?.color,
+                                fontSize: 18.sp,
                               ),
                             ),
-                            SizedBox(
-                              height: 100.h,
-                              child: ListView.builder(
-                                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                                scrollDirection: Axis.horizontal,
-                                itemCount: controller.bestRestaurants.length,
-                                itemBuilder: (context, index) {
-                                  final restaurant = controller.bestRestaurants[index];
-                                  return Padding(
-                                    padding: EdgeInsetsDirectional.only(end: 12.w),
-                                    child: InkWell(
-                                      onTap: () {
-                                        Get.to(
-                                              () => RestaurantDetailsScreen(
-                                            restaurantId: restaurant.id,
+                          ),
+                          SizedBox(
+                            height: 100.h,
+                            child: ListView.builder(
+                              padding: EdgeInsets.symmetric(horizontal: 24.w),
+                              scrollDirection: Axis.horizontal,
+                              itemCount: controller.bestRestaurants.length,
+                              itemBuilder: (context, index) {
+                                final restaurant =
+                                    controller.bestRestaurants[index];
+                                return Padding(
+                                  padding: EdgeInsetsDirectional.only(
+                                    end: 12.w,
+                                  ),
+                                  child: InkWell(
+                                    onTap: () {
+                                      Get.to(
+                                        () => RestaurantDetailsScreen(
+                                          restaurantId: restaurant.id,
+                                        ),
+                                      );
+                                    },
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          width: 70,
+                                          height: 70,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
                                           ),
-                                        );
-                                      },
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            width: 70,
-                                            height: 70,
-                                            decoration: const BoxDecoration(
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: ClipOval(
-                                              child: Stack(
-                                                children: [
-                                                  CachedNetworkImage(
-                                                    imageUrl: restaurant.logo!,
-                                                    fit: BoxFit.cover,
-                                                    errorWidget: (context, url, error) => Container(
-                                                      color: Colors.grey[300],
-                                                      child: const Icon(
-                                                        Icons.restaurant,
-                                                        size: 30,
-                                                        color: Colors.grey,
+                                          child: ClipOval(
+                                            child: Stack(
+                                              children: [
+                                                CachedNetworkImage(
+                                                  imageUrl: restaurant.logo!,
+                                                  fit: BoxFit.cover,
+                                                  errorWidget:
+                                                      (
+                                                        context,
+                                                        url,
+                                                        error,
+                                                      ) => Container(
+                                                        color: Colors.grey[300],
+                                                        child: const Icon(
+                                                          Icons.restaurant,
+                                                          size: 30,
+                                                          color: Colors.grey,
+                                                        ),
+                                                      ),
+                                                ),
+                                                if (!restaurant.isOpen)
+                                                  Positioned.fill(
+                                                    child: Container(
+                                                      alignment:
+                                                          Alignment.center,
+                                                      color: const Color(
+                                                        0x9D7F22FE,
+                                                      ),
+                                                      child: Text(
+                                                        'مغلق الأن',
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: const TextStyle()
+                                                            .textColorBold(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 10.sp,
+                                                            ),
                                                       ),
                                                     ),
                                                   ),
-                                                  if (!restaurant.isOpen)
-                                                    Positioned.fill(
-                                                      child: Container(
-                                                        alignment: Alignment.center,
-                                                        color: const Color(0x9D7F22FE),
-                                                        child: Text(
-                                                          'مغلق الأن',
-                                                          textAlign: TextAlign.center,
-                                                          style: const TextStyle().textColorBold(
-                                                            color: Colors.white,
-                                                            fontSize: 10.sp,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
+                                              ],
                                             ),
                                           ),
-                                          SizedBox(height: 4.h),
-                                          SizedBox(
-                                            width: 70.w,
-                                            child: Text(
-                                              restaurant.name,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                              ),
+                                        ),
+                                        SizedBox(height: 4.h),
+                                        SizedBox(
+                                          width: 70.w,
+                                          child: Text(
+                                            restaurant.name,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
-                                  );
-                                },
-                              ),
+                                  ),
+                                );
+                              },
                             ),
-                          ],
-        
-        
-                        if (controller.restaurants.isNotEmpty)
-                        ...[
+                          ),
+                        ],
+
+                        if (controller.restaurants.isNotEmpty) ...[
                           Padding(
                             padding: EdgeInsetsDirectional.only(
                               start: 24.w,
@@ -548,7 +620,9 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                             child: Text(
                               'كُل المطاعم',
                               style: const TextStyle().textColorBold(
-                                color: Theme.of(context).textTheme.titleLarge?.color,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.titleLarge?.color,
                                 fontSize: 18.sp,
                               ),
                             ),
@@ -557,7 +631,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                           NotificationListener<ScrollNotification>(
                             onNotification: (ScrollNotification scrollInfo) {
                               if (scrollInfo.metrics.pixels ==
-                                  scrollInfo.metrics.maxScrollExtent &&
+                                      scrollInfo.metrics.maxScrollExtent &&
                                   controller.hasMore &&
                                   !controller.isLoadingMore) {
                                 controller.loadMore();
@@ -570,7 +644,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                 padding: EdgeInsets.symmetric(horizontal: 24.w),
                                 scrollDirection: Axis.horizontal,
                                 itemCount:
-                                controller.restaurants.length +
+                                    controller.restaurants.length +
                                     (controller.hasMore ? 1 : 0),
                                 itemBuilder: (context, index) {
                                   if (index == controller.restaurants.length) {
@@ -581,27 +655,137 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                       ),
                                     );
                                   }
-                                  final restaurant = controller.restaurants[index];
+                                  final restaurant =
+                                      controller.restaurants[index];
                                   return SizedBox(
-                                    width: MediaQuery.of(context).size.width * 0.88,
+                                    width:
+                                        MediaQuery.of(context).size.width *
+                                        0.88,
                                     child: Padding(
-                                      padding: EdgeInsetsDirectional.only(end: 12.w),
-                                      child: RestaurantCard(restaurant: restaurant),
+                                      padding: EdgeInsetsDirectional.only(
+                                        end: 12.w,
+                                      ),
+                                      child: RestaurantCard(
+                                        restaurant: restaurant,
+                                      ),
                                     ),
                                   );
                                 },
                               ),
                             ),
                           ),
-        
                         ],
-        
+
                         SizedBox(height: 20.h),
                       ],
                     ),
                   ),
                 );
               }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Category filter chip (selected = purple, unselected = white).
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final String? icon;
+  final String? imageUrl;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CategoryChip({
+    required this.label,
+    this.icon,
+    this.imageUrl,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isSelected ? Colors.white : const Color(0xFF697282);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+        constraints: BoxConstraints(minWidth: 88.w, minHeight: 45.h),
+        decoration: ShapeDecoration(
+          color: isSelected ? const Color(0xFF7F22FE) : Colors.white,
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              width: 0.76,
+              color: isSelected
+                  ? const Color(0xFF7F22FE)
+                  : Colors.black.withValues(alpha: 0.10),
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          shadows: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFFDCD5FF),
+                    blurRadius: 6,
+                    offset: const Offset(0, 4),
+                    spreadRadius: -4,
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFFDCD5FF),
+                    blurRadius: 15,
+                    offset: const Offset(0, 10),
+                    spreadRadius: -3,
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (imageUrl != null && imageUrl!.isNotEmpty) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl!,
+                  width: 24.w,
+                  height: 24.w,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, url, error) => Icon(
+                    Icons.category_outlined,
+                    size: 24.sp,
+                    color: textColor,
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+            ] else if (icon != null && icon!.isNotEmpty) ...[
+              Text(
+                icon!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 14.sp,
+                  fontFamily: 'IBM Plex Sans Arabic',
+                  fontWeight: FontWeight.w700,
+                  height: 1.43,
+                ),
+              ),
+              SizedBox(width: 6.w),
+            ],
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 14.sp,
+                fontFamily: 'IBM Plex Sans Arabic',
+                fontWeight: FontWeight.w700,
+                height: 1.43,
+              ),
             ),
           ],
         ),
@@ -620,7 +804,9 @@ class RestaurantCard extends StatelessWidget {
     final bool isFavorite = restaurant.isFavorite;
     final bool isActive = restaurant is Restaurant
         ? restaurant.isOpen
-        : (restaurant is BestRestaurant ? restaurant.isOpen : (restaurant is FavoriteRestaurant ? restaurant.isOpen : false));
+        : (restaurant is BestRestaurant
+              ? restaurant.isOpen
+              : (restaurant is FavoriteRestaurant ? restaurant.isOpen : false));
     final String restaurantId = restaurant.id;
     final String name = restaurant.name;
     final String? backgroundImage = restaurant.backgroundImage;
@@ -629,7 +815,13 @@ class RestaurantCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.black.withValues(alpha: 0.10), width: 0.5)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Colors.black.withValues(alpha: 0.10),
+          width: 0.5,
+        ),
+      ),
       child: InkWell(
         onTap: () {
           // Navigate to restaurant details
@@ -670,13 +862,18 @@ class RestaurantCard extends StatelessWidget {
                         child: CustomIconButtonApp(
                           onTap: () {
                             if (restaurant is Restaurant) {
-                              final controller = Get.find<RestaurantsController>();
+                              final controller =
+                                  Get.find<RestaurantsController>();
                               controller.toggleFavorite(restaurant);
                             } else if (restaurant is BestRestaurant) {
-                              final controller = Get.find<RestaurantsController>();
-                              controller.toggleBestRestaurantFavorite(restaurant);
+                              final controller =
+                                  Get.find<RestaurantsController>();
+                              controller.toggleBestRestaurantFavorite(
+                                restaurant,
+                              );
                             } else {
-                              final controller = Get.find<FavoritesController>();
+                              final controller =
+                                  Get.find<FavoritesController>();
                               controller.toggleFavorite(restaurant);
                             }
                           },
@@ -785,7 +982,7 @@ class RestaurantCard extends StatelessWidget {
                         if (!Get.isRegistered<RestaurantsController>()) {
                           return const SizedBox();
                         }
-                        
+
                         final controller = Get.find<RestaurantsController>();
                         return Obx(() {
                           final userLat = controller.userLat;
@@ -801,7 +998,9 @@ class RestaurantCard extends StatelessWidget {
                               restaurantLat: lat,
                               restaurantLong: long,
                             );
-                            distanceText = LocationUtils.formatDistance(distance);
+                            distanceText = LocationUtils.formatDistance(
+                              distance,
+                            );
 
                             final price = LocationUtils.calculateDeliveryPrice(
                               distanceInKm: distance,

@@ -1,5 +1,6 @@
 import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/features/client/pages/client_nav_bar.dart';
+import 'package:avvento/features/client/pages/bindings/client_nav_bar_binding.dart';
 import 'package:avvento/features/driver/pages/driver_nav_bar.dart';
 import 'package:avvento/features/auth/models/user_model.dart';
 import 'package:avvento/features/notifications/presentation/bindings/notifications_binding.dart';
@@ -48,7 +49,9 @@ class AppPages {
     if (token != null && token.isNotEmpty && userData != null) {
       final user = UserModel.fromJson(userData);
       // print("user.type: ${user.role}");
-      return user.role == 'delivery' ? AppRoutes.driverNavBar : AppRoutes.clientNavBar;
+      return user.role == 'delivery'
+          ? AppRoutes.driverNavBar
+          : AppRoutes.clientNavBar;
     }
 
     // Otherwise, go to login page
@@ -92,9 +95,7 @@ class AppPages {
       name: AppRoutes.resetPassword,
       page: () {
         final args = Get.arguments as Map<String, dynamic>?;
-        return ResetPasswordPage(
-          userName: args?['userName'] ?? '',
-        );
+        return ResetPasswordPage(userName: args?['userName'] ?? '');
       },
       binding: AuthBinding(),
       middlewares: [AuthMiddleware()],
@@ -103,7 +104,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.clientNavBar,
       page: () => const ClientNavBar(),
-      // binding: ClientBinding(), // Define this later if needed
+      binding: ClientNavBarBinding(),
       middlewares: [AuthMiddleware()],
     ),
     GetPage(

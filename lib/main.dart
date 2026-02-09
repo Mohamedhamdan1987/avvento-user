@@ -1,4 +1,4 @@
-import 'package:avvento/core/routes/app_routes.dart';
+import 'package:avvento/features/client/orders/widgets/floating_active_order_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -12,19 +12,18 @@ import 'core/theme/theme_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/services/notification_service.dart';
+import 'core/utils/location_utils.dart';
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // Initialize Notification Service
   await NotificationService.instance.initialize();
-  
+
   // Background message handler
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
@@ -36,6 +35,9 @@ void main() async {
 
   // Initialize Hive
   await Hive.initFlutter();
+
+  // Initialize device location
+  await LocationUtils.init();
 
   runApp(const MyApp());
 }
@@ -63,9 +65,18 @@ class MyApp extends StatelessWidget {
           locale: const Locale('ar'),
           fallbackLocale: const Locale('ar'),
           builder: (context, widget) {
-            return Directionality(
-              textDirection: TextDirection.rtl,
-              child: widget!,
+            return Material(
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Stack(
+                  children: [
+                    widget!,
+                    const Positioned.fill(
+                      child: FloatingActiveOrderBanner(),
+                    ),
+                  ],
+                ),
+              ),
             );
           },
         );

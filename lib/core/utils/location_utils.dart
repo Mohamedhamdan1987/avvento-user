@@ -1,10 +1,71 @@
 import 'dart:math';
+import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Utility class for location-based calculations
 class LocationUtils {
   /// Price per kilometer for delivery (in Dirhams)
   static const double pricePerKm = 5.0;
+
+  /// Default location (Tripoli) as fallback
+  static const double _defaultLat = 32.8872;
+  static const double _defaultLong = 13.1913;
+
+  /// Current device location (updated via [init])
+  static double _currentLatitude = _defaultLat;
+  static double _currentLongitude = _defaultLong;
+  static bool _initialized = false;
+
+  /// Getters for current device location
+  static double get currentLatitude => _currentLatitude;
+  static double get currentLongitude => _currentLongitude;
+  static bool get isInitialized => _initialized;
+
+  /// Initialize location — requests permission and fetches current position.
+  /// Should be called once at app startup (e.g. in main or a splash screen).
+  static Future<void> init() async {
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print('LocationUtils: Location services are disabled, using default.');
+        return;
+      }
+
+      // Check & request permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          print('LocationUtils: Location permission denied, using default.');
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        print('LocationUtils: Location permission permanently denied, using default.');
+        return;
+      }
+
+      // Get current position
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      );
+
+      _currentLatitude = position.latitude;
+      _currentLongitude = position.longitude;
+      _initialized = true;
+      print('LocationUtils: Location initialized ($_currentLatitude, $_currentLongitude)');
+    } catch (e) {
+      print('LocationUtils: Error getting location: $e, using default.');
+    }
+  }
+
+  /// Refresh the current location (can be called anytime to update)
+  static Future<void> refreshLocation() async {
+    await init();
+  }
 
   /// Calculate distance between two coordinates using Haversine formula
   /// Returns distance in kilometers

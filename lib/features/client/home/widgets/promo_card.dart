@@ -1,3 +1,4 @@
+import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
@@ -34,16 +35,23 @@ class PromoCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 4.w),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.r),
-          color: Theme.of(context).cardColor,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+        // width: 345,
+        // height: 216,
+        padding: const EdgeInsets.only(
+          top: 12.76,
+          left: 12.76,
+          right: 12.76,
+          bottom: 0.76,
+        ),
+        decoration: ShapeDecoration(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              width: 0.76,
+              color: Colors.black.withValues(alpha: 0.10),
             ),
-          ],
+            borderRadius: BorderRadius.circular(24),
+          ),
         ),
         child: Column(
           children: [
@@ -51,7 +59,7 @@ class PromoCard extends StatelessWidget {
               child: Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+                    borderRadius: BorderRadius.all(Radius.circular(16.r)),
                     child: imageUrl.startsWith('http')
                         ? Image.network(
                             imageUrl,
@@ -80,7 +88,7 @@ class PromoCard extends StatelessWidget {
                       child: Container(
                         padding: EdgeInsets.all(8.w),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
+                          color: Colors.white.withValues(alpha: 0.68),
                           shape: BoxShape.circle,
                         ),
                         child: SvgPicture.asset(
@@ -95,6 +103,44 @@ class PromoCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  PositionedDirectional(
+                    bottom: 12.h,
+                    end: 12.w,
+                    child: Container(
+                      width: 47.07,
+                      height: 22.99,
+                      alignment: Alignment.center,
+                      padding:  EdgeInsetsDirectional.only(end: 2, bottom: 2),
+                      decoration: ShapeDecoration(
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        shadows: [
+                          BoxShadow(
+                            color: Color(0x19000000),
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                            spreadRadius: -1,
+                          ),BoxShadow(
+                            color: Color(0x19000000),
+                            blurRadius: 3,
+                            offset: Offset(0, 1),
+                            spreadRadius: 0,
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SvgIcon(iconName: "assets/svg/client/home/star.svg", ),
+                          SizedBox(width: 4.w),
+                          Text(rating.toString(), style: const TextStyle().textColorBold(fontSize: 10, color: Theme.of(context).textTheme.labelLarge?.color)),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 ],
               ),
             ),
@@ -106,34 +152,43 @@ class PromoCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.star, color: Colors.amber, size: 16.sp),
-                          SizedBox(width: 4.w),
-                          Text(rating.toString(), style: const TextStyle().textColorLight(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color)),
-                        ],
-                      ),
                       Text(
                         restaurantName,
                         style: const TextStyle().textColorBold(fontSize: 14, color: Theme.of(context).textTheme.titleMedium?.color),
                       ),
+                      if(hasFreeDelivery)
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 2.0),
+                              child: Text(
+                                'عرض التوصيل مجاني',
+                                style: const TextStyle().textColorSemiBold(fontSize: 10, color: Color(0xFF00A63E),),
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            SvgIcon(iconName: "assets/svg/client/home/free_delivery.svg"),
+                          ],
+                        ),
                     ],
                   ),
                   SizedBox(height: 4.h),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    spacing: 16.w,
                     children: [
                       Text(
-                        '$distance • ${hasFreeDelivery ? "توصيل مجاني" : "توصيل $deliveryFee"}',
-                        style: const TextStyle().textColorLight(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                        'التوصيل: ${deliveryFee} دينار',
+
+                        style: const TextStyle().textColorMedium(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
                       ),
-                      SizedBox(width: 4.w),
-                      SvgPicture.asset(
-                        'assets/svg/client/home/truck.svg',
-                        width: 14.w,
-                        height: 14.h,
-                        colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+                      Text(
+                        'المسافة: ${distance}',
+
+                        style: const TextStyle().textColorSemiBold(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
                       ),
+
+
                     ],
                   ),
                 ],

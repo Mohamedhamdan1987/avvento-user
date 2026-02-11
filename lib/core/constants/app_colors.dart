@@ -12,9 +12,9 @@ class AppColors {
   static const Color purpleLight = Color(0xFF9D5AFF);
 
   // Background Colors
-  static const Color background = Color(0xFF000000);
-  static const Color surface = Color(0xFF1A1A1A);
-  static const Color surfaceLight = Color(0xFF2A2A2A);
+  static const Color background = Color(0xFF0B0E13);
+  static const Color surface = Color(0xFF111827);
+  static const Color surfaceLight = Color(0xFF1A2332);
 
   // Restaurant Drawer Colors
   static const Color drawerPurple = Color(0xFF6A2C91);
@@ -46,8 +46,8 @@ class AppColors {
   static const Color notificationRed = Color(0xFFFB2C36);
 
   // Border Colors
-  static const Color border = Color(0xFF3A3A3A);
-  static const Color borderLight = Color(0xFF4A4A4A);
+  static const Color border = Color(0xFF1E2A3A);
+  static const Color borderLight = Color(0xFF253344);
 
   // Light Theme Border Colors
   static const Color borderGray = Color(0xFFE5E7EB);
@@ -60,8 +60,8 @@ class AppColors {
 
 
   // Background Colors
-  static const Color backgroundLight = Color(0xFF1A1A1A);
-  static const Color backgroundDark = Color(0xFF000000);
+  static const Color backgroundLight = Color(0xFF111827);
+  static const Color backgroundDark = Color(0xFF0B0E13);
 
 
 

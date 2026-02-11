@@ -1,3 +1,4 @@
+import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:avvento/core/constants/app_colors.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
 import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 
 class AddressListPage extends StatelessWidget {
   const AddressListPage({super.key});
@@ -35,14 +37,14 @@ class AddressListPage extends StatelessWidget {
               child: Obx(() {
                 if (controller.isLoading.value &&
                     controller.addresses.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const AddressListShimmer();
                 }
 
                 if (controller.addresses.isEmpty) {
                   return _buildEmptyState(context);
                 }
 
-                return RefreshIndicator(
+                return AppRefreshIndicator(
                   onRefresh: controller.fetchAddresses,
                   child: ListView.builder(
                     padding: EdgeInsets.symmetric(

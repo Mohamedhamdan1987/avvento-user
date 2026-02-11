@@ -1,3 +1,4 @@
+import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,6 +11,7 @@ import '../../../../core/widgets/reusable/safe_svg_icon.dart';
 import '../widgets/wallet_transaction_item.dart';
 import '../widgets/wallet_summary_card.dart';
 import '../controllers/driver_wallet_controller.dart';
+import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 
 class DriverWalletPage extends StatefulWidget {
   const DriverWalletPage({super.key});
@@ -43,7 +45,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
         textDirection: TextDirection.rtl,
         child: Obx(() {
           if (controller.isLoading.value && controller.wallet.value == null) {
-            return const Center(child: CircularProgressIndicator());
+            return const WalletPageShimmer();
           }
           return Column(
             children: [
@@ -52,7 +54,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
 
               // Content Section
               Expanded(
-                child: RefreshIndicator(
+                child: AppRefreshIndicator(
                   onRefresh: () => controller.refreshWallet(),
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),

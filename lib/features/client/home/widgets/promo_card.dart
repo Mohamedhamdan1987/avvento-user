@@ -31,6 +31,7 @@ class PromoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -44,11 +45,13 @@ class PromoCard extends StatelessWidget {
           bottom: 0.76,
         ),
         decoration: ShapeDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF111827) : Colors.white,
           shape: RoundedRectangleBorder(
             side: BorderSide(
               width: 0.76,
-              color: Colors.black.withValues(alpha: 0.10),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.10),
             ),
             borderRadius: BorderRadius.circular(24),
           ),
@@ -65,19 +68,21 @@ class PromoCard extends StatelessWidget {
                             imageUrl,
                             width: double.infinity,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: AppColors.borderGray,
-                              child: const Icon(Icons.image),
-                            ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  color: AppColors.borderGray,
+                                  child: const Icon(Icons.image),
+                                ),
                           )
                         : Image.asset(
                             imageUrl,
                             width: double.infinity,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: AppColors.borderGray,
-                              child: const Icon(Icons.image),
-                            ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  color: AppColors.borderGray,
+                                  child: const Icon(Icons.image),
+                                ),
                           ),
                   ),
                   Positioned(
@@ -88,13 +93,17 @@ class PromoCard extends StatelessWidget {
                       child: Container(
                         padding: EdgeInsets.all(8.w),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.68),
+                          color: isDark
+                              ? Colors.black.withValues(alpha: 0.50)
+                              : Colors.white.withValues(alpha: 0.68),
                           shape: BoxShape.circle,
                         ),
                         child: SvgPicture.asset(
                           'assets/svg/client/home/favorite.svg',
                           colorFilter: ColorFilter.mode(
-                            isFavorite ? AppColors.notificationRed : Colors.grey,
+                            isFavorite
+                                ? AppColors.notificationRed
+                                : Colors.grey,
                             BlendMode.srcIn,
                           ),
                           width: 16.w,
@@ -110,37 +119,49 @@ class PromoCard extends StatelessWidget {
                       width: 47.07,
                       height: 22.99,
                       alignment: Alignment.center,
-                      padding:  EdgeInsetsDirectional.only(end: 2, bottom: 2),
+                      padding: EdgeInsetsDirectional.only(end: 2, bottom: 2),
                       decoration: ShapeDecoration(
-                        color: Colors.white,
+                        color: isDark ? const Color(0xFF111827) : Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                         shadows: [
                           BoxShadow(
-                            color: Color(0x19000000),
+                            color: isDark
+                                ? Colors.black.withValues(alpha: 0.30)
+                                : const Color(0x19000000),
                             blurRadius: 2,
-                            offset: Offset(0, 1),
+                            offset: const Offset(0, 1),
                             spreadRadius: -1,
-                          ),BoxShadow(
-                            color: Color(0x19000000),
+                          ),
+                          BoxShadow(
+                            color: isDark
+                                ? Colors.black.withValues(alpha: 0.30)
+                                : const Color(0x19000000),
                             blurRadius: 3,
-                            offset: Offset(0, 1),
+                            offset: const Offset(0, 1),
                             spreadRadius: 0,
-                          )
+                          ),
                         ],
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SvgIcon(iconName: "assets/svg/client/home/star.svg", ),
+                          SvgIcon(iconName: "assets/svg/client/home/star.svg"),
                           SizedBox(width: 4.w),
-                          Text(rating.toString(), style: const TextStyle().textColorBold(fontSize: 10, color: Theme.of(context).textTheme.labelLarge?.color)),
+                          Text(
+                            rating.toString(),
+                            style: const TextStyle().textColorBold(
+                              fontSize: 10,
+                              color: Theme.of(
+                                context,
+                              ).textTheme.labelLarge?.color,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
-
                 ],
               ),
             ),
@@ -154,20 +175,29 @@ class PromoCard extends StatelessWidget {
                     children: [
                       Text(
                         restaurantName,
-                        style: const TextStyle().textColorBold(fontSize: 14, color: Theme.of(context).textTheme.titleMedium?.color),
+                        style: const TextStyle().textColorBold(
+                          fontSize: 14,
+                          color: Theme.of(context).textTheme.titleMedium?.color,
+                        ),
                       ),
-                      if(hasFreeDelivery)
+                      if (hasFreeDelivery)
                         Row(
                           children: [
                             Padding(
                               padding: const EdgeInsets.only(bottom: 2.0),
                               child: Text(
                                 'عرض التوصيل مجاني',
-                                style: const TextStyle().textColorSemiBold(fontSize: 10, color: Color(0xFF00A63E),),
+                                style: const TextStyle().textColorSemiBold(
+                                  fontSize: 10,
+                                  color: Color(0xFF00A63E),
+                                ),
                               ),
                             ),
                             SizedBox(width: 4.w),
-                            SvgIcon(iconName: "assets/svg/client/home/free_delivery.svg"),
+                            SvgIcon(
+                              iconName:
+                                  "assets/svg/client/home/free_delivery.svg",
+                            ),
                           ],
                         ),
                     ],
@@ -180,15 +210,19 @@ class PromoCard extends StatelessWidget {
                       Text(
                         'التوصيل: ${deliveryFee} دينار',
 
-                        style: const TextStyle().textColorMedium(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                        style: const TextStyle().textColorMedium(
+                          fontSize: 12,
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
                       ),
                       Text(
                         'المسافة: ${distance}',
 
-                        style: const TextStyle().textColorSemiBold(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                        style: const TextStyle().textColorSemiBold(
+                          fontSize: 12,
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
                       ),
-
-
                     ],
                   ),
                 ],

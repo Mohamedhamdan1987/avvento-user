@@ -31,7 +31,7 @@ class BottomNavBar extends StatelessWidget {
     return Container(
       height: 73.h,
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: isDark ? const Color(0xFF111827) : Theme.of(context).cardColor,
         border: Border(
           top: BorderSide(
             color: Theme.of(context).dividerColor,

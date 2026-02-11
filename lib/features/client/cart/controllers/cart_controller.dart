@@ -276,7 +276,7 @@ class CartController extends GetxController {
       
       // Navigate to order tracking page
       if (restaurantLat != null && restaurantLong != null) {
-        Get.offNamed(
+        Get.offAllNamed(
           AppRoutes.orderTrackingMap,
           arguments: {
             'userLat': deliveryLat,
@@ -292,7 +292,7 @@ class CartController extends GetxController {
         );
       } else {
         // Fallback if coordinates missing
-        Get.offAllNamed(AppRoutes.clientNavBar); 
+        Get.offAllNamed(AppRoutes.clientNavBar, arguments: {'tabIndex': 1}); 
       }
     } catch (e) {
       _errorMessage.value = 'فشل إتمام الطلب';

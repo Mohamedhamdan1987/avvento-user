@@ -1,9 +1,11 @@
+import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:avvento/features/support/presentation/widgets/support_message_bubble.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 import '../../../support/presentation/controllers/support_controller.dart';
 
 class RestaurantSupportPage extends StatefulWidget {
@@ -54,9 +56,7 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
       ),
       body: Obx(() {
         if (controller.isLoading.value && controller.messages.isEmpty) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.purple),
-          );
+          return const SupportChatShimmer();
         }
 
         if (controller.errorMessage.value.isNotEmpty && controller.messages.isEmpty) {
@@ -155,9 +155,8 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
 
           // Messages List
           Expanded(
-            child: RefreshIndicator(
+            child: AppRefreshIndicator(
               onRefresh: () => controller.refreshMessages(),
-              color: AppColors.purple,
               child: ListView.builder(
                 controller: scrollController,
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),

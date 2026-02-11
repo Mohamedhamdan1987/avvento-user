@@ -229,12 +229,13 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       primaryColor: AppColors.primary,
-      scaffoldBackgroundColor: const Color(0xFF111827), // Dark background
+      scaffoldBackgroundColor: const Color(0xFF0B0E13), // Dark background
+      cardColor: const Color(0xFF111827), // Card color close to 0B0E13
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
         secondary: AppColors.primaryLight,
-        surface: Color(0xFF1F2937), // Dark surface
-        background: Color(0xFF111827),
+        surface: Color(0xFF111827), // Dark surface (closer to 0B0E13)
+        background: Color(0xFF0B0E13),
         error: AppColors.error,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
@@ -243,7 +244,7 @@ class AppTheme {
         onError: Colors.white,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xFF1F2937),
+        backgroundColor: const Color(0xFF0B0E13),
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -256,7 +257,7 @@ class AppTheme {
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       cardTheme: CardThemeData(
-        color: const Color(0xFF1F2937),
+        color: const Color(0xFF111827),
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -264,14 +265,14 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF374151),
+        fillColor: const Color(0xFF1A2332),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(color: Color(0xFF4B5563)),
+          borderSide: const BorderSide(color: Color(0xFF1E2A3A)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(color: Color(0xFF4B5563)),
+          borderSide: const BorderSide(color: Color(0xFF1E2A3A)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -428,12 +429,12 @@ class AppTheme {
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: Color(0xFF374151),
+        color: Color(0xFF1E2A3A),
         thickness: 1,
         space: 1,
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: const Color(0xFF374151),
+        backgroundColor: const Color(0xFF1A2332),
         contentTextStyle: const TextStyle(
           color: Colors.white,
           fontFamily: 'IBMPlexSansArabic',

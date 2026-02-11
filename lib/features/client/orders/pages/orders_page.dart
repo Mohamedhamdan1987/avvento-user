@@ -1,3 +1,4 @@
+import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
 import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:avvento/features/client/orders/controllers/orders_controller.dart';
@@ -7,6 +8,7 @@ import 'package:get/get.dart';
 import 'order_details_screen.dart';
 import '../widgets/previous_order_card.dart';
 import '../widgets/current_order_card.dart';
+import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 
 class OrdersPage extends StatelessWidget {
   const OrdersPage({super.key});
@@ -147,14 +149,14 @@ class OrdersPage extends StatelessWidget {
       if (controller.isLoading.value &&
           controller.activeOrders.isEmpty &&
           controller.previousOrders.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
+        return const OrdersListShimmer();
       }
 
       final currentList = isPrevious
           ? controller.previousOrders
           : controller.activeOrders;
 
-      return RefreshIndicator(
+      return AppRefreshIndicator(
         onRefresh: controller.refreshOrders,
         child: currentList.isEmpty
             ? _buildEmptyState()

@@ -1,3 +1,4 @@
+import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
@@ -19,6 +20,7 @@ import '../../address/controllers/address_controller.dart';
 import 'story_view_page.dart';
 import 'all_stories_page.dart';
 import 'restaurant_details_screen.dart';
+import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 
 class RestaurantsPage extends GetView<RestaurantsController> {
   const RestaurantsPage({super.key});
@@ -27,6 +29,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
   Widget build(BuildContext context) {
     final addressController = Get.find<AddressController>();
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // appBar:
       // CustomAppBar(
       //   titleWidget: Column(
@@ -95,7 +98,9 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomIconButtonApp(
-                    color: Color(0xFFF9FAFB),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF111827)
+                        : const Color(0xFFF9FAFB),
                     childWidget: SvgIcon(
                       iconName: 'assets/svg/arrow-right.svg',
                       color:
@@ -141,7 +146,9 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                     ),
                   ),
                   CustomIconButtonApp(
-                    color: Color(0xFFF9FAFB),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF111827)
+                        : const Color(0xFFF9FAFB),
                     childWidget: SvgIcon(
                       iconName: "assets/svg/wallet/wallet.svg",
                     ),
@@ -205,7 +212,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                 return const SizedBox.shrink();
               }
               return SizedBox(
-                height: 50.h,
+                height: 40.h,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -242,7 +249,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
               child: Obx(() {
                 // Loading state
                 if (controller.isLoading && controller.restaurants.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const RestaurantsPageShimmer();
                 }
 
                 // Error state
@@ -297,12 +304,23 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                 }
 
                 // Restaurants list
-                return RefreshIndicator(
-                  onRefresh: controller.refreshRestaurants,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                return NotificationListener<ScrollNotification>(
+                  onNotification: (ScrollNotification scrollInfo) {
+                    if (scrollInfo.metrics.axis == Axis.vertical &&
+                        scrollInfo.metrics.pixels >=
+                            scrollInfo.metrics.maxScrollExtent - 200 &&
+                        controller.hasMore &&
+                        !controller.isLoadingMore) {
+                      controller.loadMore();
+                    }
+                    return false;
+                  },
+                  child: AppRefreshIndicator(
+                    onRefresh: controller.refreshRestaurants,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Restaurant Stories Section
                         if (controller.stories.isNotEmpty) ...[
@@ -471,30 +489,40 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                               ],
                             ),
                           ),
-                          // Featured Restaurants (Horizontal)
-                          SizedBox(
-                            height: 215.h,
-                            child: ListView.builder(
-                              padding: EdgeInsets.symmetric(horizontal: 24.w),
-                              scrollDirection: Axis.horizontal,
-                              itemCount: controller.restaurants.length,
-                              itemBuilder: (context, index) {
-                                final restaurant =
-                                    controller.restaurants[index];
-                                return SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.88,
-                                  child: Padding(
-                                    padding: EdgeInsetsDirectional.only(
-                                      end: 12.w,
-                                    ),
-                                    child: RestaurantCard(
-                                      restaurant: restaurant,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                          // Featured Restaurants (Horizontal - open only)
+                          Builder(
+                            builder: (context) {
+                              final openRestaurants = controller.restaurants
+                                  .where((r) => r.isOpen)
+                                  .toList();
+                              if (openRestaurants.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
+                              return SizedBox(
+                                height: 215.h,
+                                child: ListView.builder(
+                                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: openRestaurants.length,
+                                  itemBuilder: (context, index) {
+                                    final restaurant = openRestaurants[index];
+                                    return SizedBox(
+                                      width:
+                                          MediaQuery.of(context).size.width * 0.88,
+                                      child: Padding(
+                                        padding: EdgeInsetsDirectional.only(
+                                          end: 12.w,
+                                        ),
+                                        child: RestaurantCard(
+                                          restaurant: restaurant,
+                                          showClosedOverlay: false,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
                           ),
                         ],
 
@@ -564,27 +592,6 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                                         ),
                                                       ),
                                                 ),
-                                                if (!restaurant.isOpen)
-                                                  Positioned.fill(
-                                                    child: Container(
-                                                      alignment:
-                                                          Alignment.center,
-                                                      color: const Color(
-                                                        0x9D7F22FE,
-                                                      ),
-                                                      child: Text(
-                                                        'مغلق الأن',
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style: const TextStyle()
-                                                            .textColorBold(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontSize: 10.sp,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ),
                                               ],
                                             ),
                                           ),
@@ -629,58 +636,44 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                               ),
                             ),
                           ),
-                          // All Restaurants (Horizontal with Pagination)
-                          NotificationListener<ScrollNotification>(
-                            onNotification: (ScrollNotification scrollInfo) {
-                              if (scrollInfo.metrics.pixels ==
-                                      scrollInfo.metrics.maxScrollExtent &&
-                                  controller.hasMore &&
-                                  !controller.isLoadingMore) {
-                                controller.loadMore();
-                              }
-                              return false;
-                            },
-                            child: SizedBox(
-                              height: 215.h,
-                              child: ListView.builder(
-                                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                                scrollDirection: Axis.horizontal,
-                                itemCount:
-                                    controller.restaurants.length +
-                                    (controller.hasMore ? 1 : 0),
-                                itemBuilder: (context, index) {
-                                  if (index == controller.restaurants.length) {
-                                    return const Padding(
-                                      padding: EdgeInsets.all(16.0),
-                                      child: Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    );
-                                  }
-                                  final restaurant =
-                                      controller.restaurants[index];
-                                  return SizedBox(
-                                    width:
-                                        MediaQuery.of(context).size.width *
-                                        0.88,
-                                    child: Padding(
-                                      padding: EdgeInsetsDirectional.only(
-                                        end: 12.w,
+                          // All Restaurants (Vertical, sorted: open first)
+                          Builder(
+                            builder: (context) {
+                              final sorted = [...controller.restaurants]
+                                ..sort((a, b) {
+                                  if (a.isOpen == b.isOpen) return 0;
+                                  return a.isOpen ? -1 : 1;
+                                });
+                              return Column(
+                                children: [
+                                  ...sorted.map(
+                                    (restaurant) => Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 24.w,
+                                        vertical: 6.h,
                                       ),
                                       child: RestaurantCard(
                                         restaurant: restaurant,
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
-                            ),
+                                  ),
+                                  if (controller.hasMore)
+                                    const Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
                           ),
                         ],
 
                         SizedBox(height: 20.h),
                       ],
                     ),
+                  ),
                   ),
                 );
               }),
@@ -727,22 +720,6 @@ class _CategoryChip extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(16),
           ),
-          shadows: isSelected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFFDCD5FF),
-                    blurRadius: 6,
-                    offset: const Offset(0, 4),
-                    spreadRadius: -4,
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFFDCD5FF),
-                    blurRadius: 15,
-                    offset: const Offset(0, 10),
-                    spreadRadius: -3,
-                  ),
-                ]
-              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -798,8 +775,9 @@ class _CategoryChip extends StatelessWidget {
 
 class RestaurantCard extends StatelessWidget {
   final dynamic restaurant;
+  final bool showClosedOverlay;
 
-  const RestaurantCard({super.key, required this.restaurant});
+  const RestaurantCard({super.key, required this.restaurant, this.showClosedOverlay = true});
 
   @override
   Widget build(BuildContext context) {
@@ -919,11 +897,11 @@ class RestaurantCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (!isActive)
+                      if (!isActive && showClosedOverlay)
                         Positioned.fill(
                           child: Container(
                             alignment: Alignment.center,
-                            color: const Color(0x8A7F22FE),
+                            color: const Color(0x3A7F22FE),
                             child: Text(
                               'مغلق الأن',
                               textAlign: TextAlign.center,

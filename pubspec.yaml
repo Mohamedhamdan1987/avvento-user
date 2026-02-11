@@ -75,6 +75,7 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   image_picker: ^1.2.1
   custom_refresh_indicator: ^4.0.1
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:

@@ -1,3 +1,4 @@
+import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:avvento/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -48,7 +49,7 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Directionality(
         textDirection: TextDirection.rtl,
-        child: RefreshIndicator(
+        child: AppRefreshIndicator(
           onRefresh: _fetchOrders,
           child: Column(
             children: [

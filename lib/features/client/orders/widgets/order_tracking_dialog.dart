@@ -14,11 +14,13 @@ class OrderTrackingDialog extends StatelessWidget {
   final String? driverName;
   final String? driverPhone;
   final String? driverImageUrl;
+  final ScrollController scrollController;
 
   const OrderTrackingDialog({
     super.key,
     required this.orderId,
     required this.status,
+    required this.scrollController,
     this.driverName,
     this.driverPhone,
     this.driverImageUrl,
@@ -26,104 +28,102 @@ class OrderTrackingDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.5,
-      minChildSize: 0.25,
-      maxChildSize: 0.92,
-      snap: true,
-      snapSizes: const [0.5, 0.92],
-      builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(32.r),
-              topRight: Radius.circular(32.r),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(32.r),
+          topRight: Radius.circular(32.r),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: CustomScrollView(
+        controller: scrollController,
+        slivers: [
+          // Drag Handle (pinned)
+          SliverToBoxAdapter(
+            child: Center(
+              child: Container(
+                margin: EdgeInsets.only(top: 12.h, bottom: 8.h),
+                width: 48.w,
+                height: 6.h,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).dividerColor,
+                  borderRadius: BorderRadius.circular(3.r),
+                ),
+              ),
             ),
           ),
-          child: CustomScrollView(
-            controller: scrollController,
-            slivers: [
-              // Drag Handle (pinned)
-              SliverToBoxAdapter(
-                child: Center(
-                  child: Container(
-                    margin: EdgeInsets.only(top: 12.h, bottom: 8.h),
-                    width: 48.w,
-                    height: 6.h,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).dividerColor,
-                      borderRadius: BorderRadius.circular(3.r),
+
+          // Header
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                children: [
+                  Text(
+                    _getStatusTitle(),
+                    style: TextStyle().textColorBold(
+                      fontSize: 20.sp,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-              ),
-
-              // Header
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Column(
-                    children: [
-                      Text(
-                        _getStatusTitle(),
-                        style: TextStyle().textColorBold(
-                          fontSize: 20.sp,
-                          color: Theme.of(context).textTheme.titleLarge?.color,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        'طلبك رقم #$orderId',
-                        style: TextStyle().textColorNormal(
-                          fontSize: 12.sp,
-                          color: Theme.of(context).textTheme.bodySmall?.color,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                  SizedBox(height: 4.h),
+                  Text(
+                    'طلبك رقم #$orderId',
+                    style: TextStyle().textColorNormal(
+                      fontSize: 12.sp,
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
+                ],
               ),
-
-              SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-
-              // Animation Section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: _buildAnimationSection(context),
-                ),
-              ),
-
-              SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-
-              // Driver Info (if applicable)
-              if (status == OrderStatus.onTheWay ||
-                  status == OrderStatus.awaitingDelivery)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24.w),
-                    child: _buildDriverInfo(context),
-                  ),
-                ),
-
-              SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-
-              // Timeline
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: _buildTimeline(context),
-                ),
-              ),
-
-              SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-            ],
+            ),
           ),
-        );
-      },
+
+          SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+
+          // Animation Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: _buildAnimationSection(context),
+            ),
+          ),
+
+          SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+
+          // Driver Info (if applicable)
+          if (status == OrderStatus.onTheWay ||
+              status == OrderStatus.awaitingDelivery)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: _buildDriverInfo(context),
+              ),
+            ),
+
+          SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+
+          // Timeline
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: _buildTimeline(context),
+            ),
+          ),
+
+          SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+        ],
+      ),
     );
   }
 
@@ -666,26 +666,4 @@ class OrderTrackingDialog extends StatelessWidget {
     );
   }
 
-  static void show(
-    BuildContext context,
-    String orderId,
-    OrderStatus status, {
-    String? driverName,
-    String? driverPhone,
-    String? driverImageUrl,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      useSafeArea: true,
-      builder: (context) => OrderTrackingDialog(
-        orderId: orderId,
-        status: status,
-        driverName: driverName,
-        driverPhone: driverPhone,
-        driverImageUrl: driverImageUrl,
-      ),
-    );
-  }
 }

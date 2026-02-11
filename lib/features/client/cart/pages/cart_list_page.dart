@@ -1,3 +1,4 @@
+import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
@@ -11,6 +12,7 @@ import 'package:avvento/core/theme/app_text_styles.dart';
 import '../controllers/cart_controller.dart';
 import '../models/cart_model.dart';
 import 'restaurant_cart_details_page.dart';
+import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 
 class CartListPage extends StatelessWidget {
   const CartListPage({super.key});
@@ -31,7 +33,7 @@ class CartListPage extends StatelessWidget {
         textDirection: TextDirection.rtl,
         child: Obx(() {
           if (controller.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const CartListShimmer();
           }
 
           if (controller.carts.isEmpty) {
@@ -96,7 +98,7 @@ class CartListPage extends StatelessWidget {
             );
           }
 
-          return RefreshIndicator(
+          return AppRefreshIndicator(
             onRefresh: () async => controller.refreshCarts(),
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(horizontal: 24.w),

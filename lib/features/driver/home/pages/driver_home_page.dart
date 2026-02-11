@@ -213,7 +213,7 @@ class _DriverHomePageState extends State<DriverHomePage> {
                         color: controller.isAvailable 
                             ? AppColors.primary
                             : isDark
-                                ? const Color(0xFF374151)
+                                ? const Color(0xFF1A2332)
                                 : const Color(0xFFE5E7EB),
                         borderRadius: BorderRadius.circular(13.r),
                         boxShadow: [

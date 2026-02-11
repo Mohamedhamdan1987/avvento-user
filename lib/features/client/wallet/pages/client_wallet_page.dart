@@ -1,3 +1,4 @@
+import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:avvento/features/client/wallet/controllers/client_wallet_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,6 +8,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import '../../../../core/widgets/reusable/safe_svg_icon.dart';
 import '../../../driver/wallet/widgets/wallet_transaction_item.dart';
+import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 
 
 class ClientWalletPage extends StatelessWidget {
@@ -38,12 +40,11 @@ class ClientWalletPage extends StatelessWidget {
         textDirection: TextDirection.rtl,
         child: Obx(() {
           if (controller.isLoading.value && controller.wallet.value == null) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.purple));
+            return const WalletPageShimmer();
           }
 
-          return RefreshIndicator(
+          return AppRefreshIndicator(
             onRefresh: () => controller.refreshWallet(),
-            color: AppColors.purple,
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               physics: const AlwaysScrollableScrollPhysics(),

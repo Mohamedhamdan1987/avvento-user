@@ -45,16 +45,16 @@ class DriverOrdersController extends GetxController {
 
     // Get theme detection
     final isDarkMode = Get.isDarkMode;
-    final dialogBg = isDarkMode ? const Color(0xFF1A1A1A) : Colors.white;
+    final dialogBg = isDarkMode ? const Color(0xFF0B0E13) : Colors.white;
     final textPrimary = isDarkMode ? Colors.white : const Color(0xFF101828);
     final textSecondary =
         isDarkMode ? const Color(0xFFB0B0B0) : const Color(0xFF4A5565);
     final infoBgColor =
-        isDarkMode ? const Color(0xFF2A2A2A) : const Color(0xFFF9FAFB);
+        isDarkMode ? const Color(0xFF111827) : const Color(0xFFF9FAFB);
     final infoBorderColor =
-        isDarkMode ? const Color(0xFF3A3A3A) : const Color(0xFFE5E7EB);
+        isDarkMode ? const Color(0xFF1E2A3A) : const Color(0xFFE5E7EB);
     final outlineButtonColor =
-        isDarkMode ? const Color(0xFF4A4A4A) : const Color(0xFFE5E7EB);
+        isDarkMode ? const Color(0xFF1E2A3A) : const Color(0xFFE5E7EB);
 
     // Show enhanced confirmation dialog with dark theme support
     Get.dialog(

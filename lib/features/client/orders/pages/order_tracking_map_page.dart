@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:avvento/core/theme/app_text_styles.dart';
-import 'package:avvento/core/widgets/reusable/svg_icon.dart';
+import 'package:get/get.dart';
 import 'package:avvento/core/utils/polyline_utils.dart';
 import 'package:avvento/core/enums/order_status.dart';
+import 'package:avvento/core/routes/app_routes.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../widgets/order_tracking_dialog.dart';
 
@@ -46,25 +46,6 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
     super.initState();
     _setupMap();
     _loadRoute();
-    // Open order tracking dialog automatically after a short delay
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          _openTrackingDialog();
-        }
-      });
-    });
-  }
-
-  void _openTrackingDialog() {
-    OrderTrackingDialog.show(
-      context,
-      widget.orderId,
-      widget.status,
-      driverName: widget.driverName,
-      driverPhone: widget.driverPhone,
-      driverImageUrl: widget.driverImageUrl,
-    );
   }
 
   void _setupMap() {
@@ -188,9 +169,20 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
     );
   }
 
+  void _goToOrdersPage() {
+    Get.offAllNamed(AppRoutes.clientNavBar, arguments: {'tabIndex': 1});
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _goToOrdersPage();
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).cardColor,
         elevation: 0,
@@ -205,7 +197,7 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
             Icons.arrow_back,
             color: Theme.of(context).iconTheme.color,
           ),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => _goToOrdersPage(),
         ),
       ),
       body: Stack(
@@ -227,80 +219,29 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
             mapType: MapType.normal,
             compassEnabled: true,
             zoomControlsEnabled: true,
+            padding: EdgeInsets.only(bottom: 120.h),
           ),
-          // Reopen Tracking Dialog Button
-          Positioned(
-            bottom: 24.h,
-            left: 24.w,
-            right: 24.w,
-            child: GestureDetector(
-              onTap: () => _openTrackingDialog(),
-              child: Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(16.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48.w,
-                      height: 48.h,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Center(
-                        child: SvgIcon(
-                          iconName: 'assets/svg/client/orders/on_the_way.svg',
-                          width: 24.w,
-                          height: 24.h,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'تفاصيل الطلب',
-                            style: TextStyle().textColorBold(
-                              fontSize: 14.sp,
-                              color: Theme.of(context).textTheme.titleLarge?.color,
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            'اضغط لعرض حالة الطلب والتفاصيل',
-                            style: TextStyle().textColorNormal(
-                              fontSize: 12.sp,
-                              color: Theme.of(context).textTheme.bodyMedium?.color,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.keyboard_arrow_up_rounded,
-                      color: AppColors.primary,
-                      size: 28.sp,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          // Non-modal order tracking sheet - allows map interaction
+          DraggableScrollableSheet(
+            initialChildSize: 0.45,
+            minChildSize: 0.12,
+            maxChildSize: 0.92,
+            snap: true,
+            snapSizes: const [0.12, 0.45, 0.92],
+            builder: (context, scrollController) {
+              return OrderTrackingDialog(
+                scrollController: scrollController,
+                orderId: widget.orderId,
+                status: widget.status,
+                driverName: widget.driverName,
+                driverPhone: widget.driverPhone,
+                driverImageUrl: widget.driverImageUrl,
+              );
+            },
           ),
         ],
       ),
+    ),
     );
   }
 

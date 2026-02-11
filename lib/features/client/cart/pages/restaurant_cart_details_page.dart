@@ -14,6 +14,7 @@ import '../../../../core/utils/show_snackbar.dart';
 import '../../../../core/utils/app_dialogs.dart';
 import '../models/cart_model.dart';
 import '../../restaurants/models/menu_item_model.dart';
+import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 
 class RestaurantCartDetailsPage extends StatefulWidget {
   final RestaurantCartResponse cart;
@@ -70,7 +71,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
         textDirection: TextDirection.rtl,
         child: Obx(() {
           if (controller.isLoading && controller.detailedCart == null) {
-            return const Center(child: CircularProgressIndicator());
+            return const CartDetailsShimmer();
           }
 
           final currentCart = controller.detailedCart;
@@ -264,7 +265,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
             children: [
               // Item Image (Left in RTL - was Left in Figma)
               Padding(
-                padding: EdgeInsetsDirectional.only(top: 22.h, end: 16.w),
+                padding: EdgeInsetsDirectional.only(top: 22.h, end: 16.w, start: 16.w),
                 child: Container(
                   width: 80.w,
                   height: 80.h,
@@ -497,7 +498,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
   Widget _buildSuggestedDrinksSection() {
     return Obx(() {
       if (controller.isLoadingDrinks) {
-        return const Center(child: CircularProgressIndicator());
+        return const DrinksShimmer();
       }
 
       if (controller.drinks.isEmpty) {

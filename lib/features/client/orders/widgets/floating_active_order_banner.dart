@@ -46,7 +46,7 @@ class _FloatingActiveOrderBannerState extends State<FloatingActiveOrderBanner> {
   void _initPosition(Size screenSize) {
     if (!_positionInitialized) {
       final safePadding = MediaQuery.of(context).padding.top;
-      _top = safePadding + 8.h;
+      _top = safePadding*4;
       _left = 16.w;
       _positionInitialized = true;
     }

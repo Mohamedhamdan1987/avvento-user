@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
-import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
+import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -26,6 +26,7 @@ import '../widgets/promo_card.dart';
 import '../widgets/restaurant_circle_item.dart';
 import '../widgets/discount_card.dart';
 import '../../favorites/pages/favorites_page.dart';
+import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -43,12 +44,12 @@ class HomePage extends StatelessWidget {
       body: Obx(() {
         // Ensure controller is registered before accessing it
         if (!Get.isRegistered<HomeController>()) {
-          return const Center(child: CircularProgressIndicator());
+          return const HomePageShimmer();
         }
         // Get controller inside Obx to ensure it's available
         final controller = Get.find<HomeController>();
         return controller.isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const HomePageShimmer()
             : _HomePageContent(controller: controller);
       }),
     );
@@ -70,6 +71,7 @@ class _HomePageContentState extends State<_HomePageContent> {
   double _scrollOffset = 0.0;
   static const double _maxScrollOffset = 100.0;
   final ValueNotifier<bool> _isRefreshing = ValueNotifier(false);
+  final ValueNotifier<double> _refreshProgress = ValueNotifier(0.0);
 
   @override
   void initState() {
@@ -125,6 +127,7 @@ class _HomePageContentState extends State<_HomePageContent> {
     _scrollController.dispose();
     _promoPageController.dispose();
     _isRefreshing.dispose();
+    _refreshProgress.dispose();
     super.dispose();
   }
 
@@ -260,238 +263,145 @@ class _HomePageContentState extends State<_HomePageContent> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      body: CustomRefreshIndicator(
+      body: AppRefreshIndicator(
         onRefresh: () async {
           await widget.controller.refreshData();
         },
-        builder: (BuildContext context, Widget child, IndicatorController indicatorController) {
-          return AnimatedBuilder(
-            animation: indicatorController,
-            builder: (BuildContext context, _) {
-              final double shift = 100.h * indicatorController.value;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _isRefreshing.value = indicatorController.value > 0.0;
-              });
-              return Stack(
-                children: [
-                  // Logo area with header gradient
-                  if (indicatorController.value > 0.0)
+        onProgressChanged: (progress) {
+          _refreshProgress.value = progress;
+          _isRefreshing.value = progress > 0.0;
+        },
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              // Header area (background image + gradient + header + categories)
+              SizedBox(
+                height: 330.h,
+                child: Stack(
+                  children: [
+                    // Background image
+                    Container(
+                      height: 277.h,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(19.r),
+                          bottomRight: Radius.circular(19.r),
+                        ),
+                        child: ValueListenableBuilder<double>(
+                          valueListenable: _refreshProgress,
+                          builder: (context, progress, child) {
+                            // Subtle zoom on pull-to-refresh (max ~8%)
+                            final scale = 1.0 + (progress * 0.08);
+                            return Transform.scale(
+                              scale: scale,
+                              child: child,
+                            );
+                          },
+                          child: Image.asset(
+                            'assets/home_cover.jpg',
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              color: AppColors.purple,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Gradient overlay
+                    Container(
+                      height: 277.h,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(19.r),
+                          bottomRight: Radius.circular(19.r),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withOpacity(0.4),
+                            const Color(0xFF9C19FA).withOpacity(0.8),
+                            const Color(0xFF9B16FA).withOpacity(0.964),
+                          ],
+                          stops: const [0.0, 0.63462, 0.94231],
+                        ),
+                      ),
+                    ),
+                    // Header content
+                    _buildHeader(),
+
+                    // Categories Grid
                     Positioned(
-                      top: 0,
+                      top: 220.h,
                       left: 0,
                       right: 0,
-                      height: shift,
-                      child: ClipRect(
-                        child: Stack(
-                          children: [
-                            Container(
-                              width: double.infinity,
-                              height: 200,
-                              decoration: BoxDecoration(
-                                image: const DecorationImage(
-                                  image: AssetImage( 'assets/home_cover_flip.jpg',),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              child: BackdropFilter(
-                        filter: ImageFilter.blur(
-                        sigmaX: 10.0, // درجة البلور في الاتجاه الأفقي
-                          sigmaY: 10.0, // درجة البلور في الاتجاه الرأسي
-                        ),
-                        child: Container(
-                          color: Colors.black.withOpacity(
-                            0.2,
-                          ), // طبقة شفافة فوق البلور
-                          height: 100,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16.w,
-                            vertical: 6.h,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CategoryCard(
+                            imagePath: 'assets/images/services/restaurant.png',
+                            title: 'المطاعم',
+                            onTap: () {
+                              Get.toNamed(AppRoutes.restaurants);
+                            },
                           ),
-                          width: double.infinity,
-
-                        ),
+                          SizedBox(width: 14.w),
+                          CategoryCard(
+                            imagePath: 'assets/images/services/market.png',
+                            title: 'الماركت',
+                            onTap: () {},
+                          ),
+                          SizedBox(width: 14.w),
+                          CategoryCard(
+                            imagePath: 'assets/images/services/pharmacy.png',
+                            title: 'صيدليات',
+                            onTap: () {
+                              Get.snackbar(
+                                'صيدليات',
+                                'ستكون متاحة قريباً',
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: AppColors.purple.withOpacity(0.9),
+                                colorText: Colors.white,
+                                margin: EdgeInsets.all(16.w),
+                                borderRadius: 12.r,
+                                duration: const Duration(seconds: 2),
+                                icon: Icon(Icons.access_time_rounded, color: Colors.white, size: 24.w),
+                              );
+                            },
+                          ),
+                          SizedBox(width: 14.w),
+                          CategoryCard(
+                            imagePath: 'assets/images/services/store.png',
+                            title: 'المتاجر',
+                            onTap: () {
+                              Get.snackbar(
+                                'المتاجر',
+                                'ستكون متاحة قريباً',
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: AppColors.purple.withOpacity(0.9),
+                                colorText: Colors.white,
+                                margin: EdgeInsets.all(16.w),
+                                borderRadius: 12.r,
+                                duration: const Duration(seconds: 2),
+                                icon: Icon(Icons.access_time_rounded, color: Colors.white, size: 24.w),
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                            ),
-                            Center(
-                              child: Opacity(
-                                opacity: indicatorController.value.clamp(0.0, 1.0),
-                                child: SvgPicture.asset(
-                                  'assets/svg/logo.svg',
-                                  width: 40.w,
-                                  height: 40.h,
-                                  colorFilter: const ColorFilter.mode(
-                                    Colors.white,
-                                    BlendMode.srcIn,
-                                  ),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
                     ),
-                  // Entire page shifted down on pull
-                  Transform.translate(
-                    offset: Offset(0, shift),
-                    child: child,
-                  ),
-                ],
-              );
-            },
-          );
-        },
-        offsetToArmed: 80.0,
-        child: SizedBox.expand(
-          child: Stack(
-            children: [
-              // Background image (FIXED)
-              Container(
-                height: 277.h,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(19.r),
-                    bottomRight: Radius.circular(19.r),
-                  ),
-                  child: Stack(
-                    children: [
-                      Image.asset(
-                        'assets/home_cover.jpg',
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: AppColors.purple,
-                        ),
-                      ),
-                      // Blur top of image during refresh to match refresh area
-                      ValueListenableBuilder<bool>(
-                        valueListenable: _isRefreshing,
-                        builder: (context, isRefreshing, _) {
-                          if (!isRefreshing) return const SizedBox.shrink();
-                          return Positioned(
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: 120.h,
-                            child: ClipRect(
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                                child: Container(
-                                  color: Colors.black.withOpacity(0.2),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Gradient overlay (FIXED)
-              Container(
-                height: 277.h,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(19.r),
-                    bottomRight: Radius.circular(19.r),
-                  ),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withOpacity(0.4),
-                      const Color(0xFF9C19FA).withOpacity(0.8),
-                      const Color(0xFF9B16FA).withOpacity(0.964),
-                    ],
-                    stops: const [0.0, 0.63462, 0.94231],
-                  ),
-                ),
-              ),
-              // Header content (FIXED on top)
-              _buildHeader(),
-
-              // Categories Grid
-              Positioned(
-                top: 220.h,
-                left: 0,
-                right: 0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CategoryCard(
-                      imagePath: 'assets/images/services/restaurant.png',
-                      title: 'المطاعم',
-                      onTap: () {
-                        Get.toNamed(AppRoutes.restaurants);
-                      },
-                    ),
-                    SizedBox(width: 14.w),
-                    CategoryCard(
-                      imagePath: 'assets/images/services/market.png',
-                      title: 'الماركت',
-                      onTap: () {},
-                    ),
-                    SizedBox(width: 14.w),
-                    CategoryCard(
-                      imagePath: 'assets/images/services/pharmacy.png',
-                      title: 'صيدليات',
-                      onTap: () {
-                        Get.snackbar(
-                          'صيدليات',
-                          'ستكون متاحة قريباً',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: AppColors.purple.withOpacity(0.9),
-                          colorText: Colors.white,
-                          margin: EdgeInsets.all(16.w),
-                          borderRadius: 12.r,
-                          duration: const Duration(seconds: 2),
-                          icon: Icon(Icons.access_time_rounded, color: Colors.white, size: 24.w),
-                        );
-                      },
-                    ),
-                    SizedBox(width: 14.w),
-                    CategoryCard(
-                      imagePath: 'assets/images/services/store.png',
-                      title: 'المتاجر',
-                      onTap: () {
-                        Get.snackbar(
-                          'المتاجر',
-                          'ستكون متاحة قريباً',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: AppColors.purple.withOpacity(0.9),
-                          colorText: Colors.white,
-                          margin: EdgeInsets.all(16.w),
-                          borderRadius: 12.r,
-                          duration: const Duration(seconds: 2),
-                          icon: Icon(Icons.access_time_rounded, color: Colors.white, size: 24.w),
-                        );
-                      },
-                    ),
-
                   ],
                 ),
               ),
 
-              // Scrollable content below header
-              Positioned(
-                top: 330.h,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: SingleChildScrollView(
-
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    children: [
-                      SizedBox(height: 20.h),
-                      _buildContent(),
-                      SizedBox(height: 100.h),
-                    ],
-                  ),
-                ),
-              ),
+              // Content below header
+              SizedBox(height: 20.h),
+              _buildContent(),
+              SizedBox(height: 100.h),
             ],
           ),
         ),

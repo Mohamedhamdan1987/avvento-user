@@ -1,8 +1,10 @@
+import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../controllers/notifications_controller.dart';
+import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 import '../../domain/entities/notification_entity.dart';
 
 class NotificationsPage extends StatelessWidget {
@@ -43,9 +45,7 @@ class NotificationsPage extends StatelessWidget {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value && controller.notifications.isEmpty) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppColors.drawerPurple),
-                );
+                return const NotificationsListShimmer();
               }
 
               if (controller.errorMessage.value.isNotEmpty) {
@@ -90,7 +90,7 @@ class NotificationsPage extends StatelessWidget {
                 );
               }
 
-              return RefreshIndicator(
+              return AppRefreshIndicator(
                 onRefresh: () => controller.refreshNotifications(),
                 child: NotificationListener<ScrollNotification>(
                   onNotification: (ScrollNotification scrollInfo) {

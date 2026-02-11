@@ -717,7 +717,7 @@ class _CategoryChip extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
         constraints: BoxConstraints(minWidth: 88.w, minHeight: 45.h),
         decoration: ShapeDecoration(
-          color: isSelected ? const Color(0xFF7F22FE) : Colors.white,
+          color: isSelected ? const Color(0xFF7F22FE) : Colors.transparent,
           shape: RoundedRectangleBorder(
             side: BorderSide(
               width: 0.76,

@@ -142,6 +142,9 @@ class AppPages {
           restaurantLong: args['restaurantLong'] as double,
           orderId: args['orderId'] as String,
           status: args['status'] as OrderStatus,
+          driverName: args['driverName'] as String?,
+          driverPhone: args['driverPhone'] as String?,
+          driverImageUrl: args['driverImageUrl'] as String?,
         );
       },
       middlewares: [AuthMiddleware()],

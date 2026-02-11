@@ -402,7 +402,9 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                              color: const Color(0xFF7F22FE),
+                                              color: storyGroup.allViewed
+                                                  ? Colors.grey
+                                                  : const Color(0xFF7F22FE),
                                               width: 2,
                                             ),
                                           ),

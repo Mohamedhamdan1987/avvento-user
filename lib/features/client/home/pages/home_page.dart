@@ -14,6 +14,7 @@ import '../../../../core/enums/order_status.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/socket_service.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/app_dialogs.dart';
 import '../../../../core/utils/location_utils.dart';
 import '../../../../core/widgets/reusable/custom_text_field.dart';
 import 'package:avvento/features/client/address/controllers/address_controller.dart';
@@ -86,6 +87,35 @@ class _HomePageContentState extends State<_HomePageContent> {
       socketService.connectToNotifications();
     } catch (e) {
       // SocketService not initialized yet
+    }
+
+    // Check if user's current location differs from saved addresses
+    _checkLocationAndRemind();
+  }
+
+  /// Refreshes the device location, reloads saved addresses, then checks
+  /// whether the current GPS position is far from every saved address.
+  /// If so, shows a reminder bottom-sheet to add a new address.
+  /// Runs every time the home page is opened.
+  Future<void> _checkLocationAndRemind() async {
+    try {
+      // 1. Refresh device GPS location
+      await LocationUtils.refreshLocation();
+
+      // 2. Reload addresses from API
+      final addressController = Get.find<AddressController>();
+      await addressController.fetchAddresses();
+
+      // 3. Check and show reminder if needed
+      if (!mounted) return;
+      if (addressController.isCurrentLocationNew()) {
+        // Small delay so the home page is fully rendered first
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) AppDialogs.showAddAddressReminder();
+        });
+      }
+    } catch (_) {
+      // AddressController not registered yet or location error — ignore
     }
   }
 

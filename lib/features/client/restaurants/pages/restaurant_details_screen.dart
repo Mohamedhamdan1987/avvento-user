@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:avvento/core/theme/app_text_styles.dart';
 import 'package:avvento/core/utils/show_snackbar.dart';
-import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/features/client/restaurants/models/menu_item_model.dart';
 import 'package:avvento/features/client/restaurants/models/restaurant_model.dart';
 import 'package:avvento/features/client/restaurants/pages/category_menu_page.dart';
@@ -1022,46 +1021,128 @@ class RestaurantDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildViewCartButton(BuildContext context, RestaurantCartResponse cart) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
-      child: CustomButtonApp(
-        onTap: () {
-          Get.to(() => RestaurantCartDetailsPage(
-            cart: cart,
-          ));
-        },
-        height: 56.h,
-        borderRadius: 16.r,
-        color: AppColors.purple,
-        isFill: true,
-        childWidget: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(8.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Text(
-                    '${cart.items.length}',
-                    style: TextStyle().textColorBold(fontSize: 14.sp, color: Colors.white),
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Text(
-                  'عرض السلة',
-                  style: TextStyle().textColorBold(fontSize: 16.sp, color: Colors.white),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24.w),
+        child: GestureDetector(
+          onTap: () {
+            Get.to(() => RestaurantCartDetailsPage(cart: cart));
+          },
+          child: Container(
+            height: 56.h,
+            decoration: BoxDecoration(
+              color: const Color(0xFF101828),
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+                width: 0.761,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF99A1AF).withOpacity(0.3),
+                  blurRadius: 50,
+                  offset: const Offset(0, 25),
                 ),
               ],
             ),
-            Text(
-              '${cart.totalPrice} د.ل',
-              style: TextStyle().textColorBold(fontSize: 16.sp, color: Colors.white),
+            child: Padding(
+              padding: EdgeInsetsDirectional.only(start: 10.w, end: 24.w),
+              child: Row(
+                children: [
+                  // White circle indicator
+                  Container(
+                    width: 37.r,
+                    height: 37.r,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 15,
+                          offset: const Offset(0, 10),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${cart.items.length}',
+                        style: TextStyle().textColorBold(
+                          fontSize: 14.sp,
+                          color: const Color(0xFF101828),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  // Cart info text
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'سلة المشتريات',
+                        style: TextStyle().textColorBold(
+                          fontSize: 10.sp,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        '${cart.totalPrice.toStringAsFixed(2)} د.ل',
+                        style: TextStyle().textColorMedium(
+                          fontSize: 10.sp,
+                          color: const Color(0xFF99A1AF),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  // "إتمام الطلب" pill button
+                  GestureDetector(
+                    onTap: () {
+                      Get.to(() => RestaurantCartDetailsPage(cart: cart));
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'إتمام الطلب',
+                            style: TextStyle().textColorBold(
+                              fontSize: 10.sp,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Transform.rotate(
+                            angle: pi,
+                            child: SvgIcon(
+                              iconName: 'assets/svg/arrow-right.svg',
+                              width: 16.w,
+                              height: 16.h,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -360,6 +360,9 @@ class CurrentOrderCard extends StatelessWidget {
                       'restaurantLong': restaurantLong,
                       'orderId': order.id,
                       'status': status,
+                      'driverName': order.driver?.name,
+                      'driverPhone': order.driver?.phone,
+                      'driverImageUrl': order.driver?.image,
                     },
                   );
                 },

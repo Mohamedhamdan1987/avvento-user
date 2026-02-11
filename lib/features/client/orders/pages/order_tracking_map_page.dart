@@ -15,6 +15,9 @@ class OrderTrackingMapPage extends StatefulWidget {
   final double restaurantLong;
   final String orderId;
   final OrderStatus status;
+  final String? driverName;
+  final String? driverPhone;
+  final String? driverImageUrl;
 
   const OrderTrackingMapPage({
     super.key,
@@ -24,6 +27,9 @@ class OrderTrackingMapPage extends StatefulWidget {
     required this.restaurantLong,
     required this.orderId,
     required this.status,
+    this.driverName,
+    this.driverPhone,
+    this.driverImageUrl,
   });
 
   @override
@@ -44,14 +50,21 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) {
-          OrderTrackingDialog.show(
-            context,
-            widget.orderId,
-            widget.status,
-          );
+          _openTrackingDialog();
         }
       });
     });
+  }
+
+  void _openTrackingDialog() {
+    OrderTrackingDialog.show(
+      context,
+      widget.orderId,
+      widget.status,
+      driverName: widget.driverName,
+      driverPhone: widget.driverPhone,
+      driverImageUrl: widget.driverImageUrl,
+    );
   }
 
   void _setupMap() {
@@ -215,66 +228,74 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
             compassEnabled: true,
             zoomControlsEnabled: true,
           ),
-          // Info Card
+          // Reopen Tracking Dialog Button
           Positioned(
             bottom: 24.h,
             left: 24.w,
             right: 24.w,
-            child: Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48.w,
-                    height: 48.h,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12.r),
+            child: GestureDetector(
+              onTap: () => _openTrackingDialog(),
+              child: Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
-                    child: Center(
-                      child: SvgIcon(
-                        iconName: 'assets/svg/client/orders/on_the_way.svg',
-                        width: 24.w,
-                        height: 24.h,
-                        color: AppColors.primary,
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48.w,
+                      height: 48.h,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Center(
+                        child: SvgIcon(
+                          iconName: 'assets/svg/client/orders/on_the_way.svg',
+                          width: 24.w,
+                          height: 24.h,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'مسار التوصيل',
-                          style: TextStyle().textColorBold(
-                            fontSize: 14.sp,
-                            color: Theme.of(context).textTheme.titleLarge?.color,
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'تفاصيل الطلب',
+                            style: TextStyle().textColorBold(
+                              fontSize: 14.sp,
+                              color: Theme.of(context).textTheme.titleLarge?.color,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          'الخط الأرجواني يوضح المسار بين موقعك والمطعم',
-                          style: TextStyle().textColorNormal(
-                            fontSize: 12.sp,
-                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                          SizedBox(height: 4.h),
+                          Text(
+                            'اضغط لعرض حالة الطلب والتفاصيل',
+                            style: TextStyle().textColorNormal(
+                              fontSize: 12.sp,
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    Icon(
+                      Icons.keyboard_arrow_up_rounded,
+                      color: AppColors.primary,
+                      size: 28.sp,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -1,5 +1,6 @@
 import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
+import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,9 @@ class CartListPage extends StatelessWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'السلة',
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor:
+            Theme.of(context).appBarTheme.backgroundColor ??
+            Theme.of(context).scaffoldBackgroundColor,
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
@@ -36,11 +39,57 @@ class CartListPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.shopping_cart_outlined, size: 80.r, color: Colors.grey),
-                  SizedBox(height: 16.h),
+                  // Circular icon container
+                  Container(
+                    width: 160.r,
+                    height: 160.r,
+                    padding: EdgeInsets.all(16.r),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF6F7F9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: SvgIcon(
+                        iconName: 'assets/svg/cart/shopping-bag.svg',
+                        width: 64.r,
+                        height: 64.r,
+                        color: const Color(0xFFD1D5DB),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  // Title
                   Text(
-                    'سلة التسوق فارغة',
-                    style: const TextStyle().textColorBold(fontSize: 18.sp),
+                    'السلة فارغة',
+                    style: const TextStyle().textColorBold(
+                      fontSize: 24.sp,
+                      color: const Color(0xFF101828),
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  // Subtitle
+                  Text(
+                    'لم تقم بإضافة أي وجبات بعد.',
+                    style: const TextStyle().textColorNormal(
+                      fontSize: 16.sp,
+                      color: const Color(0xFF6A7282),
+                    ),
+                  ),
+                  SizedBox(height: 32.h),
+                  // Browse restaurants button
+                  CustomButtonApp(
+                    text: 'تصفح المطاعم',
+                    width: 160.w,
+                    height: 48.h,
+                    color: const Color(0xFF4D179A),
+                    borderRadius: 14.r,
+                    textStyle: const TextStyle().textColorBold(
+                      fontSize: 16.sp,
+                      color: Colors.white,
+                    ),
+                    onTap: () {
+                      Get.offAllNamed(AppRoutes.clientNavBar);
+                    },
                   ),
                 ],
               ),
@@ -59,10 +108,12 @@ class CartListPage extends StatelessWidget {
                   _buildHeaderSection(context, controller.carts.length),
                   SizedBox(height: 33.h),
                   // Cart Cards
-                  ...controller.carts.map((cart) => Padding(
-                        padding: EdgeInsets.only(bottom: 16.h),
-                        child: _buildRestaurantCartCard(context, cart),
-                      )),
+                  ...controller.carts.map(
+                    (cart) => Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: _buildRestaurantCartCard(context, cart),
+                    ),
+                  ),
                   SizedBox(height: 24.h),
                 ],
               ),
@@ -90,7 +141,7 @@ class CartListPage extends StatelessWidget {
                 children: [
                   const TextSpan(text: 'من أين تريد أن '),
                   TextSpan(
-                    text: "\n"+ 'تكمل طلبك اليوم؟',
+                    text: "\n" + 'تكمل طلبك اليوم؟',
                     style: TextStyle().textColorBold(
                       fontSize: 24.sp,
                       color: const Color(0xFF7F22FE),
@@ -100,7 +151,11 @@ class CartListPage extends StatelessWidget {
               ),
             ),
             SizedBox(width: 12.w),
-            SvgIcon(iconName: "assets/svg/cart/shopping-bag.svg", width: 32.w, height: 32.h),
+            SvgIcon(
+              iconName: "assets/svg/cart/shopping-bag.svg",
+              width: 32.w,
+              height: 32.h,
+            ),
           ],
         ),
         SizedBox(height: 16.h),
@@ -116,7 +171,10 @@ class CartListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRestaurantCartCard(BuildContext context, RestaurantCartResponse cart) {
+  Widget _buildRestaurantCartCard(
+    BuildContext context,
+    RestaurantCartResponse cart,
+  ) {
     return GestureDetector(
       onTap: () {
         Get.toNamed(AppRoutes.restaurantCartDetails, arguments: cart);
@@ -148,9 +206,7 @@ class CartListPage extends StatelessWidget {
                 _buildRestaurantLogo(cart.restaurant.logo),
                 SizedBox(width: 12.w),
                 // Restaurant Info Section (Middle)
-                Expanded(
-                  child: _buildRestaurantInfoSection(cart),
-                ),
+                Expanded(child: _buildRestaurantInfoSection(cart)),
 
                 // Price Section (Left in RTL)
                 SizedBox(width: 12.w),
@@ -165,9 +221,7 @@ class CartListPage extends StatelessWidget {
             Row(
               children: [
                 // Cart Summary
-                Expanded(
-                  child: _buildCartSummary(cart),
-                ),
+                Expanded(child: _buildCartSummary(cart)),
                 SizedBox(width: 12.w),
 
                 // Circular Button
@@ -189,7 +243,6 @@ class CartListPage extends StatelessWidget {
                     ),
                   ),
                 ),
-
               ],
             ),
           ],
@@ -291,10 +344,7 @@ class CartListPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: const Color(0xFFF3F4F6),
-          width: 0.761,
-        ),
+        border: Border.all(color: const Color(0xFFF3F4F6), width: 0.761),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14.r),
@@ -302,18 +352,12 @@ class CartListPage extends StatelessWidget {
             ? CachedNetworkImage(
                 imageUrl: logoUrl,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => const Center(
-                  child: CircularProgressIndicator(),
-                ),
-                errorWidget: (context, url, error) => const Icon(
-                  Icons.restaurant,
-                  color: Colors.grey,
-                ),
+                placeholder: (context, url) =>
+                    const Center(child: CircularProgressIndicator()),
+                errorWidget: (context, url, error) =>
+                    const Icon(Icons.restaurant, color: Colors.grey),
               )
-            : const Icon(
-                Icons.restaurant,
-                color: Colors.grey,
-              ),
+            : const Icon(Icons.restaurant, color: Colors.grey),
       ),
     );
   }
@@ -325,10 +369,7 @@ class CartListPage extends StatelessWidget {
           height: 0.761,
           decoration: const BoxDecoration(
             border: Border(
-              top: BorderSide(
-                color: Color(0xFFE5E7EB),
-                width: 0.761,
-              ),
+              top: BorderSide(color: Color(0xFFE5E7EB), width: 0.761),
             ),
           ),
         ),
@@ -379,9 +420,7 @@ class CartListPage extends StatelessWidget {
         ),
         SizedBox(height: 4.h),
         Text(
-          firstItemName.isNotEmpty
-              ? firstItemName
-              : '${cart.items.length} ${cart.items.length == 1 ? 'صنف' : 'أصناف'}',
+          '${cart.items.length} ${cart.items.length == 1 ? 'صنف' : 'أصناف'}',
           style: const TextStyle().textColorMedium(
             fontSize: 14.sp,
             color: Color(0xFF364153),

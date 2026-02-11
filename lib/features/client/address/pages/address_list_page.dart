@@ -23,7 +23,9 @@ class AddressListPage extends StatelessWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'عناوين التوصيل',
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor:
+            Theme.of(context).appBarTheme.backgroundColor ??
+            Theme.of(context).scaffoldBackgroundColor,
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
@@ -31,7 +33,8 @@ class AddressListPage extends StatelessWidget {
           children: [
             Expanded(
               child: Obx(() {
-                if (controller.isLoading.value && controller.addresses.isEmpty) {
+                if (controller.isLoading.value &&
+                    controller.addresses.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
@@ -42,7 +45,10 @@ class AddressListPage extends StatelessWidget {
                 return RefreshIndicator(
                   onRefresh: controller.fetchAddresses,
                   child: ListView.builder(
-                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 24.h,
+                    ),
                     itemCount: controller.addresses.length,
                     itemBuilder: (context, index) {
                       final address = controller.addresses[index];
@@ -94,10 +100,14 @@ class AddressListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAddressCard(BuildContext context, AddressModel address, AddressController controller) {
+  Widget _buildAddressCard(
+    BuildContext context,
+    AddressModel address,
+    AddressController controller,
+  ) {
     // Check if this page was opened for selection (from checkout)
     final isSelectionMode = Get.arguments == true;
-    
+
     return GestureDetector(
       onTap: isSelectionMode
           ? () {
@@ -112,7 +122,9 @@ class AddressListPage extends StatelessWidget {
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
-            color: address.isActive ? AppColors.purple : Theme.of(context).dividerColor,
+            color: address.isActive
+                ? AppColors.purple
+                : Theme.of(context).dividerColor,
             width: address.isActive ? 2 : 1,
           ),
           boxShadow: [
@@ -157,7 +169,10 @@ class AddressListPage extends StatelessWidget {
                       if (address.isActive) ...[
                         SizedBox(width: 8.w),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 2.h,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.successGreen.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8.r),
@@ -194,11 +209,18 @@ class AddressListPage extends StatelessWidget {
                   if (!address.isActive)
                     IconButton(
                       onPressed: () => controller.setActive(address.id),
-                      icon: const Icon(Icons.check_circle_outline, color: AppColors.textPlaceholder),
+                      icon: const Icon(
+                        Icons.check_circle_outline,
+                        color: AppColors.textPlaceholder,
+                      ),
                     ),
                   IconButton(
-                    onPressed: () => _showDeleteConfirmation(address, controller),
-                    icon: const Icon(Icons.delete_outline, color: AppColors.notificationRed),
+                    onPressed: () =>
+                        _showDeleteConfirmation(address, controller),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: AppColors.notificationRed,
+                    ),
                   ),
                 ],
               )
@@ -215,12 +237,15 @@ class AddressListPage extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmation(AddressModel address, AddressController controller) {
+  void _showDeleteConfirmation(
+    AddressModel address,
+    AddressController controller,
+  ) {
     AppDialogs.showDeleteConfirmation(
       title: 'حذف العنوان',
       description: 'هل أنت متأكد من حذف عنوان "${address.label}"؟',
-      onConfirm: () {
-        controller.deleteAddress(address.id);
+      onConfirm: () async {
+        await controller.deleteAddress(address.id);
       },
     );
   }

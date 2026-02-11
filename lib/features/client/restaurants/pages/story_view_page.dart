@@ -29,7 +29,8 @@ class _StoryViewPageState extends State<StoryViewPage> {
   List<StoryItem> _storyItems = [];
   int _currentIndex = 0;
   bool _isLoading = true;
-  final Map<String, int> _lovesDelta = {};
+  final Map<String, bool> _lovedState = {};
+  final Map<String, bool> _viewedState = {};
   final TextEditingController _replyController = TextEditingController();
   final FocusNode _replyFocusNode = FocusNode();
 
@@ -38,6 +39,11 @@ class _StoryViewPageState extends State<StoryViewPage> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    // Initialize loved & viewed state from API data
+    for (final story in widget.stories) {
+      _lovedState[story.id] = story.isLoved;
+      _viewedState[story.id] = story.isViewed;
+    }
     _initializeStories();
   }
 
@@ -47,9 +53,9 @@ class _StoryViewPageState extends State<StoryViewPage> {
     // Start generating items from the initialIndex
     for (int i = widget.initialIndex; i < widget.stories.length; i++) {
       final story = widget.stories[i];
-      if (story.mediaType == 'image') {
+      if (story.mediaType == 'image' && story.mediaUrl != null) {
         items.add(StoryItem.pageImage(
-          url: story.mediaUrl,
+          url: story.mediaUrl!,
           caption: Text(
             story.text ?? '',
             style: const TextStyle(
@@ -68,11 +74,11 @@ class _StoryViewPageState extends State<StoryViewPage> {
           controller: _storyController,
           duration: const Duration(seconds: 10),
         ));
-      } else if (story.mediaType == 'video') {
+      } else if (story.mediaType == 'video' && story.mediaUrl != null) {
         Duration? videoDuration;
         try {
           // Pre-fetch video duration to ensure correct progress bar and playback time
-          final controller = VideoPlayerController.networkUrl(Uri.parse(story.mediaUrl));
+          final controller = VideoPlayerController.networkUrl(Uri.parse(story.mediaUrl!));
           await controller.initialize();
           videoDuration = controller.value.duration;
           await controller.dispose();
@@ -81,7 +87,7 @@ class _StoryViewPageState extends State<StoryViewPage> {
         }
 
         items.add(StoryItem.pageVideo(
-          story.mediaUrl,
+          story.mediaUrl!,
           caption: Text(
             story.text ?? '',
             style: const TextStyle(
@@ -155,15 +161,20 @@ class _StoryViewPageState extends State<StoryViewPage> {
               controller: _storyController,
               repeat: false,
               onStoryShow: (s, index) {
-                 final story = widget.stories[widget.initialIndex + _storyItems.indexOf(s)];
-                 Get.find<RestaurantsController>().viewStory(story.id);
+                 final storyIndex = widget.initialIndex + _storyItems.indexOf(s);
+                 final story = widget.stories[storyIndex];
+
+                 // Only call viewStory API if not already viewed
+                 if (_viewedState[story.id] != true) {
+                   _viewedState[story.id] = true;
+                   Get.find<RestaurantsController>().viewStory(story.id);
+                 }
 
                  // We need to update the header safely
                  WidgetsBinding.instance.addPostFrameCallback((_) {
                    if (mounted) {
                      setState(() {
-                       // Adjust index by adding initialIndex because _storyItems starts from there
-                       _currentIndex = widget.initialIndex + _storyItems.indexOf(s);
+                       _currentIndex = storyIndex;
                      });
                    }
                  });
@@ -342,34 +353,41 @@ class _StoryViewPageState extends State<StoryViewPage> {
                 GestureDetector(
                   onTap: () async {
                     final story = widget.stories[_currentIndex];
-                    // Optimistic update
+                    final isCurrentlyLoved = _lovedState[story.id] ?? false;
+                    // Optimistic toggle
                     setState(() {
-                      _lovesDelta[story.id] = (_lovesDelta[story.id] ?? 0) + 1;
+                      _lovedState[story.id] = !isCurrentlyLoved;
                     });
                     
                     // Call API
                     await Get.find<RestaurantsController>().loveStory(story.id);
                   },
-                  child: Container(
-                    width: 54.w,
-                    height: 54.w,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.w),
-                    ),
-                    child: ClipOval(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Center(
-                          child: Icon(
-                            Icons.favorite_rounded,
-                            color: const Color(0xFFFB2C36), // Notification Red from AppColors
-                            size: 26.w,
+                  child: Builder(
+                    builder: (context) {
+                      final story = widget.stories[_currentIndex];
+                      final isLoved = _lovedState[story.id] ?? false;
+                      return Container(
+                        width: 54.w,
+                        height: 54.w,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.w),
+                        ),
+                        child: ClipOval(
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Center(
+                              child: Icon(
+                                isLoved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                color: isLoved ? const Color(0xFFFB2C36) : Colors.white,
+                                size: 26.w,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ),
               ],

@@ -946,21 +946,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         color: Colors.white,
                       ),
                     ),
+
                   if (!cartController.isLoading)
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12.r),
+                    ...[
+                      SizedBox(width: 8.w),
+                      Text(
+                      '${total.toStringAsFixed(1)} د.ل',
+                      style: TextStyle().textColorBold(
+                        fontSize: 16.sp,
+                        color: Colors.white,
                       ),
-                      child: Text(
-                        '${total.toStringAsFixed(1)} د.ل',
-                        style: TextStyle().textColorBold(
-                          fontSize: 16.sp,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                    )],
                 ],
               ),
               onTap: hasAddress

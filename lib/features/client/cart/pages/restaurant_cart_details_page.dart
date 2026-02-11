@@ -20,13 +20,13 @@ class RestaurantCartDetailsPage extends StatefulWidget {
   const RestaurantCartDetailsPage({super.key, required this.cart});
 
   @override
-  State<RestaurantCartDetailsPage> createState() => _RestaurantCartDetailsPageState();
+  State<RestaurantCartDetailsPage> createState() =>
+      _RestaurantCartDetailsPageState();
 }
 
 class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
   final CartController controller = Get.find<CartController>();
   bool _isInvoiceExpanded = false;
-
 
   @override
   void initState() {
@@ -42,7 +42,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'السلة',
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor:
+            Theme.of(context).appBarTheme.backgroundColor ??
+            Theme.of(context).scaffoldBackgroundColor,
         actions: [
           CustomIconButtonApp(
             onTap: () {
@@ -50,12 +52,16 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 title: 'مسح السلة',
                 description: 'هل أنت متأكد من مسح جميع المنتجات من السلة؟',
                 confirmText: 'مسح',
-                onConfirm: () {
-                  controller.clearCart(widget.cart.restaurant.id!);
+                onConfirm: () async {
+                  await controller.clearCart(widget.cart.restaurant.id!);
                 },
               );
             },
-            childWidget: Icon(Icons.delete_sweep_outlined, color: Colors.red, size: 24.r),
+            childWidget: Icon(
+              Icons.delete_sweep_outlined,
+              color: Colors.red,
+              size: 24.r,
+            ),
           ),
           SizedBox(width: 8.w),
         ],
@@ -77,9 +83,16 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.remove_shopping_cart, size: 80.r, color: Colors.grey),
+                  Icon(
+                    Icons.remove_shopping_cart,
+                    size: 80.r,
+                    color: Colors.grey,
+                  ),
                   SizedBox(height: 16.h),
-                  Text('السلة فارغة', style: const TextStyle().textColorBold(fontSize: 18.sp)),
+                  Text(
+                    'السلة فارغة',
+                    style: const TextStyle().textColorBold(fontSize: 18.sp),
+                  ),
                 ],
               ),
             );
@@ -98,10 +111,16 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                       _buildRestaurantHeader(currentCart),
                       SizedBox(height: 13.h),
                       // Cart Items
-                      ...currentCart.items.map((item) => Padding(
-                            padding: EdgeInsets.only(bottom: 13.h),
-                            child: _buildCartItemCard(item, currentCart.items.indexOf(item), currentCart),
-                          )),
+                      ...currentCart.items.map(
+                        (item) => Padding(
+                          padding: EdgeInsets.only(bottom: 13.h),
+                          child: _buildCartItemCard(
+                            item,
+                            currentCart.items.indexOf(item),
+                            currentCart,
+                          ),
+                        ),
+                      ),
                       SizedBox(height: 13.h),
                       // Add Items Button
                       _buildAddItemsButton(),
@@ -124,12 +143,16 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
   Widget _buildRestaurantHeader(RestaurantCartResponse currentCart) {
     return InkWell(
       onTap: () {
-        Get.to(() => RestaurantDetailsScreen(restaurantId: widget.cart.restaurant.restaurantId!!))?.then((value) {
+        Get.to(
+          () => RestaurantDetailsScreen(
+            restaurantId: widget.cart.restaurant.restaurantId!!,
+          ),
+        )?.then((value) {
           controller.fetchRestaurantCart(widget.cart.restaurant.id!);
-        },);
+        });
       },
       child: Container(
-        padding: EdgeInsetsDirectional.only(start: 16.76.w, top: 1, bottom: 1 ),
+        padding: EdgeInsetsDirectional.only(start: 16.76.w, top: 1, bottom: 1),
         height: 73.51.h,
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
@@ -221,16 +244,17 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
     );
   }
 
-  Widget _buildCartItemCard(CartItem cartItem, int index, RestaurantCartResponse currentCart) {
+  Widget _buildCartItemCard(
+    CartItem cartItem,
+    int index,
+    RestaurantCartResponse currentCart,
+  ) {
     return Container(
       height: 125.49.h,
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: Theme.of(context).dividerColor,
-          width: 0.761,
-        ),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 0.761),
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -252,15 +276,15 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                     borderRadius: BorderRadius.circular(14.r),
                     child: cartItem.item.image != null
                         ? CachedNetworkImage(
-                      imageUrl: cartItem.item.image!,
-                      fit: BoxFit.cover,
-                    )
+                            imageUrl: cartItem.item.image!,
+                            fit: BoxFit.cover,
+                          )
                         : Container(color: Colors.grey[200]),
                   ),
                 ),
               ),
               SizedBox(width: 12.w),
-// Item Details (Middle)
+              // Item Details (Middle)
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(top: 16.h),
@@ -331,7 +355,8 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                                   height: 34.48.h,
                                   alignment: Alignment.center,
                                   child: SvgIcon(
-                                    iconName: 'assets/svg/client/restaurant_details/plus_icon.svg',
+                                    iconName:
+                                        'assets/svg/client/restaurant_details/plus_icon.svg',
                                     width: 16.w,
                                     height: 16.h,
                                     color: Theme.of(context).iconTheme.color,
@@ -344,7 +369,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                                 '${cartItem.quantity}',
                                 style: TextStyle().textColorBold(
                                   fontSize: 14.sp,
-                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodyLarge?.color,
                                 ),
                               ),
                               // Minus Button
@@ -357,13 +384,16 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                                       quantity: cartItem.quantity - 1,
                                       notes: cartItem.notes,
                                     );
-                                  }
-                                  else {
+                                  } else {
                                     AppDialogs.showDeleteConfirmation(
                                       title: 'حذف المنتج',
-                                      description: 'هل أنت متأكد من حذف هذا المنتج من السلة؟',
-                                      onConfirm: () {
-                                        controller.removeItem(currentCart.restaurant.id!, index);
+                                      description:
+                                          'هل أنت متأكد من حذف هذا المنتج من السلة؟',
+                                      onConfirm: () async {
+                                        await controller.removeItem(
+                                          currentCart.restaurant.id!,
+                                          index,
+                                        );
                                       },
                                     );
                                   }
@@ -399,8 +429,11 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                     AppDialogs.showDeleteConfirmation(
                       title: 'حذف المنتج',
                       description: 'هل أنت متأكد من حذف هذا المنتج من السلة؟',
-                      onConfirm: () {
-                        controller.removeItem(currentCart.restaurant.id!, index);
+                      onConfirm: () async {
+                        await controller.removeItem(
+                          currentCart.restaurant.id!,
+                          index,
+                        );
                       },
                     );
                   },
@@ -412,8 +445,6 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                   ),
                 ),
               ),
-
-
             ],
           ),
         ],
@@ -426,10 +457,13 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
       onTap: () {
         // Navigate to restaurant menu or add items
         // Get.back();
-        Get.to(() => RestaurantDetailsScreen(restaurantId: widget.cart.restaurant.restaurantId!!))?.then((value) {
+        Get.to(
+          () => RestaurantDetailsScreen(
+            restaurantId: widget.cart.restaurant.restaurantId!!,
+          ),
+        )?.then((value) {
           controller.fetchRestaurantCart(widget.cart.restaurant.id!);
-        },);
-
+        });
       },
       child: Container(
         height: 36.h,
@@ -465,7 +499,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
       if (controller.isLoadingDrinks) {
         return const Center(child: CircularProgressIndicator());
       }
-      
+
       if (controller.drinks.isEmpty) {
         return const SizedBox.shrink();
       }
@@ -531,7 +565,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                                   drink['name'],
                                   style: TextStyle().textColorBold(
                                     fontSize: 14.sp,
-                                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.color,
                                   ),
                                 ),
                                 SizedBox(height: 4.h),
@@ -539,10 +575,13 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                                   '${(drink['price'] as num).toStringAsFixed(0)} د.ل × ${drink['quantity']}',
                                   style: TextStyle().textColorMedium(
                                     fontSize: 12.sp,
-                                    color: Theme.of(context).textTheme.bodySmall?.color,
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall?.color,
                                   ),
                                 ),
-                                if (drink['notes'] != null && drink['notes'].isNotEmpty)
+                                if (drink['notes'] != null &&
+                                    drink['notes'].isNotEmpty)
                                   Padding(
                                     padding: EdgeInsets.only(top: 4.h),
                                     child: Text(
@@ -557,20 +596,20 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                             ),
                           ),
                           // Delete Button
-                           GestureDetector(
-                              onTap: () {
-                                controller.removeDrink(index);
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: SvgIcon(
-                                  iconName: 'assets/svg/cart/delete.svg',
-                                  width: 20.w,
-                                  height: 20.h,
-                                  color: Colors.red.withOpacity(0.7),
-                                ),
+                          GestureDetector(
+                            onTap: () {
+                              controller.removeDrink(index);
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: SvgIcon(
+                                iconName: 'assets/svg/cart/delete.svg',
+                                width: 20.w,
+                                height: 20.h,
+                                color: Colors.red.withOpacity(0.7),
                               ),
                             ),
+                          ),
                         ],
                       ),
                     ),
@@ -580,7 +619,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
             ),
             SizedBox(height: 24.h),
           ],
-          
+
           Text(
             'أضف مشروبات',
             style: TextStyle().textColorBold(
@@ -612,10 +651,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: Theme.of(context).dividerColor,
-          width: 0.761,
-        ),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 0.761),
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -638,11 +674,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                       ? CachedNetworkImage(
                           imageUrl: drink.image!,
                           fit: BoxFit.cover,
-                          errorWidget: (context, url, error) => Container(color: Colors.grey[200]),
+                          errorWidget: (context, url, error) =>
+                              Container(color: Colors.grey[200]),
                         )
-                      : Container(
-                          color: Colors.grey[200],
-                        ),
+                      : Container(color: Colors.grey[200]),
                 ),
               ),
               SizedBox(height: 12.h),
@@ -717,7 +752,12 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
 
   Widget _buildBottomSummary(RestaurantCartResponse currentCart) {
     return Container(
-      padding: EdgeInsets.only(top: 16.h, left: 24.w, right: 24.w, bottom: 24.h),
+      padding: EdgeInsets.only(
+        top: 16.h,
+        left: 24.w,
+        right: 24.w,
+        bottom: 24.h,
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.only(
@@ -725,10 +765,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
           topRight: Radius.circular(24.r),
         ),
         border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 0.761,
-          ),
+          top: BorderSide(color: Theme.of(context).dividerColor, width: 0.761),
         ),
         boxShadow: [
           BoxShadow(
@@ -784,78 +821,82 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
           ),
           SizedBox(height: 12.h),
           // Continue Button
-          Obx(() => GestureDetector(
-                onTap: controller.isLoading
-                    ? null
-                    : () {
-                        // Pass total price if needed, or rely on backend re-calculation
-                        Get.toNamed(AppRoutes.checkout, arguments: currentCart);
-                      },
-                child: Container(
-                  height: 56.h,
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4D179A),
-                    borderRadius: BorderRadius.circular(16.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF8E51FF).withOpacity(0.19),
-                         blurRadius: 15,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Continue Text (Right in RTL)
-                      if (controller.isLoading)
-                        const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        )
-                      else
-                        Text(
-                          'تأكيد الطلب',
-                          style: TextStyle().textColorBold(
-                            fontSize: 16.sp,
-                            color: Colors.white,
-                          ),
-                        ),
-                      // Total Price (Left in RTL)
-                      if (!controller.isLoading)
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Text(
-                            '${(currentCart.totalPrice + _calculateDrinksTotal() + 10).toStringAsFixed(0)} د.ل', // Added dummy delivery fee 10
-                            style: TextStyle().textColorBold(
-                              fontSize: 16.sp,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+          Obx(
+            () => GestureDetector(
+              onTap: controller.isLoading
+                  ? null
+                  : () {
+                      // Pass total price if needed, or rely on backend re-calculation
+                      Get.toNamed(AppRoutes.checkout, arguments: currentCart);
+                    },
+              child: Container(
+                height: 56.h,
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4D179A),
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF8E51FF).withOpacity(0.19),
+                      blurRadius: 15,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-              )),
-          
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Continue Text (Right in RTL)
+                    if (controller.isLoading)
+                      const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
+                    else
+                      Text(
+                        'تأكيد الطلب',
+                        style: TextStyle().textColorBold(
+                          fontSize: 16.sp,
+                          color: Colors.white,
+                        ),
+                      ),
+                    // Total Price (Left in RTL)
+                    if (!controller.isLoading)
+                      Text(
+                        '${(currentCart.totalPrice + _calculateDrinksTotal() + 10).toStringAsFixed(0)} د.ل', // Added dummy delivery fee 10
+                        style: TextStyle().textColorBold(
+                          fontSize: 16.sp,
+                          color: Colors.white,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           // Invoice Details (Expandable)
           AnimatedCrossFade(
             firstChild: const SizedBox.shrink(),
             secondChild: Column(
               children: [
                 SizedBox(height: 16.h),
-                _buildInvoiceRow('المجموع الفرعي', '${currentCart.totalPrice.toStringAsFixed(0)} د.ل'),
+                _buildInvoiceRow(
+                  'المجموع الفرعي',
+                  '${currentCart.totalPrice.toStringAsFixed(0)} د.ل',
+                ),
                 if (_calculateDrinksTotal() > 0)
                   Padding(
                     padding: EdgeInsets.only(top: 12.h),
-                    child: _buildInvoiceRow('المشروبات', '${_calculateDrinksTotal().toStringAsFixed(0)} د.ل'),
+                    child: _buildInvoiceRow(
+                      'المشروبات',
+                      '${_calculateDrinksTotal().toStringAsFixed(0)} د.ل',
+                    ),
                   ),
                 SizedBox(height: 12.h),
-                _buildInvoiceRow('رسوم التوصيل', '10 د.ل'), // Fixed delivery fee for now
+                _buildInvoiceRow(
+                  'رسوم التوصيل',
+                  '10 د.ل',
+                ), // Fixed delivery fee for now
                 SizedBox(height: 12.h),
                 const Divider(height: 1),
                 SizedBox(height: 12.h),
@@ -867,7 +908,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 SizedBox(height: 8.h),
               ],
             ),
-            crossFadeState: _isInvoiceExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            crossFadeState: _isInvoiceExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 300),
           ),
         ],
@@ -914,8 +957,6 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
       ],
     );
   }
-
-
 
   void _showAddDrinkBottomSheet(MenuItem drink) {
     int quantity = 1;
@@ -970,7 +1011,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                           color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(12.r),
                         ),
-                        child: Icon(Icons.remove, color: Theme.of(context).iconTheme.color),
+                        child: Icon(
+                          Icons.remove,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
                       ),
                     ),
                     SizedBox(width: 24.w),
@@ -993,7 +1037,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                           color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(12.r),
                         ),
-                        child: Icon(Icons.add, color: Theme.of(context).iconTheme.color),
+                        child: Icon(
+                          Icons.add,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
                       ),
                     ),
                   ],
@@ -1001,7 +1048,9 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                 SizedBox(height: 24.h),
                 TextField(
                   controller: notesController,
-                  style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'ملاحظات (مثل: بدون سكر، ثلج زيادة...)',
                     hintStyle: TextStyle(color: Theme.of(context).hintColor),
@@ -1011,13 +1060,17 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                       borderRadius: BorderRadius.circular(12.r),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 12.h,
+                    ),
                   ),
                   maxLines: 2,
                 ),
                 SizedBox(height: 24.h),
                 CustomButtonApp(
-                  text: 'إضافة للطلب - ${(drink.price * quantity).toStringAsFixed(0)} د.ل',
+                  text:
+                      'إضافة للطلب - ${(drink.price * quantity).toStringAsFixed(0)} د.ل',
                   onTap: () {
                     controller.addDrink(drink, quantity, notesController.text);
                     Get.back();

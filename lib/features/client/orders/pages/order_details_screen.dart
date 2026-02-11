@@ -451,6 +451,9 @@ class OrderDetailsScreen extends StatelessWidget {
                   'restaurantLong': order.deliveryLong, // Fallback
                   'orderId': order.id,
                   'status': status,
+                  'driverName': order.driver?.name,
+                  'driverPhone': order.driver?.phone,
+                  'driverImageUrl': order.driver?.image,
                 });
               },
               height: 48.h,

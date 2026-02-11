@@ -81,12 +81,14 @@ class OrderDriver {
   final String name;
   final String? username;
   final String? phone;
+  final String? image;
 
   OrderDriver({
     required this.id,
     required this.name,
     this.username,
     this.phone,
+    this.image,
   });
 
   factory OrderDriver.fromJson(Map<String, dynamic> json) {
@@ -95,6 +97,7 @@ class OrderDriver {
       name: json['name'] as String,
       username: json['username'] as String?,
       phone: json['phone'] as String?,
+      image: json['image'] as String?,
     );
   }
 }

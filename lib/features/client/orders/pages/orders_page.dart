@@ -77,7 +77,8 @@ class OrdersPage extends StatelessWidget {
     return Container(
       height: 48.h,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        // color: Theme.of(context).colorScheme.surface,
+        color:  Color(0xCCF3F4F6),
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: TabBar(
@@ -97,12 +98,7 @@ class OrdersPage extends StatelessWidget {
         labelColor: Theme.of(context).textTheme.bodyLarge?.color,
         unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color,
         dividerColor: Colors.transparent,
-        labelStyle: TextStyle(
-          fontSize: 14.sp,
-          fontWeight: FontWeight.bold,
-          fontFamily:
-              'Cairo', // Assuming Cairo is the app font, otherwise rely on default
-        ),
+        labelStyle: TextStyle().textColorBold(fontSize: 14.sp,),
         tabs: [
           Tab(
             child: Obx(

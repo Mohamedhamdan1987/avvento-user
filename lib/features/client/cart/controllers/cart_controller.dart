@@ -285,6 +285,9 @@ class CartController extends GetxController {
             'restaurantLong': restaurantLong,
             'orderId': order.id,
             'status': OrderStatus.fromString(order.status),
+            'driverName': order.driver?.name,
+            'driverPhone': order.driver?.phone,
+            'driverImageUrl': order.driver?.image,
           },
         );
       } else {

@@ -1,7 +1,9 @@
 import 'package:avvento/core/theme/app_text_styles.dart';
 import 'package:avvento/core/widgets/reusable/svg_icon.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:avvento/core/enums/order_status.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -9,109 +11,119 @@ import '../../../../core/constants/app_colors.dart';
 class OrderTrackingDialog extends StatelessWidget {
   final String orderId;
   final OrderStatus status;
+  final String? driverName;
+  final String? driverPhone;
+  final String? driverImageUrl;
 
   const OrderTrackingDialog({
     super.key,
     required this.orderId,
     required this.status,
+    this.driverName,
+    this.driverPhone,
+    this.driverImageUrl,
   });
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(32.r),
-          topRight: Radius.circular(32.r),
-        ),
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag Handle
-            Container(
-              margin: EdgeInsets.only(top: 12.h),
-              width: 48.w,
-              height: 6.h,
-              decoration: BoxDecoration(
-                color: Theme.of(context).dividerColor,
-                borderRadius: BorderRadius.circular(3.r),
-              ),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.5,
+      minChildSize: 0.25,
+      maxChildSize: 0.92,
+      snap: true,
+      snapSizes: const [0.5, 0.92],
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(32.r),
+              topRight: Radius.circular(32.r),
             ),
-
-            SizedBox(height: 8.h),
-
-            // Scrollable Content
-            ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24.w),
-                      child: Column(
-                        children: [
-                          Text(
-                            _getStatusTitle(),
-                            style: TextStyle().textColorBold(
-                              fontSize: 20.sp,
-                              color: Theme.of(context).textTheme.titleLarge?.color,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            'طلبك رقم #$orderId',
-                            style: TextStyle().textColorNormal(
-                              fontSize: 12.sp,
-                              color: Theme.of(context).textTheme.bodySmall?.color,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
+          ),
+          child: CustomScrollView(
+            controller: scrollController,
+            slivers: [
+              // Drag Handle (pinned)
+              SliverToBoxAdapter(
+                child: Center(
+                  child: Container(
+                    margin: EdgeInsets.only(top: 12.h, bottom: 8.h),
+                    width: 48.w,
+                    height: 6.h,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).dividerColor,
+                      borderRadius: BorderRadius.circular(3.r),
                     ),
-
-                    SizedBox(height: 24.h),
-
-                    // Animation Section
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24.w),
-                      child: _buildAnimationSection(context),
-                    ),
-
-                    SizedBox(height: 24.h),
-
-                    // Timeline
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24.w),
-                      child: _buildTimeline(context),
-                    ),
-
-                    SizedBox(height: 24.h),
-
-                    // Driver Info (if applicable)
-                    if (status == OrderStatus.onTheWay ||
-                        status == OrderStatus.awaitingDelivery)
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.w),
-                        child: _buildDriverInfo(context),
-                      ),
-
-                    SizedBox(height: 24.h),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
+
+              // Header
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: Column(
+                    children: [
+                      Text(
+                        _getStatusTitle(),
+                        style: TextStyle().textColorBold(
+                          fontSize: 20.sp,
+                          color: Theme.of(context).textTheme.titleLarge?.color,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        'طلبك رقم #$orderId',
+                        style: TextStyle().textColorNormal(
+                          fontSize: 12.sp,
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+
+              // Animation Section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: _buildAnimationSection(context),
+                ),
+              ),
+
+              SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+
+              // Driver Info (if applicable)
+              if (status == OrderStatus.onTheWay ||
+                  status == OrderStatus.awaitingDelivery)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    child: _buildDriverInfo(context),
+                  ),
+                ),
+
+              SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+
+              // Timeline
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: _buildTimeline(context),
+                ),
+              ),
+
+              SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -526,27 +538,44 @@ class OrderTrackingDialog extends StatelessWidget {
           // Action Buttons
           Row(
             children: [
-              Container(
-                width: 36.w,
-                height: 36.h,
-                decoration: BoxDecoration(
-                  color: Color(0xFFFF4500),
-                  shape: BoxShape.circle,
+              // Phone Call Button
+              GestureDetector(
+                onTap: () async {
+                  if (driverPhone != null && driverPhone!.isNotEmpty) {
+                    final uri = Uri(scheme: 'tel', path: driverPhone);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri);
+                    }
+                  }
+                },
+                child: Container(
+                  width: 36.w,
+                  height: 36.h,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFFF4500),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.phone, color: Colors.white, size: 16.sp),
                 ),
-                child: Icon(Icons.phone, color: Colors.white, size: 16.sp),
               ),
               SizedBox(width: 8.w),
-              Container(
-                width: 36.w,
-                height: 36.h,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.chat_bubble_outline,
-                  color: Theme.of(context).textTheme.titleLarge?.color,
-                  size: 16.sp,
+              // Chat Button
+              GestureDetector(
+                onTap: () {
+                  // TODO: Implement chat with driver
+                },
+                child: Container(
+                  width: 36.w,
+                  height: 36.h,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.chat_bubble_outline,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
+                    size: 16.sp,
+                  ),
                 ),
               ),
             ],
@@ -555,37 +584,78 @@ class OrderTrackingDialog extends StatelessWidget {
           // Driver Info
           Expanded(
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Container(
-                  width: 40.w,
-                  height: 40.h,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Theme.of(context).dividerColor, width: 0.76.w),
-                  ),
-                ),
-                SizedBox(width: 12.w),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        'محمد علي',
+                        driverName ?? 'كابتن أفينتو',
                         style: TextStyle().textColorBold(
                           fontSize: 14.sp,
                           color: Theme.of(context).textTheme.titleLarge?.color,
                         ),
+                        textAlign: TextAlign.end,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       SizedBox(height: 2.h),
-                      Text(
-                        'كيا سيراتو • أبيض',
-                        style: TextStyle().textColorNormal(
-                          fontSize: 10.sp,
-                          color: Theme.of(context).textTheme.bodySmall?.color,
+                      if (driverPhone != null && driverPhone!.isNotEmpty)
+                        Text(
+                          driverPhone!,
+                          style: TextStyle().textColorNormal(
+                            fontSize: 10.sp,
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                          ),
+                          textAlign: TextAlign.end,
+                          textDirection: TextDirection.ltr,
                         ),
-                      ),
                     ],
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                // Driver Photo
+                Container(
+                  width: 44.w,
+                  height: 44.h,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.3),
+                      width: 1.5.w,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: driverImageUrl != null && driverImageUrl!.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: driverImageUrl!,
+                            fit: BoxFit.cover,
+                            width: 44.w,
+                            height: 44.h,
+                            placeholder: (context, url) => Center(
+                              child: SizedBox(
+                                width: 20.w,
+                                height: 20.h,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Icon(
+                              Icons.person,
+                              color: AppColors.primary,
+                              size: 24.sp,
+                            ),
+                          )
+                        : Icon(
+                            Icons.person,
+                            color: AppColors.primary,
+                            size: 24.sp,
+                          ),
                   ),
                 ),
               ],
@@ -596,16 +666,25 @@ class OrderTrackingDialog extends StatelessWidget {
     );
   }
 
-  static void show(BuildContext context, String orderId, OrderStatus status) {
+  static void show(
+    BuildContext context,
+    String orderId,
+    OrderStatus status, {
+    String? driverName,
+    String? driverPhone,
+    String? driverImageUrl,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: OrderTrackingDialog(orderId: orderId, status: status),
+      useSafeArea: true,
+      builder: (context) => OrderTrackingDialog(
+        orderId: orderId,
+        status: status,
+        driverName: driverName,
+        driverPhone: driverPhone,
+        driverImageUrl: driverImageUrl,
       ),
     );
   }

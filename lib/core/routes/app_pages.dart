@@ -18,6 +18,13 @@ import '../../features/auth/pages/otp_verification_page.dart';
 import '../../features/auth/pages/reset_password_page.dart';
 import '../../features/client/restaurants/bindings/restaurants_binding.dart';
 import '../../features/client/restaurants/pages/restaurants_page.dart';
+import '../../features/client/markets/bindings/markets_binding.dart';
+import '../../features/client/markets/pages/markets_page.dart';
+import '../../features/client/markets/pages/market_details_page.dart';
+import '../../features/client/markets/pages/market_cart_details_page.dart';
+import '../../features/client/markets/pages/market_checkout_page.dart';
+import '../../features/client/markets/models/market_cart_model.dart';
+import '../../features/client/markets/controllers/market_cart_controller.dart';
 import '../../features/client/orders/pages/order_tracking_map_page.dart';
 import '../../features/client/orders/widgets/order_tracking_dialog.dart';
 import 'package:avvento/core/enums/order_status.dart';
@@ -129,6 +136,46 @@ class AppPages {
       name: AppRoutes.restaurants,
       page: () => const RestaurantsPage(),
       binding: RestaurantsBinding(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: AppRoutes.markets,
+      page: () => const MarketsPage(),
+      binding: MarketsBinding(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: AppRoutes.marketDetails,
+      page: () {
+        final marketId = Get.arguments as String;
+        return MarketDetailsPage(marketId: marketId);
+      },
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: AppRoutes.marketCartDetails,
+      page: () {
+        final cart = Get.arguments as MarketCartResponse;
+        return MarketCartDetailsPage(cart: cart);
+      },
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<MarketCartController>()) {
+          Get.put(MarketCartController());
+        }
+      }),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: AppRoutes.marketCheckout,
+      page: () {
+        final cart = Get.arguments as MarketCartResponse;
+        return MarketCheckoutPage(cart: cart);
+      },
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<MarketCartController>()) {
+          Get.put(MarketCartController());
+        }
+      }),
       middlewares: [AuthMiddleware()],
     ),
     GetPage(

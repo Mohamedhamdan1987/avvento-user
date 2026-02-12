@@ -32,6 +32,12 @@ class AppRoutes {
   // Restaurants Routes
   static const String restaurants = '/restaurants';
 
+  // Markets Routes
+  static const String markets = '/markets';
+  static const String marketDetails = '/market-details';
+  static const String marketCartDetails = '/market-cart-details';
+  static const String marketCheckout = '/market-checkout';
+
   static const String cartListPage = '/cart-list-page';
   static const String restaurantCartDetails = '/restaurant-cart-details';
   static const String checkout = '/checkout';

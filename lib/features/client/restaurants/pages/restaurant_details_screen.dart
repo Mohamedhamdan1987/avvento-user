@@ -1910,7 +1910,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
       }
     } else {
       if (itemIndex != -1) {
-        cartController.updateCartItemQuantity(restaurantId, itemIndex, newQuantity);
+        cartController.updateCartItemQuantity(cartController.detailedCart!.restaurant.id, itemIndex, newQuantity);
       } else {
         controller.addToCart(
           itemId: item.id,

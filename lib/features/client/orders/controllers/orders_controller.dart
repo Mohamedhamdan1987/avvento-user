@@ -1,3 +1,4 @@
+import 'package:avvento/core/utils/logger.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -35,6 +36,7 @@ class OrdersController extends GetxController {
       ).toList());
       
     } catch (e) {
+      cprint("sdsdsd :${e.toString()}");
       showSnackBar(message: 'فشل في تحميل الطلبات', isError: true);
     } finally {
       isLoading.value = false;

@@ -353,7 +353,9 @@ class _HomePageContentState extends State<_HomePageContent> {
                           CategoryCard(
                             imagePath: 'assets/images/services/market.png',
                             title: 'الماركت',
-                            onTap: () {},
+                            onTap: () {
+                              Get.toNamed(AppRoutes.markets);
+                            },
                           ),
                           SizedBox(width: 14.w),
                           CategoryCard(

@@ -107,6 +107,31 @@ class OrdersService {
     }
   }
 
+  /// Create a market order
+  Future<Map<String, dynamic>> createMarketOrder({
+    required String marketId,
+    required String deliveryAddress,
+    required double deliveryLat,
+    required double deliveryLong,
+    required String paymentMethod,
+    String? notes,
+  }) async {
+    try {
+      final response = await _dioClient.post('/orders/market', data: {
+        'marketId': marketId,
+        'deliveryAddress': deliveryAddress,
+        'deliveryLat': deliveryLat,
+        'deliveryLong': deliveryLong,
+        'paymentMethod': paymentMethod,
+        'notes': notes ?? '',
+      });
+
+      return response.data as Map<String, dynamic>;
+    } on DioException {
+      rethrow;
+    }
+  }
+
   /// Rate a driver
   Future<void> rateDriver({
     required String orderId,

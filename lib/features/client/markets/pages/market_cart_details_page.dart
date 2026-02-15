@@ -322,22 +322,7 @@ class _MarketCartDetailsPageState extends State<MarketCartDetailsPage> {
                       SizedBox(height: 8.h),
                       // Quantity controls
                       Obx(() {
-                        if (controller.updatingProductIndex == index) {
-                          return SizedBox(
-                            width: 120.w,
-                            height: 36.h,
-                            child: Center(
-                              child: SizedBox(
-                                width: 16.r,
-                                height: 16.r,
-                                child: const CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Color(0xFF7F22FE),
-                                ),
-                              ),
-                            ),
-                          );
-                        }
+                        final isUpdating = controller.updatingProductIndex == index;
                         return Container(
                           width: 100.w,
                           height: 36.h,
@@ -356,72 +341,103 @@ class _MarketCartDetailsPageState extends State<MarketCartDetailsPage> {
                             children: [
                               // Plus Button
                               GestureDetector(
-                                onTap: () {
-                                  controller.updateQuantity(
-                                    marketId: currentCart.market.id,
-                                    productIndex: index,
-                                    quantity: cartProduct.quantity + 1,
-                                    notes: cartProduct.notes,
-                                  );
-                                },
-                                child: Container(
-                                  height: 34.48.h,
-                                  alignment: Alignment.center,
-                                  child: SvgIcon(
-                                    iconName:
-                                        'assets/svg/client/restaurant_details/plus_icon.svg',
-                                    width: 16.w,
-                                    height: 16.h,
-                                    color:
-                                        Theme.of(context).iconTheme.color,
+                                onTap: isUpdating
+                                    ? null
+                                    : () {
+                                        controller.updateQuantity(
+                                          marketId: currentCart.market.id,
+                                          productIndex: index,
+                                          quantity: cartProduct.quantity + 1,
+                                          notes: cartProduct.notes,
+                                        );
+                                      },
+                                child: AnimatedOpacity(
+                                  opacity: isUpdating ? 0.4 : 1.0,
+                                  duration: const Duration(milliseconds: 200),
+                                  child: Container(
+                                    height: 34.48.h,
+                                    alignment: Alignment.center,
+                                    child: SvgIcon(
+                                      iconName:
+                                          'assets/svg/client/restaurant_details/plus_icon.svg',
+                                      width: 16.w,
+                                      height: 16.h,
+                                      color:
+                                          Theme.of(context).iconTheme.color,
+                                    ),
                                   ),
                                 ),
                               ),
-                              Text(
-                                '${cartProduct.quantity}',
-                                style: TextStyle().textColorBold(
-                                  fontSize: 14.sp,
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge
-                                      ?.color,
+                              SizedBox(
+                                width: 20.w,
+                                height: 20.h,
+                                child: Center(
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 250),
+                                    child: isUpdating
+                                        ? SizedBox(
+                                            width: 14.w,
+                                            height: 14.h,
+                                            child: const CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Color(0xFF7F22FE),
+                                            ),
+                                          )
+                                        : Text(
+                                            '${cartProduct.quantity}',
+                                            key: ValueKey(cartProduct.quantity),
+                                            style: TextStyle().textColorBold(
+                                              fontSize: 14.sp,
+                                              color: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge
+                                                  ?.color,
+                                            ),
+                                          ),
+                                  ),
                                 ),
                               ),
                               // Minus Button
                               GestureDetector(
-                                onTap: () {
-                                  if (cartProduct.quantity > 1) {
-                                    controller.updateQuantity(
-                                      marketId: currentCart.market.id,
-                                      productIndex: index,
-                                      quantity: cartProduct.quantity - 1,
-                                      notes: cartProduct.notes,
-                                    );
-                                  } else {
-                                    AppDialogs.showDeleteConfirmation(
-                                      title: 'حذف المنتج',
-                                      description:
-                                          'هل أنت متأكد من حذف هذا المنتج من السلة؟',
-                                      onConfirm: () async {
-                                        await controller.removeProduct(
-                                          currentCart.market.id,
-                                          index,
-                                        );
+                                onTap: isUpdating
+                                    ? null
+                                    : () {
+                                        if (cartProduct.quantity > 1) {
+                                          controller.updateQuantity(
+                                            marketId: currentCart.market.id,
+                                            productIndex: index,
+                                            quantity: cartProduct.quantity - 1,
+                                            notes: cartProduct.notes,
+                                          );
+                                        } else {
+                                          AppDialogs.showDeleteConfirmation(
+                                            title: 'حذف المنتج',
+                                            description:
+                                                'هل أنت متأكد من حذف هذا المنتج من السلة؟',
+                                            onConfirm: () async {
+                                              await controller.removeProduct(
+                                                currentCart.market.id,
+                                                index,
+                                              );
+                                            },
+                                          );
+                                        }
                                       },
-                                    );
-                                  }
-                                },
-                                child: Container(
-                                  height: 34.48.h,
-                                  alignment: Alignment.center,
-                                  child: SvgIcon(
-                                    iconName: cartProduct.quantity > 1
-                                        ? 'assets/svg/client/restaurant_details/minus_icon.svg'
-                                        : 'assets/svg/cart/delete.svg',
-                                    width: 16.w,
-                                    height: 16.h,
-                                    color:
-                                        Theme.of(context).iconTheme.color,
+                                child: AnimatedOpacity(
+                                  opacity: isUpdating ? 0.4 : 1.0,
+                                  duration: const Duration(milliseconds: 200),
+                                  child: Container(
+                                    height: 34.48.h,
+                                    alignment: Alignment.center,
+                                    child: SvgIcon(
+                                      iconName: cartProduct.quantity > 1
+                                          ? 'assets/svg/client/restaurant_details/minus_icon.svg'
+                                          : 'assets/svg/cart/delete.svg',
+                                      width: 16.w,
+                                      height: 16.h,
+                                      color:
+                                          Theme.of(context).iconTheme.color,
+                                    ),
                                   ),
                                 ),
                               ),

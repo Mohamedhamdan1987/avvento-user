@@ -9,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
+import '../../cart/controllers/cart_controller.dart';
 import '../controllers/restaurant_details_controller.dart';
 import '../models/menu_item_model.dart';
 
@@ -29,6 +30,7 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
   final Set<String> selectedAddOnIds = {};
   
   late double basePrice;
+  bool _isUpdatingQuantity = false;
 
   @override
   void initState() {
@@ -36,6 +38,16 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
     basePrice = widget.menuItem.price;
     if (widget.menuItem.variations.isNotEmpty) {
       selectedVariation = widget.menuItem.variations.first;
+    }
+    // Check if item is already in cart and set initial quantity
+    final controller = Get.find<RestaurantDetailsController>();
+    final cartController = Get.find<CartController>();
+    final cartQuantity = cartController.getItemQuantityInCart(
+      controller.restaurantId,
+      widget.menuItem.id,
+    );
+    if (cartQuantity > 0) {
+      quantity = cartQuantity;
     }
   }
 
@@ -713,23 +725,191 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
   }
 
   Widget _buildBottomActionBar() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: Offset(0, -5),
+    return Obx(() {
+      final controller = Get.find<RestaurantDetailsController>();
+      final cartController = Get.find<CartController>();
+      final isLoading = controller.isAddingToCart;
+      final cartQuantity = cartController.getItemQuantityInCart(
+        controller.restaurantId,
+        widget.menuItem.id,
+      );
+      final isInCart = cartQuantity > 0;
+
+      return Container(
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: Offset(0, -5),
+            ),
+          ],
+        ),
+        child: isInCart
+            ? _buildUpdateQuantityBar(controller, cartController, isLoading, cartQuantity)
+            : _buildAddToCartBar(controller, isLoading),
+      );
+    });
+  }
+
+  Future<void> _onDecreaseQuantity(
+    CartController cartController,
+    RestaurantDetailsController controller,
+    int cartQuantity,
+    int itemIndex,
+  ) async {
+    if (_isUpdatingQuantity) return;
+    setState(() => _isUpdatingQuantity = true);
+    try {
+      if (cartQuantity > 1) {
+        await cartController.updateCartItemQuantity(
+          controller.restaurant!.user.id,
+          itemIndex,
+          cartQuantity - 1,
+        );
+        setState(() {
+          quantity = cartQuantity - 1;
+        });
+      } else {
+        await cartController.removeItem(
+          controller.restaurantId,
+          itemIndex,
+        );
+        setState(() {
+          quantity = 1;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isUpdatingQuantity = false);
+    }
+  }
+
+  Future<void> _onIncreaseQuantity(
+    CartController cartController,
+    RestaurantDetailsController controller,
+    int cartQuantity,
+    int itemIndex,
+  ) async {
+    if (_isUpdatingQuantity) return;
+    setState(() => _isUpdatingQuantity = true);
+    try {
+      await cartController.updateCartItemQuantity(
+        controller.restaurant!.user.id,
+        itemIndex,
+        cartQuantity + 1,
+      );
+      setState(() {
+        quantity = cartQuantity + 1;
+      });
+    } finally {
+      if (mounted) setState(() => _isUpdatingQuantity = false);
+    }
+  }
+
+  Widget _buildUpdateQuantityBar(
+    RestaurantDetailsController controller,
+    CartController cartController,
+    bool isLoading,
+    int cartQuantity,
+  ) {
+    final itemIndex = cartController.getItemIndexInCart(
+      controller.restaurantId,
+      widget.menuItem.id,
+    );
+    final isDisabled = _isUpdatingQuantity || isLoading;
+
+    return Row(
+      children: [
+        // Quantity Selector (dark style like restaurant_details_screen)
+        Container(
+          height: 40.h,
+          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          decoration: BoxDecoration(
+            color: const Color(0xFF101828),
+            borderRadius: BorderRadius.circular(20.r),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Quantity Selector
-          Container(
-            width: 120.w,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: isDisabled
+                    ? null
+                    : () => _onDecreaseQuantity(
+                          cartController, controller, cartQuantity, itemIndex),
+                child: AnimatedOpacity(
+                  opacity: isDisabled ? 0.4 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Container(
+                    width: 32.w,
+                    height: 32.h,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      cartQuantity > 1 ? Icons.remove : Icons.delete_outline,
+                      color: Colors.white,
+                      size: 18.w,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              SizedBox(
+                width: 24.w,
+                height: 24.h,
+                child: Center(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: _isUpdatingQuantity
+                        ? SizedBox(
+                            width: 16.w,
+                            height: 16.h,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            '$cartQuantity',
+                            key: ValueKey(cartQuantity),
+                            style: TextStyle().textColorBold(
+                              fontSize: 18.sp,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              GestureDetector(
+                onTap: isDisabled
+                    ? null
+                    : () => _onIncreaseQuantity(
+                          cartController, controller, cartQuantity, itemIndex),
+                child: AnimatedOpacity(
+                  opacity: isDisabled ? 0.4 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Container(
+                    width: 32.w,
+                    height: 32.h,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.add,
+                      color: Colors.white,
+                      size: 18.w,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        SizedBox(width: 16.w),
+
+        // Total Price display
+        Expanded(
+          child: Container(
             height: 40.h,
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
@@ -740,133 +920,176 @@ class _MealDetailsDialogState extends State<MealDetailsDialog> {
               borderRadius: BorderRadius.circular(20.r),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    if (quantity > 1) {
-                      setState(() {
-                        quantity--;
-                      });
-                    }
-                  },
-                  child: Container(
-                    width: 40.w,
-                    height: 40.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14.r),
-                    ),
-                    child: Icon(
-                      Icons.remove,
-                      size: 20.w,
-                      color: Theme.of(context).iconTheme.color,
-                    ),
-                  ),
+                Icon(
+                  Icons.shopping_cart,
+                  size: 18.w,
+                  color: const Color(0xFF101828),
                 ),
+                SizedBox(width: 8.w),
                 Text(
-                  quantity.toString(),
+                  'في السلة',
                   style: TextStyle().textColorBold(
-                    fontSize: 20.sp,
+                    fontSize: 14.sp,
                     color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      quantity++;
-                    });
-                  },
-                  child: Container(
-                    width: 40.w,
-                    height: 40.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14.r),
-                    ),
-                    child: Icon(
-                      Icons.add,
-                      size: 20.w,
-                      color: Theme.of(context).iconTheme.color,
-                    ),
+                SizedBox(width: 8.w),
+                Text(
+                  '${totalPrice.toStringAsFixed(0)} د.ل',
+                  style: TextStyle().textColorBold(
+                    fontSize: 14.sp,
+                    color: const Color(0xFF101828),
                   ),
                 ),
               ],
             ),
           ),
-          
-          SizedBox(width: 16.w),
-          
-          // Add to Cart Button
-          Expanded(
-            child: Obx(() {
-              final controller = Get.find<RestaurantDetailsController>();
-              final isLoading = controller.isAddingToCart;
-              
-              return CustomButtonApp(
-                height: 40.h,
-                borderRadius: 20.r,
-                color: const Color(0xFF101828),
-                onTap: isLoading ? null : () async {
-                  final selectedVariationNames = selectedVariation != null 
-                      ? [selectedVariation!.name] 
-                      : <String>[];
-                  
-                  final selectedAddOnNames = widget.menuItem.addOns
-                      .where((addOn) => selectedAddOnIds.contains(addOn.id))
-                      .map((addOn) => addOn.name)
-                      .toList();
-                  
-                  await controller.addToCart(
-                    itemId: widget.menuItem.id,
-                    quantity: quantity,
-                    selectedVariations: selectedVariationNames,
-                    selectedAddOns: selectedAddOnNames,
-                    notes: notesController.text,
-                  );
-                  
-                  if (Navigator.canPop(context)) {
-                    Navigator.pop(context);
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddToCartBar(RestaurantDetailsController controller, bool isLoading) {
+    return Row(
+      children: [
+        // Quantity Selector
+        Container(
+          width: 120.w,
+          height: 40.h,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            border: Border.all(
+              color: Theme.of(context).dividerColor,
+              width: 0.76.w,
+            ),
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  if (quantity > 1) {
+                    setState(() {
+                      quantity--;
+                    });
                   }
                 },
-                childWidget: isLoading
-                    ? SizedBox(
-                        width: 20.w,
-                        height: 20.h,
-                        child: const CircularProgressIndicator(
-                          strokeWidth: 2,
+                child: Container(
+                  width: 40.w,
+                  height: 40.h,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14.r),
+                  ),
+                  child: Icon(
+                    Icons.remove,
+                    size: 20.w,
+                    color: Theme.of(context).iconTheme.color,
+                  ),
+                ),
+              ),
+              Text(
+                quantity.toString(),
+                style: TextStyle().textColorBold(
+                  fontSize: 20.sp,
+                  color: Theme.of(context).textTheme.titleLarge?.color,
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    quantity++;
+                  });
+                },
+                child: Container(
+                  width: 40.w,
+                  height: 40.h,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14.r),
+                  ),
+                  child: Icon(
+                    Icons.add,
+                    size: 20.w,
+                    color: Theme.of(context).iconTheme.color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        SizedBox(width: 16.w),
+
+        // Add to Cart Button
+        Expanded(
+          child: CustomButtonApp(
+            height: 40.h,
+            borderRadius: 20.r,
+            color: const Color(0xFF101828),
+            onTap: isLoading
+                ? null
+                : () async {
+                    final selectedVariationNames = selectedVariation != null
+                        ? [selectedVariation!.name]
+                        : <String>[];
+
+                    final selectedAddOnNames = widget.menuItem.addOns
+                        .where((addOn) => selectedAddOnIds.contains(addOn.id))
+                        .map((addOn) => addOn.name)
+                        .toList();
+
+                    await controller.addToCart(
+                      itemId: widget.menuItem.id,
+                      quantity: quantity,
+                      selectedVariations: selectedVariationNames,
+                      selectedAddOns: selectedAddOnNames,
+                      notes: notesController.text,
+                    );
+
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    }
+                  },
+            childWidget: isLoading
+                ? SizedBox(
+                    width: 20.w,
+                    height: 20.h,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${totalPrice.toStringAsFixed(0)} د.ل',
+                        style: TextStyle().textColorBold(
+                          fontSize: 14.sp,
                           color: Colors.white,
                         ),
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '${totalPrice.toStringAsFixed(0)} د.ل',
-                            style: TextStyle().textColorBold(
-                              fontSize: 14.sp,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Text(
-                            'إضافة للسلة',
-                            style: TextStyle().textColorBold(
-                              fontSize: 15.sp,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Icon(
-                            Icons.shopping_cart,
-                            size: 20.w,
-                            color: Colors.white,
-                          ),
-                        ],
                       ),
-              );
-            }),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'إضافة للسلة',
+                        style: TextStyle().textColorBold(
+                          fontSize: 15.sp,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Icon(
+                        Icons.shopping_cart,
+                        size: 20.w,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

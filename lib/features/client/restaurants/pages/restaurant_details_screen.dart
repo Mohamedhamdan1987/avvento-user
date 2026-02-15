@@ -898,7 +898,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Obx(() {
-                  final isOpen = controller.schedule?.isOpen ?? controller.restaurant?.isOpen ?? false;
+                  final isOpen = controller.restaurant?.isOpen?? false;
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -1663,18 +1663,45 @@ class RestaurantDetailsScreen extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               GestureDetector(
-                                onTap: () => _updateQuantity(context, item, quantity - 1),
-                                child: Icon(Icons.remove, color: Colors.white, size: 16.w),
+                                onTap: cartController.isItemUpdating(item.id)
+                                    ? null
+                                    : () => _updateQuantity(context, item, quantity - 1),
+                                child: AnimatedOpacity(
+                                  opacity: cartController.isItemUpdating(item.id) ? 0.4 : 1.0,
+                                  duration: const Duration(milliseconds: 200),
+                                  child: Icon(Icons.remove, color: Colors.white, size: 16.w),
+                                ),
                               ),
                               SizedBox(width: 8.w),
-                              Text(
-                                '$quantity',
-                                style: TextStyle().textColorBold(fontSize: 14.sp, color: Colors.white),
+                              SizedBox(
+                                width: 18.w,
+                                height: 18.h,
+                                child: Center(
+                                  child: cartController.isItemUpdating(item.id)
+                                      ? SizedBox(
+                                          width: 14.w,
+                                          height: 14.h,
+                                          child: const CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
+                                          '$quantity',
+                                          style: TextStyle().textColorBold(fontSize: 14.sp, color: Colors.white),
+                                        ),
+                                ),
                               ),
                               SizedBox(width: 8.w),
                               GestureDetector(
-                                onTap: () => _updateQuantity(context, item, quantity + 1),
-                                child: Icon(Icons.add, color: Colors.white, size: 16.w),
+                                onTap: cartController.isItemUpdating(item.id)
+                                    ? null
+                                    : () => _updateQuantity(context, item, quantity + 1),
+                                child: AnimatedOpacity(
+                                  opacity: cartController.isItemUpdating(item.id) ? 0.4 : 1.0,
+                                  duration: const Duration(milliseconds: 200),
+                                  child: Icon(Icons.add, color: Colors.white, size: 16.w),
+                                ),
                               ),
                             ],
                           ),
@@ -1900,25 +1927,32 @@ class RestaurantDetailsScreen extends StatelessWidget {
     );
   }
 
-  void _updateQuantity(BuildContext context, MenuItem item, int newQuantity) {
+  Future<void> _updateQuantity(BuildContext context, MenuItem item, int newQuantity) async {
     final cartController = Get.find<CartController>();
-    final itemIndex = cartController.getItemIndexInCart(restaurantId, item.id);
+    if (cartController.isItemUpdating(item.id)) return;
 
-    if (newQuantity == 0) {
-      if (itemIndex != -1) {
-        cartController.removeItem(restaurantId, itemIndex);
-      }
-    } else {
-      if (itemIndex != -1) {
-        cartController.updateCartItemQuantity(cartController.detailedCart!.restaurant.id, itemIndex, newQuantity);
+    cartController.setItemUpdating(item.id);
+    try {
+      final itemIndex = cartController.getItemIndexInCart(restaurantId, item.id);
+
+      if (newQuantity == 0) {
+        if (itemIndex != -1) {
+          await cartController.removeItem(restaurantId, itemIndex);
+        }
       } else {
-        controller.addToCart(
-          itemId: item.id,
-          quantity: newQuantity,
-          selectedVariations: [],
-          selectedAddOns: [],
-        );
+        if (itemIndex != -1) {
+          await cartController.updateCartItemQuantity(cartController.detailedCart!.restaurant.id, itemIndex, newQuantity);
+        } else {
+          await controller.addToCart(
+            itemId: item.id,
+            quantity: newQuantity,
+            selectedVariations: [],
+            selectedAddOns: [],
+          );
+        }
       }
+    } finally {
+      cartController.clearItemUpdating(item.id);
     }
   }
 }

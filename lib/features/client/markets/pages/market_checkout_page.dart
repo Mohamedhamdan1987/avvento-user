@@ -2,13 +2,15 @@ import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
 import 'package:avvento/core/routes/app_routes.dart';
+import 'package:avvento/core/utils/location_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/utils/show_snackbar.dart';
+import '../controllers/market_cart_controller.dart';
 import '../models/market_cart_model.dart';
 import '../../address/controllers/address_controller.dart';
 import '../../address/models/address_model.dart';
@@ -25,23 +27,19 @@ class MarketCheckoutPage extends StatefulWidget {
 }
 
 class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
+  final MarketCartController cartController =
+      Get.find<MarketCartController>();
   final AddressController addressController = Get.put(AddressController());
   final ClientWalletController walletController =
       Get.put(ClientWalletController());
+
   MarketPaymentMethod selectedPaymentMethod = MarketPaymentMethod.cash;
-  Worker? _addressWorker;
+  final TextEditingController _notesController = TextEditingController();
 
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
   bool _isBillExpanded = false;
-  bool _isPlacingOrder = false;
-
-  @override
-  void dispose() {
-    _addressWorker?.dispose();
-    _mapController?.dispose();
-    super.dispose();
-  }
+  Worker? _addressWorker;
 
   @override
   void initState() {
@@ -55,6 +53,14 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
         _updateMapLocation(address);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _addressWorker?.dispose();
+    _mapController?.dispose();
+    _notesController.dispose();
+    super.dispose();
   }
 
   void _updateMapLocation(AddressModel address) {
@@ -77,6 +83,17 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
         ),
       };
     });
+  }
+
+  String _getPaymentString() {
+    switch (selectedPaymentMethod) {
+      case MarketPaymentMethod.cash:
+        return 'cash';
+      case MarketPaymentMethod.card:
+        return 'gateway';
+      case MarketPaymentMethod.wallet:
+        return 'wallet';
+    }
   }
 
   @override
@@ -112,6 +129,8 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
                             SizedBox(height: 24.h),
                             _buildOrderSummarySection(),
                             SizedBox(height: 24.h),
+                            _buildNotesSection(),
+                            SizedBox(height: 24.h),
                           ],
                         ),
                       ),
@@ -127,6 +146,7 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
     );
   }
 
+  // ─── Header Section with Map ──────────────────────────────────────
   Widget _buildHeaderSection() {
     final activeAddress = addressController.activeAddress.value;
     final initialPos = activeAddress != null
@@ -167,8 +187,7 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
             ),
           ),
           Container(
-            padding:
-                EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
+            padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
@@ -194,8 +213,7 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
             left: 0,
             right: 0,
             child: Center(
-              child:
-                  SvgPicture.asset("assets/svg/cart/map_group_icon.svg"),
+              child: SvgPicture.asset("assets/svg/cart/map_group_icon.svg"),
             ),
           ),
         ],
@@ -203,6 +221,7 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
     );
   }
 
+  // ─── Delivery Address Section ─────────────────────────────────────
   Widget _buildDeliveryAddressSection() {
     return Obx(() {
       final activeAddress = addressController.activeAddress.value;
@@ -216,8 +235,8 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12.r),
-              border:
-                  Border.all(color: Theme.of(context).dividerColor, width: 1),
+              border: Border.all(
+                  color: Theme.of(context).dividerColor, width: 1),
             ),
             child: Row(
               children: [
@@ -279,7 +298,7 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'عنوان التوصيل',
+                    _getDeliveryTimeText(activeAddress),
                     style: TextStyle().textColorBold(
                       fontSize: 16.sp,
                       color: Theme.of(context)
@@ -308,7 +327,6 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
                   AppRoutes.addressList,
                   arguments: true,
                 );
-
                 if (selectedAddress != null &&
                     selectedAddress is AddressModel) {
                   addressController.setActive(selectedAddress.id);
@@ -333,6 +351,7 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
     });
   }
 
+  // ─── Payment Method Section ───────────────────────────────────────
   Widget _buildPaymentMethodSection() {
     return Container(
       padding: EdgeInsets.all(12.w),
@@ -414,7 +433,8 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
         return Icon(Icons.money,
             color: Theme.of(context).iconTheme.color, size: 20.r);
       case MarketPaymentMethod.card:
-        return SvgPicture.asset("assets/svg/wallet/bank_card_outline.svg",
+        return SvgPicture.asset(
+            "assets/svg/wallet/bank_card_outline.svg",
             color: Theme.of(context).iconTheme.color);
       case MarketPaymentMethod.wallet:
         return SvgPicture.asset("assets/svg/nav/wallet.svg",
@@ -439,7 +459,8 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
         padding: EdgeInsets.all(24.w),
         decoration: BoxDecoration(
           color: Theme.of(Get.context!).scaffoldBackgroundColor,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
         child: Obx(() {
           double walletBalance =
@@ -507,7 +528,9 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
                                 color: selectedPaymentMethod ==
                                         MarketPaymentMethod.wallet
                                     ? const Color(0xFF7F22FE)
-                                    : Theme.of(context).iconTheme.color,
+                                    : Theme.of(context)
+                                        .iconTheme
+                                        .color,
                               ),
                             ),
                             Center(
@@ -529,7 +552,8 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
                                   SizedBox(height: 4.h),
                                   Text(
                                     'الرصيد المتاح',
-                                    style: TextStyle().textColorNormal(
+                                    style:
+                                        TextStyle().textColorNormal(
                                       fontSize: 12.sp,
                                       color:
                                           Theme.of(context).hintColor,
@@ -621,7 +645,9 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
                               color: selectedPaymentMethod ==
                                       MarketPaymentMethod.card
                                   ? const Color(0xFF7F22FE)
-                                  : Theme.of(context).iconTheme.color,
+                                  : Theme.of(context)
+                                      .iconTheme
+                                      .color,
                             ),
                             SizedBox(height: 12.h),
                             Text(
@@ -677,10 +703,11 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
     );
   }
 
-  Widget _buildPaymentSelectionCard(
-      {required bool isSelected,
-      required VoidCallback onTap,
-      required Widget child}) {
+  Widget _buildPaymentSelectionCard({
+    required bool isSelected,
+    required VoidCallback onTap,
+    required Widget child,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -701,6 +728,7 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
     );
   }
 
+  // ─── Order Summary Section ────────────────────────────────────────
   Widget _buildOrderSummarySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -715,6 +743,7 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
             height: 1.43,
           ),
         ),
+        SizedBox(height: 8.h),
         Container(
           padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
@@ -727,10 +756,14 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
             physics: const NeverScrollableScrollPhysics(),
             padding: EdgeInsets.zero,
             shrinkWrap: true,
+            itemCount: widget.cart.products.length,
+            separatorBuilder: (context, index) =>
+                SizedBox(height: 10),
             itemBuilder: (context, index) {
               final product = widget.cart.products[index];
               return Row(
                 children: [
+                  // Quantity badge
                   Container(
                     width: 28,
                     height: 28,
@@ -743,24 +776,64 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
                         width: 0.761,
                       ),
                     ),
-                    child: Text("${product.quantity}x",
-                        style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.primary)),
-                  ),
-                  SizedBox(width: 8.w),
-                  Expanded(
                     child: Text(
-                      product.marketProduct.product.name,
-                      style: TextStyle().textColorMedium(
-                        fontSize: 14.sp,
-                        color: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.color,
-                      ),
+                      "${product.quantity}x",
+                      style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary),
                     ),
                   ),
+                  SizedBox(width: 8.w),
+                  // Product image
+                  if (product.marketProduct.thumbnailUrl !=
+                      null) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: CachedNetworkImage(
+                        imageUrl:
+                            product.marketProduct.thumbnailUrl!,
+                        width: 32.w,
+                        height: 32.h,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) =>
+                            const SizedBox.shrink(),
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                  ],
+                  // Product name
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product.marketProduct.product.name,
+                          style: TextStyle().textColorMedium(
+                            fontSize: 14.sp,
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.color,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (product.notes.isNotEmpty)
+                          Text(
+                            product.notes,
+                            style: TextStyle().textColorNormal(
+                              fontSize: 12.sp,
+                              color: Theme.of(context).hintColor,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  // Price
                   Text(
                     '${product.totalPrice.toStringAsFixed(0)} د.ل',
                     style: TextStyle().textColorBold(
@@ -774,15 +847,59 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
                 ],
               );
             },
-            separatorBuilder: (context, index) =>
-                const SizedBox(height: 10),
-            itemCount: widget.cart.products.length,
           ),
         ),
       ],
     );
   }
 
+  // ─── Notes Section ────────────────────────────────────────────────
+  Widget _buildNotesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'ملاحظات',
+          style: TextStyle(
+            color: Theme.of(context).textTheme.titleSmall?.color,
+            fontSize: 14,
+            fontFamily: 'IBM Plex Sans Arabic',
+            fontWeight: FontWeight.w700,
+            height: 1.43,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(
+                color: Theme.of(context).dividerColor, width: 0.761),
+          ),
+          child: TextField(
+            controller: _notesController,
+            maxLines: 3,
+            textDirection: TextDirection.rtl,
+            decoration: InputDecoration(
+              hintText: 'أضف ملاحظات للطلب (اختياري)',
+              hintStyle: TextStyle().textColorNormal(
+                fontSize: 14.sp,
+                color: Theme.of(context).hintColor,
+              ),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.all(16.w),
+            ),
+            style: TextStyle().textColorNormal(
+              fontSize: 14.sp,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─── Bottom Section ───────────────────────────────────────────────
   Widget _buildBottomSection() {
     return Container(
       padding: EdgeInsets.only(
@@ -807,74 +924,79 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Bill Header (Toggle)
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _isBillExpanded = !_isBillExpanded;
-              });
-            },
-            child: Container(
-              color: Colors.transparent,
-              padding: EdgeInsets.symmetric(vertical: 8.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Transform.rotate(
-                    angle: _isBillExpanded ? 3.14159 : 0,
-                    child: SvgPicture.asset(
-                      'assets/svg/cart/arrow-top.svg',
-                      width: 20.w,
-                      height: 20.h,
-                      color: Theme.of(context).iconTheme.color,
+      child: Obx(() {
+        final subtotal = widget.cart.totalPrice;
+        final total = subtotal;
+        final activeAddress = addressController.activeAddress.value;
+        final hasAddress = activeAddress != null;
+
+        final walletBalance =
+            walletController.wallet.value?.balance ?? 0.0;
+        final isWalletBalanceEnough = walletBalance >= total;
+        final isWalletSelected =
+            selectedPaymentMethod == MarketPaymentMethod.wallet;
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Bill Header (Toggle)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _isBillExpanded = !_isBillExpanded;
+                });
+              },
+              child: Container(
+                color: Colors.transparent,
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                child: Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
+                  children: [
+                    Transform.rotate(
+                      angle: _isBillExpanded ? 3.14159 : 0,
+                      child: SvgPicture.asset(
+                        'assets/svg/cart/arrow-top.svg',
+                        width: 20.w,
+                        height: 20.h,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'ملخص الفاتورة',
-                    style: TextStyle().textColorBold(
-                      fontSize: 14.sp,
-                      color: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.color,
+                    Text(
+                      'ملخص الفاتورة',
+                      style: TextStyle().textColorBold(
+                        fontSize: 14.sp,
+                        color: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.color,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          SizedBox(height: 12.h),
+            SizedBox(height: 12.h),
 
-          // Place Order Button
-          Obx(() {
-            final activeAddress = addressController.activeAddress.value;
-            final hasAddress = activeAddress != null;
-            final walletBalance =
-                walletController.wallet.value?.balance ?? 0.0;
-            final isWalletBalanceEnough =
-                walletBalance >= widget.cart.totalPrice;
-            final isWalletSelected =
-                selectedPaymentMethod == MarketPaymentMethod.wallet;
-
-            return CustomButtonApp(
+            // Order Button
+            CustomButtonApp(
               text: (isWalletSelected && !isWalletBalanceEnough)
                   ? 'تعبئة المحفظة'
                   : 'إتمام الطلب',
-              isLoading: _isPlacingOrder,
+              isLoading: cartController.isLoading,
               isEnable: hasAddress,
               childWidget: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween,
                 children: [
-                  if (_isPlacingOrder)
+                  if (cartController.isLoading)
                     const Center(
                         child: CircularProgressIndicator(
                             color: Colors.white))
                   else
                     Text(
-                      (isWalletSelected && !isWalletBalanceEnough)
+                      (isWalletSelected &&
+                              !isWalletBalanceEnough)
                           ? 'تعبئة المحفظة'
                           : 'إتمام الطلب',
                       style: TextStyle().textColorBold(
@@ -882,10 +1004,10 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
                         color: Colors.white,
                       ),
                     ),
-                  if (!_isPlacingOrder) ...[
+                  if (!cartController.isLoading) ...[
                     SizedBox(width: 8.w),
                     Text(
-                      '${widget.cart.totalPrice.toStringAsFixed(1)} د.ل',
+                      '${total.toStringAsFixed(1)} د.ل',
                       style: TextStyle().textColorBold(
                         fontSize: 16.sp,
                         color: Colors.white,
@@ -896,57 +1018,68 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
               ),
               onTap: hasAddress
                   ? () {
-                      if (isWalletSelected && !isWalletBalanceEnough) {
+                      if (isWalletSelected &&
+                          !isWalletBalanceEnough) {
                         Get.toNamed(AppRoutes.wallet);
                         return;
                       }
-                      // TODO: Implement market order placement
-                      // This needs a createMarketOrder API
-                      showSnackBar(
-                        title: 'قريبا',
-                        message: 'سيتم تفعيل طلبات الماركت قريبا',
-                        isSuccess: true,
-                      );
+                      final address =
+                          addressController.activeAddress.value;
+                      if (address != null) {
+                        cartController.placeMarketOrder(
+                          marketId: widget.cart.market.id,
+                          deliveryAddress: address.address,
+                          deliveryLat: address.lat,
+                          deliveryLong: address.long,
+                          paymentMethod: _getPaymentString(),
+                          notes: _notesController.text.trim(),
+                        );
+                      }
                     }
                   : null,
               color: const Color(0xFF4D179A),
-            );
-          }),
-
-          // Expandable Bill Details
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: Column(
-              children: [
-                SizedBox(height: 16.h),
-                _buildBillRow("المجموع الفرعي", widget.cart.totalPrice),
-                SizedBox(height: 12.h),
-                _buildBillRow("التوصيل", 0,
-                    valueText: 'يحسب عند التأكيد'),
-                SizedBox(height: 12.h),
-                const Divider(height: 1),
-                SizedBox(height: 12.h),
-                _buildBillRow(
-                  "المجموع الكلي",
-                  widget.cart.totalPrice,
-                  isBold: true,
-                  fontSize: 16,
-                ),
-                SizedBox(height: 8.h),
-              ],
             ),
-            crossFadeState: _isBillExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 300),
-          ),
-        ],
-      ),
+
+            // Expandable Bill Details
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Column(
+                children: [
+                  SizedBox(height: 16.h),
+                  _buildBillRow("المجموع الفرعي", subtotal),
+                  SizedBox(height: 12.h),
+                  _buildBillRow(
+                    "رسوم التوصيل",
+                    0,
+                    valueText: 'يحسب عند التأكيد',
+                  ),
+                  SizedBox(height: 12.h),
+                  const Divider(height: 1),
+                  SizedBox(height: 12.h),
+                  _buildBillRow(
+                    "المجموع الكلي",
+                    total,
+                    isBold: true,
+                    fontSize: 16,
+                  ),
+                  SizedBox(height: 8.h),
+                ],
+              ),
+              crossFadeState: _isBillExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 300),
+            ),
+          ],
+        );
+      }),
     );
   }
 
   Widget _buildBillRow(String label, double amount,
-      {bool isBold = false, double fontSize = 14, String? valueText}) {
+      {bool isBold = false,
+      double fontSize = 14,
+      String? valueText}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -955,8 +1088,10 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
           style: isBold
               ? TextStyle().textColorBold(
                   fontSize: fontSize.sp,
-                  color:
-                      Theme.of(context).textTheme.bodyLarge?.color)
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.color)
               : TextStyle().textColorNormal(
                   fontSize: fontSize.sp,
                   color: Theme.of(context)
@@ -969,14 +1104,34 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
           style: isBold
               ? TextStyle().textColorBold(
                   fontSize: fontSize.sp,
-                  color:
-                      Theme.of(context).textTheme.bodyLarge?.color)
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.color)
               : TextStyle().textColorBold(
                   fontSize: fontSize.sp,
-                  color:
-                      Theme.of(context).textTheme.bodyLarge?.color),
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.color),
         ),
       ],
     );
+  }
+
+  String _getDeliveryTimeText(AddressModel deliveryAddress) {
+    if (widget.cart.market.lat == null ||
+        widget.cart.market.long == null) {
+      return '-- دقيقة';
+    }
+
+    final deliveryTime = LocationUtils.calculateDeliveryTime(
+      restaurantLat: widget.cart.market.lat!,
+      restaurantLong: widget.cart.market.long!,
+      deliveryLat: deliveryAddress.lat,
+      deliveryLong: deliveryAddress.long,
+    );
+
+    return LocationUtils.formatDeliveryTime(deliveryTime);
   }
 }

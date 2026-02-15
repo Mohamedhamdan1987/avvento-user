@@ -1,21 +1,28 @@
 import 'package:get/get.dart';
 import '../../../../core/utils/show_snackbar.dart';
+import '../../../../core/routes/app_routes.dart';
+import '../../orders/services/orders_service.dart';
 import '../models/market_cart_model.dart';
 import '../services/markets_service.dart';
 
 class MarketCartController extends GetxController {
   final MarketsService _marketsService = MarketsService();
+  final OrdersService _ordersService = OrdersService();
 
   final RxList<MarketCartResponse> _carts = <MarketCartResponse>[].obs;
   final Rx<MarketCartResponse?> _detailedCart = Rx<MarketCartResponse?>(null);
   final RxBool _isLoading = false.obs;
   final RxInt _updatingProductIndex = (-1).obs;
+  final RxSet<String> _updatingProductIds = <String>{}.obs;
   final RxString _errorMessage = ''.obs;
 
   List<MarketCartResponse> get carts => _carts;
   MarketCartResponse? get detailedCart => _detailedCart.value;
   bool get isLoading => _isLoading.value;
   int get updatingProductIndex => _updatingProductIndex.value;
+  bool isProductUpdating(String productId) => _updatingProductIds.contains(productId);
+  void setProductUpdating(String productId) => _updatingProductIds.add(productId);
+  void clearProductUpdating(String productId) => _updatingProductIds.remove(productId);
   String get errorMessage => _errorMessage.value;
   bool get hasError => _errorMessage.value.isNotEmpty;
 
@@ -133,5 +140,44 @@ class MarketCartController extends GetxController {
     final product = cart.products
         .firstWhereOrNull((p) => p.marketProduct.id == marketProductId);
     return product?.quantity ?? 0;
+  }
+
+  /// Place a market order
+  Future<void> placeMarketOrder({
+    required String marketId,
+    required String deliveryAddress,
+    required double deliveryLat,
+    required double deliveryLong,
+    required String paymentMethod,
+    String? notes,
+  }) async {
+    _isLoading.value = true;
+    _errorMessage.value = '';
+    try {
+      await _ordersService.createMarketOrder(
+        marketId: marketId,
+        deliveryAddress: deliveryAddress,
+        deliveryLat: deliveryLat,
+        deliveryLong: deliveryLong,
+        paymentMethod: paymentMethod,
+        notes: notes,
+      );
+
+      // Clear local state and refresh
+      _detailedCart.value = null;
+      await fetchAllCarts();
+
+      showSnackBar(message: 'تم إرسال طلبك بنجاح', isSuccess: true);
+
+      // Navigate to orders tab
+      Get.offAllNamed(AppRoutes.clientNavBar, arguments: {'tabIndex': 1});
+    } catch (e) {
+      _errorMessage.value = 'فشل إتمام الطلب';
+      print('Error placing market order: $e');
+      showSnackBar(
+          message: 'فشل إرسال الطلب، يرجى المحاولة مرة أخرى', isError: true);
+    } finally {
+      _isLoading.value = false;
+    }
   }
 }

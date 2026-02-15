@@ -3,6 +3,7 @@ import '../../../../core/utils/show_snackbar.dart';
 import '../models/market_model.dart';
 import '../models/market_category_model.dart';
 import '../models/market_product_item.dart';
+import '../models/market_schedule_model.dart';
 import '../services/markets_service.dart';
 import 'market_cart_controller.dart';
 
@@ -14,11 +15,13 @@ class MarketDetailsController extends GetxController {
 
   // Observable state
   final Rxn<Market> _market = Rxn<Market>();
+  final Rxn<MarketSchedule> _schedule = Rxn<MarketSchedule>();
   final RxList<MarketProductItem> _products = <MarketProductItem>[].obs;
   final RxList<MarketCategory> _categories = <MarketCategory>[].obs;
   final Rxn<String> _selectedCategoryId = Rxn<String>();
 
   final RxBool _isLoadingMarketDetails = false.obs;
+  final RxBool _isLoadingSchedule = false.obs;
   final RxBool _isLoadingProducts = false.obs;
   final RxBool _isLoadingCategories = false.obs;
   final RxBool _isAddingToCart = false.obs;
@@ -26,11 +29,13 @@ class MarketDetailsController extends GetxController {
 
   // Getters
   Market? get market => _market.value;
+  MarketSchedule? get schedule => _schedule.value;
   List<MarketProductItem> get products => _products;
   List<MarketCategory> get categories => _categories;
   String? get selectedCategoryId => _selectedCategoryId.value;
 
   bool get isLoadingMarketDetails => _isLoadingMarketDetails.value;
+  bool get isLoadingSchedule => _isLoadingSchedule.value;
   bool get isLoadingProducts => _isLoadingProducts.value;
   bool get isLoadingCategories => _isLoadingCategories.value;
   bool get isAddingToCart => _isAddingToCart.value;
@@ -49,6 +54,7 @@ class MarketDetailsController extends GetxController {
       await Future.wait([
         fetchCategories(),
         fetchProducts(),
+        fetchSchedule(),
       ]);
     }
   }
@@ -63,6 +69,18 @@ class MarketDetailsController extends GetxController {
       _errorMessage.value = 'فشل تحميل بيانات المتجر: ${e.toString()}';
     } finally {
       _isLoadingMarketDetails.value = false;
+    }
+  }
+
+  Future<void> fetchSchedule() async {
+    try {
+      _isLoadingSchedule.value = true;
+      final schedule = await _marketsService.getMarketSchedule(marketId);
+      _schedule.value = schedule;
+    } catch (e) {
+      print('Error fetching market schedule: $e');
+    } finally {
+      _isLoadingSchedule.value = false;
     }
   }
 
@@ -138,6 +156,32 @@ class MarketDetailsController extends GetxController {
       );
     } finally {
       _isAddingToCart.value = false;
+    }
+  }
+
+  /// Check if the market is currently a favorite
+  bool get isFavorite => _market.value?.isFavorite ?? false;
+
+  /// Toggle market favorite status with optimistic update
+  Future<void> toggleFavorite() async {
+    if (_market.value == null) return;
+
+    final wasFavorite = _market.value!.isFavorite;
+
+    try {
+      // Optimistic update
+      _market.value = _market.value!.copyWith(isFavorite: !wasFavorite);
+
+      final isFav = await _marketsService.toggleFavorite(marketId);
+      _market.value = _market.value!.copyWith(isFavorite: isFav);
+    } catch (e) {
+      // Rollback on error
+      _market.value = _market.value!.copyWith(isFavorite: wasFavorite);
+      showSnackBar(
+        title: 'خطأ',
+        message: 'فشل تحديث المفضلة',
+        isError: true,
+      );
     }
   }
 

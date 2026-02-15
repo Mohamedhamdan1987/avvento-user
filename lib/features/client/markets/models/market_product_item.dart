@@ -124,14 +124,36 @@ class MarketProductItem {
   String? get thumbnailUrl => product.firstImage;
 
   factory MarketProductItem.fromJson(Map<String, dynamic> json) {
+    // Handle market field: can be a String ID or a populated Map
+    ProductMarketInfo market;
+    final marketField = json['market'];
+    if (marketField is Map<String, dynamic>) {
+      market = ProductMarketInfo.fromJson(marketField);
+    } else if (marketField is String) {
+      market = ProductMarketInfo(id: marketField, name: '');
+    } else {
+      market = ProductMarketInfo(id: '', name: '');
+    }
+
+    // Handle product field: can be a String ID or a populated Map
+    ProductDetails product;
+    final productField = json['product'];
+    if (productField is Map<String, dynamic>) {
+      product = ProductDetails.fromJson(productField);
+    } else {
+      product = ProductDetails(
+        id: productField is String ? productField : '',
+        name: '',
+        description: '',
+        images: [],
+        isActive: true,
+      );
+    }
+
     return MarketProductItem(
       id: json['_id'] ?? json['id'] ?? '',
-      market: ProductMarketInfo.fromJson(
-        json['market'] as Map<String, dynamic>? ?? {},
-      ),
-      product: ProductDetails.fromJson(
-        json['product'] as Map<String, dynamic>? ?? {},
-      ),
+      market: market,
+      product: product,
       price: (json['price'] as num?)?.toDouble() ?? 0,
       quantity: (json['quantity'] as num?)?.toInt() ?? 0,
       isAvailable: json['isAvailable'] as bool? ?? true,

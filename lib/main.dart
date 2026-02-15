@@ -1,3 +1,4 @@
+import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/features/client/orders/widgets/floating_active_order_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -5,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'core/constants/app_constants.dart';
 import 'core/routes/app_pages.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
@@ -52,6 +54,10 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       builder: (context, child) {
         final themeController = Get.put(ThemeController());
+        final GetStorage _storage = GetStorage();
+        final token = _storage.read<String>(AppConstants.tokenKey);
+        cprint("token: $token");
+
         return GetMaterialApp(
           title: 'We Pay',
           debugShowCheckedModeBanner: false,

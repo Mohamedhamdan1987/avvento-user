@@ -11,6 +11,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
 import '../controllers/cart_controller.dart';
 import '../models/cart_model.dart';
+import '../../markets/models/market_cart_model.dart';
 import 'restaurant_cart_details_page.dart';
 import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 
@@ -36,7 +37,7 @@ class CartListPage extends StatelessWidget {
             return const CartListShimmer();
           }
 
-          if (controller.carts.isEmpty) {
+          if (controller.allCartsEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -71,16 +72,16 @@ class CartListPage extends StatelessWidget {
                   SizedBox(height: 8.h),
                   // Subtitle
                   Text(
-                    'لم تقم بإضافة أي وجبات بعد.',
+                    'لم تقم بإضافة أي منتجات بعد.',
                     style: const TextStyle().textColorNormal(
                       fontSize: 16.sp,
                       color: const Color(0xFF6A7282),
                     ),
                   ),
                   SizedBox(height: 32.h),
-                  // Browse restaurants button
+                  // Browse button
                   CustomButtonApp(
-                    text: 'تصفح المطاعم',
+                    text: 'تصفح المتاجر',
                     width: 160.w,
                     height: 48.h,
                     color: const Color(0xFF4D179A),
@@ -107,15 +108,31 @@ class CartListPage extends StatelessWidget {
                 children: [
                   SizedBox(height: 29.h),
                   // Header Section
-                  _buildHeaderSection(context, controller.carts.length),
+                  _buildHeaderSection(context, controller.totalCartCount),
                   SizedBox(height: 33.h),
-                  // Cart Cards
-                  ...controller.carts.map(
-                    (cart) => Padding(
-                      padding: EdgeInsets.only(bottom: 16.h),
-                      child: _buildRestaurantCartCard(context, cart),
+                  // Restaurant Cart Cards
+                  if (controller.carts.isNotEmpty) ...[
+                    _buildSectionTitle(context, 'المطاعم', controller.carts.length),
+                    SizedBox(height: 12.h),
+                    ...controller.carts.map(
+                      (cart) => Padding(
+                        padding: EdgeInsets.only(bottom: 16.h),
+                        child: _buildRestaurantCartCard(context, cart),
+                      ),
                     ),
-                  ),
+                  ],
+                  // Market Cart Cards
+                  if (controller.marketCarts.isNotEmpty) ...[
+                    if (controller.carts.isNotEmpty) SizedBox(height: 8.h),
+                    _buildSectionTitle(context, 'المتاجر', controller.marketCarts.length),
+                    SizedBox(height: 12.h),
+                    ...controller.marketCarts.map(
+                      (cart) => Padding(
+                        padding: EdgeInsets.only(bottom: 16.h),
+                        child: _buildMarketCartCard(context, cart),
+                      ),
+                    ),
+                  ],
                   SizedBox(height: 24.h),
                 ],
               ),
@@ -123,6 +140,35 @@ class CartListPage extends StatelessWidget {
           );
         }),
       ),
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title, int count) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: const TextStyle().textColorBold(
+            fontSize: 16.sp,
+            color: Theme.of(context).textTheme.titleMedium?.color ?? const Color(0xFF101828),
+          ),
+        ),
+        SizedBox(width: 8.w),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFF7F22FE).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: Text(
+            '$count',
+            style: const TextStyle().textColorBold(
+              fontSize: 12.sp,
+              color: const Color(0xFF7F22FE),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -163,7 +209,7 @@ class CartListPage extends StatelessWidget {
         SizedBox(height: 16.h),
         // Subtitle
         Text(
-          'لديك طلبات غير مكتملة في $cartCount ${cartCount == 1 ? 'مطعم' : 'مطاعم'}',
+          'لديك طلبات غير مكتملة في $cartCount ${cartCount == 1 ? 'متجر' : 'متاجر'}',
           style: TextStyle().textColorMedium(
             fontSize: 14.sp,
             color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -173,6 +219,7 @@ class CartListPage extends StatelessWidget {
     );
   }
 
+  // ─── Restaurant Cart Card ─────────────────────────────────────────
   Widget _buildRestaurantCartCard(
     BuildContext context,
     RestaurantCartResponse cart,
@@ -181,74 +228,116 @@ class CartListPage extends StatelessWidget {
       onTap: () {
         Get.toNamed(AppRoutes.restaurantCartDetails, arguments: cart);
       },
-      child: Container(
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(28.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
-          border: Border.all(
-            color: Theme.of(context).dividerColor,
-            width: 0.761,
+      child: _buildCartCardContainer(
+        context,
+        logoUrl: cart.restaurant.logo,
+        name: cart.restaurant.name,
+        itemCount: cart.items.length,
+        totalPrice: cart.totalPrice,
+        fallbackIcon: Icons.restaurant,
+        onArrowTap: () {
+          Get.to(() => RestaurantCartDetailsPage(cart: cart));
+        },
+      ),
+    );
+  }
+
+  // ─── Market Cart Card ─────────────────────────────────────────────
+  Widget _buildMarketCartCard(
+    BuildContext context,
+    MarketCartResponse cart,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        Get.toNamed(AppRoutes.marketCartDetails, arguments: cart);
+      },
+      child: _buildCartCardContainer(
+        context,
+        logoUrl: cart.market.logo,
+        name: cart.market.name,
+        itemCount: cart.products.length,
+        totalPrice: cart.totalPrice,
+        fallbackIcon: Icons.store,
+        onArrowTap: () {
+          Get.toNamed(AppRoutes.marketCartDetails, arguments: cart);
+        },
+      ),
+    );
+  }
+
+  // ─── Shared Cart Card Container ───────────────────────────────────
+  Widget _buildCartCardContainer(
+    BuildContext context, {
+    required String? logoUrl,
+    required String name,
+    required int itemCount,
+    required double totalPrice,
+    required IconData fallbackIcon,
+    required VoidCallback onArrowTap,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(28.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
+        ],
+        border: Border.all(
+          color: Theme.of(context).dividerColor,
+          width: 0.761,
         ),
-        child: Column(
-          children: [
-            // Top Section: Price, Restaurant Info, Logo
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Restaurant Logo (Right in RTL)
-                _buildRestaurantLogo(cart.restaurant.logo),
-                SizedBox(width: 12.w),
-                // Restaurant Info Section (Middle)
-                Expanded(child: _buildRestaurantInfoSection(cart)),
-
-                // Price Section (Left in RTL)
-                SizedBox(width: 12.w),
-                _buildPriceSection(context, cart.totalPrice),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            // Decorative Divider
-            _buildDecorativeDivider(),
-            SizedBox(height: 16.h),
-            // Bottom Section: Button and Cart Summary
-            Row(
-              children: [
-                // Cart Summary
-                Expanded(child: _buildCartSummary(cart)),
-                SizedBox(width: 12.w),
-
-                // Circular Button
-                CustomIconButtonApp(
-                  width: 40.w,
-                  height: 40.h,
-                  radius: 100.r,
-                  color: const Color(0xFF101828),
-                  onTap: () {
-                    Get.to(() => RestaurantCartDetailsPage(cart: cart));
-                  },
-                  childWidget: Transform.rotate(
-                    angle: 3.14159, // 180 degrees rotation
-                    child: SvgIcon(
-                      iconName: 'assets/svg/arrow-right.svg',
-                      width: 20.w,
-                      height: 20.h,
-                      color: Colors.white,
-                    ),
+      ),
+      child: Column(
+        children: [
+          // Top Section: Price, Info, Logo
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Logo (Right in RTL)
+              _buildLogo(logoUrl, fallbackIcon),
+              SizedBox(width: 12.w),
+              // Info Section (Middle)
+              Expanded(child: _buildInfoSection(name)),
+              // Price Section (Left in RTL)
+              SizedBox(width: 12.w),
+              _buildPriceSection(context, totalPrice),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          // Decorative Divider
+          _buildDecorativeDivider(),
+          SizedBox(height: 16.h),
+          // Bottom Section: Button and Cart Summary
+          Row(
+            children: [
+              // Cart Summary
+              Expanded(child: _buildCartSummary(itemCount)),
+              SizedBox(width: 12.w),
+              // Circular Button
+              CustomIconButtonApp(
+                width: 40.w,
+                height: 40.h,
+                radius: 100.r,
+                color: const Color(0xFF101828),
+                onTap: onArrowTap,
+                childWidget: Transform.rotate(
+                  angle: 3.14159, // 180 degrees rotation
+                  child: SvgIcon(
+                    iconName: 'assets/svg/arrow-right.svg',
+                    width: 20.w,
+                    height: 20.h,
+                    color: Colors.white,
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -301,16 +390,16 @@ class CartListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRestaurantInfoSection(RestaurantCartResponse cart) {
+  Widget _buildInfoSection(String name) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Restaurant Name
+        // Name
         Text(
-          cart.restaurant.name!,
+          name,
           style: const TextStyle().textColorBold(
             fontSize: 18.sp,
-            color: Color(0xFF101828),
+            color: const Color(0xFF101828),
           ),
         ),
         SizedBox(height: 4.h),
@@ -339,7 +428,7 @@ class CartListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRestaurantLogo(String? logoUrl) {
+  Widget _buildLogo(String? logoUrl, IconData fallbackIcon) {
     return Container(
       width: 56.w,
       height: 56.h,
@@ -357,9 +446,9 @@ class CartListPage extends StatelessWidget {
                 placeholder: (context, url) =>
                     const Center(child: CircularProgressIndicator()),
                 errorWidget: (context, url, error) =>
-                    const Icon(Icons.restaurant, color: Colors.grey),
+                    Icon(fallbackIcon, color: Colors.grey),
               )
-            : const Icon(Icons.restaurant, color: Colors.grey),
+            : Icon(fallbackIcon, color: Colors.grey),
       ),
     );
   }
@@ -405,11 +494,7 @@ class CartListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCartSummary(RestaurantCartResponse cart) {
-    final firstItemName = cart.items.isNotEmpty
-        ? cart.items.first.item.name
-        : '';
-
+  Widget _buildCartSummary(int itemCount) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -422,7 +507,7 @@ class CartListPage extends StatelessWidget {
         ),
         SizedBox(height: 4.h),
         Text(
-          '${cart.items.length} ${cart.items.length == 1 ? 'صنف' : 'أصناف'}',
+          '$itemCount ${itemCount == 1 ? 'صنف' : 'أصناف'}',
           style: const TextStyle().textColorMedium(
             fontSize: 14.sp,
             color: Color(0xFF364153),

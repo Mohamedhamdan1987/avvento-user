@@ -31,6 +31,7 @@ class RestaurantsController extends GetxController {
   final Rx<String?> _selectedCategoryId = Rx<String?>(null);
   final RxBool _isLoadingCategories = false.obs;
 
+
   // User location (you can update this with actual GPS location)
   final Rx<double?> _userLat = Rx<double?>(null);
   final Rx<double?> _userLong = Rx<double?>(null);
@@ -60,6 +61,7 @@ class RestaurantsController extends GetxController {
   List<CategorySelection> get categories => _categories;
   String? get selectedCategoryId => _selectedCategoryId.value;
   bool get isLoadingCategories => _isLoadingCategories.value;
+
 
   @override
   void onInit() {

@@ -95,11 +95,15 @@ class RestaurantCartResponse {
   });
 
   factory RestaurantCartResponse.fromJson(Map<String, dynamic> json) {
+    final restaurantJson = json['restaurant'];
+    if (restaurantJson == null || restaurantJson is! Map<String, dynamic>) {
+      throw FormatException(
+          'Invalid cart response: restaurant field is null or not a map');
+    }
     return RestaurantCartResponse(
       id: json['_id'] as String,
       user: json['user'] as String,
-      restaurant:
-          CartRestaurant.fromJson(json['restaurant'] as Map<String, dynamic>),
+      restaurant: CartRestaurant.fromJson(restaurantJson),
       items: (json['items'] as List<dynamic>?)
               ?.where((i) =>
                   i != null &&
@@ -108,7 +112,7 @@ class RestaurantCartResponse {
               .map((i) => CartItem.fromJson(i as Map<String, dynamic>))
               .toList() ??
           [],
-      totalPrice: (json['totalPrice'] as num).toDouble(),
+      totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

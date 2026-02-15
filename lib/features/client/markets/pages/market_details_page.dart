@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/location_utils.dart';
 import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import '../../../../core/widgets/reusable/svg_icon.dart';
 import '../../../../core/widgets/shimmer/shimmer_loading.dart';
@@ -15,6 +16,8 @@ import '../models/market_model.dart';
 import '../models/market_product_item.dart';
 import '../models/market_cart_model.dart';
 import 'market_cart_details_page.dart';
+import 'market_category_products_page.dart';
+import 'market_product_details_dialog.dart';
 
 class MarketDetailsPage extends StatelessWidget {
   final String marketId;
@@ -93,6 +96,7 @@ class MarketDetailsPage extends StatelessWidget {
                 delegate: _MarketHeaderDelegate(
                   market: controller.market!,
                   onBack: () => Navigator.pop(context),
+                  onFavorite: () => controller.toggleFavorite(),
                 ),
               ),
 
@@ -102,6 +106,11 @@ class MarketDetailsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: 50.h),
+
+                    // Open/Closed Status
+                    _buildOpenClosedStatus(context),
+
+                    SizedBox(height: 14.h),
 
                     // Market Stats Row
                     _buildStatsRow(context),
@@ -123,6 +132,300 @@ class MarketDetailsPage extends StatelessWidget {
             ],
           );
         }),
+      ),
+    );
+  }
+
+  Widget _buildOpenClosedStatus(BuildContext context) {
+    return InkWell(
+      onTap: () => _showOpeningHoursSheet(context),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24.w),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Obx(() {
+                  final isOpen = controller.market?.isOpen ?? false;
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 8.w,
+                        height: 8.h,
+                        decoration: BoxDecoration(
+                          color: isOpen ? Colors.green : Colors.red,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: (isOpen ? Colors.green : Colors.red)
+                                  .withOpacity(0.4),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        isOpen ? 'مفتوح الآن' : 'مغلق حالياً',
+                        style: TextStyle().textColorBold(
+                          fontSize: 14.sp,
+                          color: Theme.of(context).textTheme.titleLarge?.color,
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+                SizedBox(height: 4.h),
+                Obx(() {
+                  final status = controller.schedule?.currentDayStatus;
+                  if (status == null) return const SizedBox.shrink();
+
+                  final nextTime = status.isCurrentlyOpen
+                      ? status.closeTime
+                      : status.openTime;
+                  final text = status.isCurrentlyOpen
+                      ? 'يغلق الساعة $nextTime'
+                      : 'يفتح الساعة $nextTime';
+
+                  return Text(
+                    text,
+                    style: TextStyle().textColorMedium(
+                      fontSize: 12.sp,
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
+                  );
+                }),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  'مواعيد العمل',
+                  style: TextStyle().textColorMedium(
+                    fontSize: 12.sp,
+                    color: AppColors.purple,
+                  ),
+                ),
+                SizedBox(width: 4.w),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 20.w,
+                  color: AppColors.purple,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showOpeningHoursSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: Container(
+          padding: EdgeInsetsDirectional.only(
+              top: 16.w, start: 16.w, bottom: 24.w, end: 8.w),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.purple.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: SvgIcon(
+                      iconName:
+                          'assets/svg/client/restaurant_details/clock.svg',
+                      width: 24.w,
+                      height: 24.h,
+                      color: AppColors.purple,
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'مواعيد العمل',
+                          style: TextStyle().textColorBold(
+                            fontSize: 18.sp,
+                            color: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.color,
+                          ),
+                        ),
+                        Text(
+                          controller.market?.name ?? '',
+                          style: TextStyle().textColorMedium(
+                            fontSize: 14.sp,
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close,
+                        color:
+                            Theme.of(context).textTheme.bodySmall?.color),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 32.h),
+
+              // Days List
+              Obx(() {
+                if (controller.isLoadingSchedule) {
+                  return ShimmerLoading(
+                    child: Column(
+                      children: List.generate(
+                        7,
+                        (_) => Padding(
+                          padding: EdgeInsets.only(bottom: 12.h),
+                          child: Padding(
+                            padding:
+                                EdgeInsets.symmetric(horizontal: 16.w),
+                            child: Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                ShimmerBox(
+                                    width: 60.w,
+                                    height: 14.h,
+                                    borderRadius: 6),
+                                ShimmerBox(
+                                    width: 100.w,
+                                    height: 14.h,
+                                    borderRadius: 6),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                final schedule = controller.schedule;
+                if (schedule == null) {
+                  return const Center(child: Text('لا توجد بيانات مواعيد'));
+                }
+
+                final daysArabic = {
+                  'sunday': 'الأحد',
+                  'monday': 'الاثنين',
+                  'tuesday': 'الثلاثاء',
+                  'wednesday': 'الأربعاء',
+                  'thursday': 'الخميس',
+                  'friday': 'الجمعة',
+                  'saturday': 'السبت',
+                };
+
+                return Column(
+                  children: schedule.weeklySchedule.map((s) {
+                    final isCurrent = s.day.toLowerCase() ==
+                        schedule.currentDayStatus.day.toLowerCase();
+                    final hoursText = s.isClosed
+                        ? 'مغلق'
+                        : '${s.openTime} - ${s.closeTime}';
+                    return _buildDayRow(context,
+                        daysArabic[s.day.toLowerCase()] ?? s.day, hoursText,
+                        isCurrent: isCurrent);
+                  }).toList(),
+                );
+              }),
+
+              SizedBox(height: 32.h),
+
+              // Close Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.purple,
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                  ),
+                  child: Text(
+                    'إغلاق',
+                    style: TextStyle().textColorBold(
+                      fontSize: 16.sp,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDayRow(BuildContext context, String day, String hours,
+      {bool isCurrent = false}) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: isCurrent
+            ? AppColors.purple.withOpacity(0.05)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12.r),
+        border: isCurrent
+            ? Border.all(color: AppColors.purple.withOpacity(0.2))
+            : null,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            day,
+            style: TextStyle().textColorMedium(
+              fontSize: 14.sp,
+              color: isCurrent
+                  ? AppColors.purple
+                  : Theme.of(context).textTheme.titleMedium?.color,
+            ),
+          ),
+          Text(
+            hours,
+            style: TextStyle().textColorBold(
+              fontSize: 14.sp,
+              color: isCurrent
+                  ? AppColors.purple
+                  : Theme.of(context).textTheme.bodyMedium?.color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -165,6 +468,20 @@ class MarketDetailsPage extends StatelessWidget {
             icon: 'assets/svg/client/restaurant_details/inactive_star_icon.svg',
             value: controller.market!.averageRatingDisplay,
             label: 'التقييم',
+          ),
+          Container(width: 1.w, height: 32.h, color: const Color(0xFFF3F4F6)),
+          _buildStatItem(
+            context,
+            icon: 'assets/svg/client/restaurant_details/clock.svg',
+            value: LocationUtils.formatDistance(
+              LocationUtils.calculateDistance(
+                userLat: LocationUtils.currentLatitude,
+                userLong: LocationUtils.currentLongitude,
+                restaurantLat: controller.market!.lat,
+                restaurantLong: controller.market!.long,
+              ),
+            ),
+            label: 'المسافة',
           ),
         ],
       ),
@@ -218,22 +535,19 @@ class MarketDetailsPage extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           children: [
-            Padding(
-              padding: EdgeInsets.only(left: 12.w),
-              child: _CategoryChip(
-                label: 'الكل',
-                isSelected: controller.selectedCategoryId == null,
-                onTap: () => controller.selectCategory(null),
-              ),
-            ),
             ...controller.categories.map(
               (cat) => Padding(
                 padding: EdgeInsets.only(left: 12.w),
                 child: _CategoryChip(
                   label: cat.name,
                   imageUrl: cat.image,
-                  isSelected: controller.selectedCategoryId == cat.id,
-                  onTap: () => controller.selectCategory(cat.id),
+                  isSelected: false,
+                  onTap: () => Get.to(() => MarketCategoryProductsPage(
+                        marketId: marketId,
+                        categoryId: cat.id,
+                        categoryName: cat.name,
+                        categoryImage: cat.image,
+                      )),
                 ),
               ),
             ),
@@ -305,6 +619,18 @@ class MarketDetailsPage extends StatelessWidget {
     );
   }
 
+  void _showProductDetails(BuildContext context, MarketProductItem product) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => MarketProductDetailsDialog(
+        product: product,
+        marketId: marketId,
+      ),
+    );
+  }
+
   Widget _buildProductCard(BuildContext context, MarketProductItem product) {
     final cartController = Get.find<MarketCartController>();
     final quantity =
@@ -312,7 +638,9 @@ class MarketDetailsPage extends StatelessWidget {
 
     final imageUrl = product.thumbnailUrl;
 
-    return Container(
+    return GestureDetector(
+      onTap: () => _showProductDetails(context, product),
+      child: Container(
       margin: EdgeInsets.only(bottom: 16.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
@@ -380,24 +708,51 @@ class MarketDetailsPage extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   GestureDetector(
-                                    onTap: () => _updateQuantity(
-                                        context, product, quantity - 1),
-                                    child: Icon(Icons.remove,
-                                        color: Colors.white, size: 16.w),
+                                    onTap: cartController.isProductUpdating(product.id)
+                                        ? null
+                                        : () => _updateQuantity(
+                                            context, product, quantity - 1),
+                                    child: AnimatedOpacity(
+                                      opacity: cartController.isProductUpdating(product.id) ? 0.4 : 1.0,
+                                      duration: const Duration(milliseconds: 200),
+                                      child: Icon(Icons.remove,
+                                          color: Colors.white, size: 16.w),
+                                    ),
                                   ),
                                   SizedBox(width: 8.w),
-                                  Text(
-                                    '$quantity',
-                                    style: TextStyle().textColorBold(
-                                        fontSize: 14.sp,
-                                        color: Colors.white),
+                                  SizedBox(
+                                    width: 18.w,
+                                    height: 18.h,
+                                    child: Center(
+                                      child: cartController.isProductUpdating(product.id)
+                                          ? SizedBox(
+                                              width: 14.w,
+                                              height: 14.h,
+                                              child: const CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : Text(
+                                              '$quantity',
+                                              style: TextStyle().textColorBold(
+                                                  fontSize: 14.sp,
+                                                  color: Colors.white),
+                                            ),
+                                    ),
                                   ),
                                   SizedBox(width: 8.w),
                                   GestureDetector(
-                                    onTap: () => _updateQuantity(
-                                        context, product, quantity + 1),
-                                    child: Icon(Icons.add,
-                                        color: Colors.white, size: 16.w),
+                                    onTap: cartController.isProductUpdating(product.id)
+                                        ? null
+                                        : () => _updateQuantity(
+                                            context, product, quantity + 1),
+                                    child: AnimatedOpacity(
+                                      opacity: cartController.isProductUpdating(product.id) ? 0.4 : 1.0,
+                                      duration: const Duration(milliseconds: 200),
+                                      child: Icon(Icons.add,
+                                          color: Colors.white, size: 16.w),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -475,6 +830,7 @@ class MarketDetailsPage extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -599,29 +955,36 @@ class MarketDetailsPage extends StatelessWidget {
     );
   }
 
-  void _updateQuantity(
-      BuildContext context, MarketProductItem product, int newQuantity) {
+  Future<void> _updateQuantity(
+      BuildContext context, MarketProductItem product, int newQuantity) async {
     final cartController = Get.find<MarketCartController>();
-    final productIndex =
-        cartController.getProductIndexInCart(marketId, product.id);
+    if (cartController.isProductUpdating(product.id)) return;
 
-    if (newQuantity == 0) {
-      if (productIndex != -1) {
-        cartController.removeProduct(marketId, productIndex);
-      }
-    } else {
-      if (productIndex != -1) {
-        cartController.updateQuantity(
-          marketId: marketId,
-          productIndex: productIndex,
-          quantity: newQuantity,
-        );
+    cartController.setProductUpdating(product.id);
+    try {
+      final productIndex =
+          cartController.getProductIndexInCart(marketId, product.id);
+
+      if (newQuantity == 0) {
+        if (productIndex != -1) {
+          await cartController.removeProduct(marketId, productIndex);
+        }
       } else {
-        controller.addToCart(
-          marketProductId: product.id,
-          quantity: newQuantity,
-        );
+        if (productIndex != -1) {
+          await cartController.updateQuantity(
+            marketId: marketId,
+            productIndex: productIndex,
+            quantity: newQuantity,
+          );
+        } else {
+          await controller.addToCart(
+            marketProductId: product.id,
+            quantity: newQuantity,
+          );
+        }
       }
+    } finally {
+      cartController.clearProductUpdating(product.id);
     }
   }
 }
@@ -630,10 +993,12 @@ class MarketDetailsPage extends StatelessWidget {
 class _MarketHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Market market;
   final VoidCallback onBack;
+  final VoidCallback onFavorite;
 
   _MarketHeaderDelegate({
     required this.market,
     required this.onBack,
+    required this.onFavorite,
   });
 
   @override
@@ -701,7 +1066,19 @@ class _MarketHeaderDelegate extends SliverPersistentHeaderDelegate {
                       fontSize: 18.sp, color: Colors.white),
                 ),
               ),
-              const SizedBox(width: 40), // Placeholder for alignment
+              Obx(() {
+                final ctrl = Get.find<MarketDetailsController>();
+                final isFav = ctrl.isFavorite;
+                return CustomIconButtonApp(
+                  onTap: onFavorite,
+                  color: Colors.white.withOpacity(0.2),
+                  childWidget: Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border,
+                    color: isFav ? Colors.red : Colors.white,
+                    size: 20,
+                  ),
+                );
+              }),
             ],
           ),
         ),

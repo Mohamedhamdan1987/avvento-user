@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import '../../../../core/utils/show_snackbar.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../restaurants/services/restaurants_service.dart';
+import '../../markets/services/markets_service.dart';
+import '../../markets/models/market_cart_model.dart';
 import '../models/cart_model.dart';
 import '../models/calculate_price_model.dart';
 import '../../orders/services/orders_service.dart';
@@ -11,9 +13,11 @@ import '../../../../core/enums/order_status.dart';
 
 class CartController extends GetxController {
   final RestaurantsService _restaurantsService = RestaurantsService();
+  final MarketsService _marketsService = MarketsService();
   final OrdersService _ordersService = OrdersService();
 
   final RxList<RestaurantCartResponse> _carts = <RestaurantCartResponse>[].obs;
+  final RxList<MarketCartResponse> _marketCarts = <MarketCartResponse>[].obs;
   final Rx<RestaurantCartResponse?> _detailedCart = Rx<RestaurantCartResponse?>(null);
   final Rx<CalculatePriceResponse?> calculatedPrice = Rx<CalculatePriceResponse?>(null); // Store calculated price
   final RxList<MenuItem> _drinks = <MenuItem>[].obs; // Add drinks list
@@ -22,15 +26,20 @@ class CartController extends GetxController {
   final RxBool _isCalculatingPrice = false.obs; // Add loading state for price calculation
   final RxBool _isLoadingDrinks = false.obs; // Add loading state for drinks
   final RxInt _updatingItemIndex = (-1).obs;
+  final RxSet<String> _updatingItemIds = <String>{}.obs;
   final RxString _errorMessage = ''.obs;
 
   List<RestaurantCartResponse> get carts => _carts;
+  List<MarketCartResponse> get marketCarts => _marketCarts;
+  int get totalCartCount => _carts.length + _marketCarts.length;
+  bool get allCartsEmpty => _carts.isEmpty && _marketCarts.isEmpty;
   RestaurantCartResponse? get detailedCart => _detailedCart.value;
   List<MenuItem> get drinks => _drinks; // Getter for drinks
   bool get isLoading => _isLoading.value;
   bool get isCalculatingPrice => _isCalculatingPrice.value; // Getter for price calculation loading
   bool get isLoadingDrinks => _isLoadingDrinks.value; // Getter for drinks loading
   int get updatingItemIndex => _updatingItemIndex.value;
+  bool isItemUpdating(String itemId) => _updatingItemIds.contains(itemId);
   String get errorMessage => _errorMessage.value;
   bool get hasError => _errorMessage.value.isNotEmpty;
 
@@ -44,8 +53,12 @@ class CartController extends GetxController {
     _isLoading.value = true;
     _errorMessage.value = '';
     try {
-      final fetchedCarts = await _restaurantsService.getAllCarts();
-      _carts.assignAll(fetchedCarts);
+      final results = await Future.wait([
+        _restaurantsService.getAllCarts(),
+        _marketsService.getAllMarketCarts(),
+      ]);
+      _carts.assignAll(results[0] as List<RestaurantCartResponse>);
+      _marketCarts.assignAll(results[1] as List<MarketCartResponse>);
     } catch (e) {
       _errorMessage.value = 'فشل تحميل السلة';
       print('Error fetching carts: $e');
@@ -166,6 +179,12 @@ class CartController extends GetxController {
     final item = cart.items.firstWhereOrNull((i) => i.item.id == itemId);
     return item?.quantity ?? 0;
   }
+
+  /// Mark an item as currently updating (for UI loading indicators)
+  void setItemUpdating(String itemId) => _updatingItemIds.add(itemId);
+
+  /// Clear an item's updating state
+  void clearItemUpdating(String itemId) => _updatingItemIds.remove(itemId);
 
   /// Helper to update quantity using restaurantId and itemIndex
   Future<void> updateCartItemQuantity(String restaurantId, int itemIndex, int quantity) async {

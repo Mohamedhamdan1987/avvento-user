@@ -3,6 +3,7 @@ import '../../../../core/utils/show_snackbar.dart';
 import '../models/market_model.dart';
 import '../models/market_category_model.dart';
 import '../models/market_product_item.dart';
+import '../models/advertisement_model.dart';
 import '../services/markets_service.dart';
 
 class MarketsController extends GetxController {
@@ -27,6 +28,10 @@ class MarketsController extends GetxController {
       <MarketProductItem>[].obs;
   final RxInt _firstMarketProductCount = 0.obs;
   final RxBool _isLoadingFirstMarketProducts = false.obs;
+
+  // Advertisements state
+  final RxList<Advertisement> _advertisements = <Advertisement>[].obs;
+  final RxBool _isLoadingAds = false.obs;
 
   // User location
   final Rx<double?> _userLat = Rx<double?>(null);
@@ -53,6 +58,10 @@ class MarketsController extends GetxController {
   int get firstMarketProductCount => _firstMarketProductCount.value;
   bool get isLoadingFirstMarketProducts => _isLoadingFirstMarketProducts.value;
 
+  // Advertisements getters
+  List<Advertisement> get advertisements => _advertisements;
+  bool get isLoadingAds => _isLoadingAds.value;
+
   // Location getters
   double? get userLat => _userLat.value;
   double? get userLong => _userLong.value;
@@ -67,6 +76,7 @@ class MarketsController extends GetxController {
     Future.microtask(() {
       fetchCategories();
       fetchMarkets();
+      fetchAdvertisements();
     });
   }
 
@@ -198,11 +208,25 @@ class MarketsController extends GetxController {
     await fetchMarkets(refresh: true);
   }
 
+  /// Fetch active advertisements
+  Future<void> fetchAdvertisements() async {
+    try {
+      _isLoadingAds.value = true;
+      final ads = await _marketsService.getActiveAdvertisements();
+      _advertisements.assignAll(ads);
+    } catch (e) {
+      print('Failed to fetch advertisements: $e');
+    } finally {
+      _isLoadingAds.value = false;
+    }
+  }
+
   /// Refresh markets (pull to refresh)
   Future<void> refreshMarkets() async {
     await Future.wait([
       fetchMarkets(refresh: true),
       fetchCategories(),
+      fetchAdvertisements(),
     ]);
   }
 

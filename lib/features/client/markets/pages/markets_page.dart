@@ -266,6 +266,13 @@ class MarketsPage extends GetView<MarketsController> {
                 }
 
                 // Markets list
+                // Sort markets: open first, closed last
+                final sortedMarkets = [...controller.markets]
+                  ..sort((a, b) {
+                    if (a.isOpen == b.isOpen) return 0;
+                    return a.isOpen ? -1 : 1;
+                  });
+
                 return NotificationListener<ScrollNotification>(
                   onNotification: (ScrollNotification scrollInfo) {
                     if (scrollInfo.metrics.axis == Axis.vertical &&
@@ -285,10 +292,62 @@ class MarketsPage extends GetView<MarketsController> {
                         vertical: 8.h,
                       ),
                       physics: const AlwaysScrollableScrollPhysics(),
-                      itemCount: controller.markets.length +
+                      itemCount: sortedMarkets.length +
+                          (controller.advertisements.isNotEmpty ? 1 : 0) +
                           (controller.hasMore ? 1 : 0),
                       itemBuilder: (context, index) {
-                        if (index == controller.markets.length) {
+                        // Advertisements as the first item
+                        if (controller.advertisements.isNotEmpty && index == 0) {
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: 16.h),
+                            child: SizedBox(
+                              height: 144.h,
+                              child: PageView.builder(
+                                controller: PageController(
+                                  viewportFraction: controller.advertisements.length > 1 ? 0.92 : 1.0,
+                                ),
+                                itemCount: controller.advertisements.length,
+                                itemBuilder: (context, adIndex) {
+                                  final ad = controller.advertisements[adIndex];
+                                  return Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 4.w),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: CachedNetworkImage(
+                                        imageUrl: ad.image,
+                                        width: double.infinity,
+                                        height: 144.h,
+                                        fit: BoxFit.cover,
+                                        errorWidget: (context, url, error) =>
+                                            Container(
+                                              height: 144.h,
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey[200],
+                                                borderRadius: BorderRadius.circular(16),
+                                              ),
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.image_outlined,
+                                                  size: 40,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        }
+
+                        // Adjust index for markets
+                        final marketIndex = controller.advertisements.isNotEmpty
+                            ? index - 1
+                            : index;
+
+                        if (marketIndex == sortedMarkets.length) {
                           return const Padding(
                             padding: EdgeInsets.all(16.0),
                             child: Center(
@@ -296,8 +355,8 @@ class MarketsPage extends GetView<MarketsController> {
                             ),
                           );
                         }
-                        final market = controller.markets[index];
-                        if (index == 0) {
+                        final market = sortedMarkets[marketIndex];
+                        if (marketIndex == 0) {
                           // First market: wrap in Obx for reactive product updates
                           return Padding(
                             padding: EdgeInsets.only(bottom: 24.h),
@@ -429,136 +488,172 @@ class MarketCard extends StatelessWidget {
     final bool hasProducts = productItems != null && productItems!.isNotEmpty;
     final int totalProducts = totalProductCount;
 
+    final bool isOpen = market.isOpen;
+
     return GestureDetector(
       onTap: () {
         Get.to(() => MarketDetailsPage(marketId: market.id));
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(32.r),
-          border: Border.all(
-            color: Colors.black.withValues(alpha: 0.05),
-            width: 0.76,
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // --- Market Info Row ---
-            Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 20.w, 20.w, 0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Market Logo
-                  Container(
-                    width: 64.w,
-                    height: 64.w,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(
-                        color: const Color(0xFFF3F4F6),
-                        width: 0.76,
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20.r),
-                      child: market.logo != null && market.logo!.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: market.logo!,
-                              fit: BoxFit.cover,
-                              errorWidget: (context, url, error) =>
-                                  _buildLogoPlaceholder(),
-                            )
-                          : _buildLogoPlaceholder(),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  // Market Name + Rating + Delivery info
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                market.name,
-                                style: const TextStyle().textColorBold(
-                                  fontSize: 18,
-                                  color: AppColors.textDark,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                textDirection: TextDirection.rtl,
-                              ),
-                            ),
-                            SizedBox(height: 8.h),
-                            // Rating badge
-                            _RatingBadge(
-                              rating: market.averageRatingDisplay,
-                            ),
-                            // Delivery info row
-                          ],
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(32.r),
+              border: Border.all(
+                color: Colors.black.withValues(alpha: 0.05),
+                width: 0.76,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // --- Market Info Row ---
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20.w, 20.w, 20.w, 0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Market Logo
+                      Container(
+                        width: 64.w,
+                        height: 64.w,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.r),
+                          border: Border.all(
+                            color: const Color(0xFFF3F4F6),
+                            width: 0.76,
+                          ),
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20.r),
+                          child: market.logo != null && market.logo!.isNotEmpty
+                              ? CachedNetworkImage(
+                                  imageUrl: market.logo!,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (context, url, error) =>
+                                      _buildLogoPlaceholder(),
+                                )
+                              : _buildLogoPlaceholder(),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      // Market Name + Rating + Delivery info
+                      Expanded(
+                        child: Column(
                           children: [
-                            // Delivery time
                             Row(
-                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Icon(
-                                  Icons.access_time_rounded,
-                                  size: 12.sp,
-                                  color: const Color(0xFF99A1AF),
+                                Flexible(
+                                  child: Text(
+                                    market.name,
+                                    style: const TextStyle().textColorBold(
+                                      fontSize: 18,
+                                      color: AppColors.textDark,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    textDirection: TextDirection.rtl,
+                                  ),
                                 ),
-                                SizedBox(width: 2.w),
+                                SizedBox(height: 8.h),
+                                // Rating badge
+                                _RatingBadge(
+                                  rating: market.averageRatingDisplay,
+                                ),
+                                // Delivery info row
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                // Open/Closed indicator
+                                Container(
+                                  width: 6.w,
+                                  height: 6.w,
+                                  decoration: BoxDecoration(
+                                    color: isOpen ? Colors.green : Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                SizedBox(width: 4.w),
                                 Text(
-                                  market.deliveryTime > 0
-                                      ? '${market.deliveryTime} د'
-                                      : '-- د',
+                                  isOpen ? 'مفتوح' : 'مغلق',
                                   style: const TextStyle().textColorMedium(
                                     fontSize: 12,
-                                    color: const Color(0xFF99A1AF),
+                                    color: isOpen ? Colors.green : Colors.red,
                                   ),
                                   textDirection: TextDirection.rtl,
                                 ),
-
+                                // Dot separator
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.w),
+                                  child: Container(
+                                    width: 4.w,
+                                    height: 4.w,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFD1D5DC),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                                // Delivery time
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.access_time_rounded,
+                                      size: 12.sp,
+                                      color: const Color(0xFF99A1AF),
+                                    ),
+                                    SizedBox(width: 2.w),
+                                    Text(
+                                      market.deliveryTime > 0
+                                          ? '${market.deliveryTime} د'
+                                          : '-- د',
+                                      style: const TextStyle().textColorMedium(
+                                        fontSize: 12,
+                                        color: const Color(0xFF99A1AF),
+                                      ),
+                                      textDirection: TextDirection.rtl,
+                                    ),
+                                  ],
+                                ),
+                                // Dot separator
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.w),
+                                  child: Container(
+                                    width: 4.w,
+                                    height: 4.w,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFD1D5DC),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                                // Delivery fee
+                                Flexible(
+                                  child: Text(
+                                    market.deliveryFeeDisplay,
+                                    style: const TextStyle().textColorMedium(
+                                      fontSize: 12,
+                                      color: const Color(0xFF99A1AF),
+                                    ),
+                                    textDirection: TextDirection.rtl,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
                               ],
                             ),
-                            // Dot separator
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.w),
-                              child: Container(
-                                width: 4.w,
-                                height: 4.w,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFD1D5DC),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                            // Delivery fee
-                            Text(
-                              market.deliveryFeeDisplay,
-                              style: const TextStyle().textColorMedium(
-                                fontSize: 12,
-                                color: const Color(0xFF99A1AF),
-                              ),
-                              textDirection: TextDirection.rtl,
-                            ),
+
                           ],
                         ),
-
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
 
-            // --- Featured Products Section ---
+                // --- Featured Products Section ---
             // Text("${isLoadingProducts} - ${hasProducts} - $totalProducts"),
             if (isLoadingProducts) ...[
               SizedBox(height: 20.h),
@@ -684,6 +779,27 @@ class MarketCard extends StatelessWidget {
               SizedBox(height: 20.h),
           ],
         ),
+      ),
+      // Closed overlay
+      if (!isOpen)
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0x3A7F22FE),
+              borderRadius: BorderRadius.circular(32.r),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              'مغلق الأن',
+              textAlign: TextAlign.center,
+              style: const TextStyle().textColorBold(
+                color: Colors.white,
+                fontSize: 20.sp,
+              ),
+            ),
+          ),
+        ),
+        ],
       ),
     );
   }

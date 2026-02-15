@@ -4,6 +4,8 @@ import '../models/market_model.dart';
 import '../models/market_category_model.dart';
 import '../models/market_product_item.dart';
 import '../models/market_cart_model.dart';
+import '../models/market_schedule_model.dart';
+import '../models/advertisement_model.dart';
 
 class MarketsService {
   final DioClient _dioClient = DioClient.instance;
@@ -11,7 +13,7 @@ class MarketsService {
   /// Fetch market categories for filter chips
   Future<List<MarketCategory>> getMarketCategories() async {
     try {
-      final response = await _dioClient.get('/markets/categories');
+      final response = await _dioClient.get('/products/categories');
       final list = response.data as List<dynamic>;
       return list
           .map((e) => MarketCategory.fromJson(e as Map<String, dynamic>))
@@ -108,6 +110,16 @@ class MarketsService {
     }
   }
 
+  /// Fetch market schedule
+  Future<MarketSchedule> getMarketSchedule(String marketId) async {
+    try {
+      final response = await _dioClient.get('/markets/$marketId/schedule');
+      return MarketSchedule.fromJson(response.data as Map<String, dynamic>);
+    } on DioException {
+      rethrow;
+    }
+  }
+
   /// Toggle market favorite status
   Future<bool> toggleFavorite(String marketId) async {
     try {
@@ -127,6 +139,19 @@ class MarketsService {
       final responseData = response.data as List<dynamic>;
       return responseData
           .map((item) => Market.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Fetch active advertisements
+  Future<List<Advertisement>> getActiveAdvertisements() async {
+    try {
+      final response = await _dioClient.get('/advertisements/active');
+      final responseData = response.data as List<dynamic>;
+      return responseData
+          .map((item) => Advertisement.fromJson(item as Map<String, dynamic>))
           .toList();
     } on DioException {
       rethrow;

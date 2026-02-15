@@ -10,7 +10,6 @@ import '../models/favorite_restaurant_model.dart';
 import '../models/best_restaurant_model.dart';
 import '../models/restaurant_schedule_model.dart';
 import '../models/category_selection_model.dart';
-
 class RestaurantsService {
   final DioClient _dioClient = DioClient.instance;
 
@@ -274,6 +273,9 @@ class RestaurantsService {
       final response = await _dioClient.get('/cart/all');
       final responseData = response.data as List<dynamic>;
       return responseData
+          .where((item) =>
+              item is Map<String, dynamic> &&
+              item['restaurant'] is Map<String, dynamic>)
           .map(
             (item) =>
                 RestaurantCartResponse.fromJson(item as Map<String, dynamic>),

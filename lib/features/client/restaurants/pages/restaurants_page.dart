@@ -29,7 +29,8 @@ class RestaurantsPage extends GetView<RestaurantsController> {
   Widget build(BuildContext context) {
     final addressController = Get.find<AddressController>();
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      // backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: AppColors.white,
       // appBar:
       // CustomAppBar(
       //   titleWidget: Column(
@@ -615,6 +616,8 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                               child: RestaurantCard(
                                                 restaurant: restaurant,
                                                 showClosedOverlay: false,
+                                                  // color: Theme.of(context).scaffoldBackgroundColor
+                                                  color: AppColors.white
                                               ),
                                             ),
                                           );
@@ -943,11 +946,14 @@ class _CategoryChip extends StatelessWidget {
 class RestaurantCard extends StatelessWidget {
   final dynamic restaurant;
   final bool showClosedOverlay;
+    final Color? color;
+
 
   const RestaurantCard({
     super.key,
     required this.restaurant,
     this.showClosedOverlay = true,
+    this.color,
   });
 
   @override
@@ -966,6 +972,7 @@ class RestaurantCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
+      color: color,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(

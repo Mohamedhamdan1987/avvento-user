@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/utils/show_snackbar.dart';
 import '../models/market_model.dart';
@@ -10,7 +11,8 @@ class MarketsController extends GetxController {
   final MarketsService _marketsService = MarketsService();
 
   // Observable state
-  final RxList<Market> _markets = <Market>[].obs;
+  final RxList<Market> _allMarkets = <Market>[].obs; // unfiltered master list
+  final RxList<Market> _markets = <Market>[].obs; // filtered display list
   final RxBool _isLoading = false.obs;
   final RxBool _isLoadingMore = false.obs;
   final RxString _searchQuery = ''.obs;
@@ -36,6 +38,9 @@ class MarketsController extends GetxController {
   // User location
   final Rx<double?> _userLat = Rx<double?>(null);
   final Rx<double?> _userLong = Rx<double?>(null);
+
+  // Search text controller (preserves state across Obx rebuilds)
+  final searchTextController = TextEditingController();
 
   // Getters
   List<Market> get markets => _markets;
@@ -80,6 +85,12 @@ class MarketsController extends GetxController {
     });
   }
 
+  @override
+  void onClose() {
+    searchTextController.dispose();
+    super.onClose();
+  }
+
   /// Fetch categories for filter chips
   Future<void> fetchCategories() async {
     try {
@@ -97,8 +108,38 @@ class MarketsController extends GetxController {
   Future<void> selectCategory(String? categoryId) async {
     if (_selectedCategoryId.value == categoryId) return;
     _selectedCategoryId.value = categoryId;
-    _currentPage.value = 1;
-    await fetchMarkets(refresh: true);
+
+    if (categoryId == null) {
+      // "الكل" — restore from cached _allMarkets instantly (no API call)
+      _markets.assignAll(_allMarkets);
+      _fetchFirstMarketProducts();
+    } else {
+      // Specific category — fetch from API
+      _currentPage.value = 1;
+      try {
+        _isLoading.value = true;
+        _errorMessage.value = '';
+        final response = await _marketsService.getMarketsByCategory(
+          categoryId,
+          page: 1,
+          limit: 10,
+        );
+        _markets.assignAll(response.data);
+        if (response.pagination != null) {
+          _totalPages.value = response.pagination!.totalPages;
+          _currentPage.value = response.pagination!.page;
+        } else {
+          _totalPages.value = 1;
+          _currentPage.value = 1;
+        }
+        _fetchFirstMarketProducts();
+      } catch (e) {
+        _errorMessage.value = 'فشل تحميل الماركتات: ${e.toString()}';
+        showSnackBar(message: _errorMessage.value, isError: true);
+      } finally {
+        _isLoading.value = false;
+      }
+    }
   }
 
   /// Fetch markets (initial load or refresh)
@@ -111,38 +152,24 @@ class MarketsController extends GetxController {
       _isLoading.value = true;
       _errorMessage.value = '';
 
-      final MarketsResponse response;
-      final categoryId = _selectedCategoryId.value;
-      if (categoryId != null && categoryId.isNotEmpty) {
-        response = await _marketsService.getMarketsByCategory(
-          categoryId,
-          page: _currentPage.value,
-          limit: 10,
-        );
-      } else {
-        response = await _marketsService.getMarkets(
-          page: _currentPage.value,
-          limit: 10,
-          search: _searchQuery.value.isEmpty ? null : _searchQuery.value,
-        );
-      }
+      final response = await _marketsService.getMarkets(
+        page: _currentPage.value,
+        limit: 10,
+        search: _searchQuery.value.isEmpty ? null : _searchQuery.value,
+      );
 
-      if (refresh) {
-        _markets.value = response.data;
-      } else {
-        _markets.assignAll(response.data);
-      }
+      // Cache all markets for instant "الكل" switching
+      _allMarkets.assignAll(response.data);
+      _markets.assignAll(response.data);
 
       if (response.pagination != null) {
         _totalPages.value = response.pagination!.totalPages;
         _currentPage.value = response.pagination!.page;
       } else {
-        // No pagination: assume single page
         _totalPages.value = 1;
         _currentPage.value = 1;
       }
 
-      // Fetch products for the first market to show featured products
       _fetchFirstMarketProducts();
     } catch (e) {
       _errorMessage.value = 'فشل تحميل الماركتات: ${e.toString()}';
@@ -176,6 +203,8 @@ class MarketsController extends GetxController {
           limit: 10,
           search: _searchQuery.value.isEmpty ? null : _searchQuery.value,
         );
+        // Cache for "الكل" switching
+        _allMarkets.addAll(response.data);
       }
 
       _markets.addAll(response.data);
@@ -194,9 +223,10 @@ class MarketsController extends GetxController {
     }
   }
 
-  /// Search markets
+  /// Search markets (resets category to "الكل")
   Future<void> searchMarkets(String query) async {
     _searchQuery.value = query;
+    _selectedCategoryId.value = null;
     _currentPage.value = 1;
     await fetchMarkets(refresh: true);
   }
@@ -256,22 +286,29 @@ class MarketsController extends GetxController {
   /// Toggle market favorite status
   Future<void> toggleFavorite(Market market) async {
     try {
-      // Optimistic update
-      final index = _markets.indexWhere((m) => m.id == market.id);
-      if (index != -1) {
-        _markets[index] = market.copyWith(
-          isFavorite: !market.isFavorite,
-        );
+      // Optimistic update on both lists
+      final allIndex = _allMarkets.indexWhere((m) => m.id == market.id);
+      if (allIndex != -1) {
+        _allMarkets[allIndex] = market.copyWith(isFavorite: !market.isFavorite);
+        _allMarkets.refresh();
+      }
+      final displayIndex = _markets.indexWhere((m) => m.id == market.id);
+      if (displayIndex != -1) {
+        _markets[displayIndex] = market.copyWith(isFavorite: !market.isFavorite);
         _markets.refresh();
       }
 
       final isFavorite = await _marketsService.toggleFavorite(market.id);
 
       // Update with actual result from server
-      if (index != -1) {
-        _markets[index] = _markets[index].copyWith(
-          isFavorite: isFavorite,
-        );
+      final allIdx = _allMarkets.indexWhere((m) => m.id == market.id);
+      if (allIdx != -1) {
+        _allMarkets[allIdx] = _allMarkets[allIdx].copyWith(isFavorite: isFavorite);
+        _allMarkets.refresh();
+      }
+      final dispIdx = _markets.indexWhere((m) => m.id == market.id);
+      if (dispIdx != -1) {
+        _markets[dispIdx] = _markets[dispIdx].copyWith(isFavorite: isFavorite);
         _markets.refresh();
       }
 
@@ -284,9 +321,14 @@ class MarketsController extends GetxController {
       );
     } catch (e) {
       // Revert on error
-      final index = _markets.indexWhere((m) => m.id == market.id);
-      if (index != -1) {
-        _markets[index] = market;
+      final revertAllIdx = _allMarkets.indexWhere((m) => m.id == market.id);
+      if (revertAllIdx != -1) {
+        _allMarkets[revertAllIdx] = market;
+        _allMarkets.refresh();
+      }
+      final revertDispIdx = _markets.indexWhere((m) => m.id == market.id);
+      if (revertDispIdx != -1) {
+        _markets[revertDispIdx] = market;
         _markets.refresh();
       }
 

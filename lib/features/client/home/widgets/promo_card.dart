@@ -15,6 +15,7 @@ class PromoCard extends StatelessWidget {
   final bool isFavorite;
   final VoidCallback onTap;
   final VoidCallback onFavoriteTap;
+  final Color? color  ;
 
   const PromoCard({
     super.key,
@@ -27,6 +28,7 @@ class PromoCard extends StatelessWidget {
     required this.isFavorite,
     required this.onTap,
     required this.onFavoriteTap,
+    this.color,
   });
 
   @override
@@ -45,7 +47,7 @@ class PromoCard extends StatelessWidget {
           bottom: 0.76,
         ),
         decoration: ShapeDecoration(
-          color: isDark ? const Color(0xFF111827) : Colors.white,
+          color: color ?? (isDark ? const Color(0xFF111827) : Colors.white),
           shape: RoundedRectangleBorder(
             side: BorderSide(
               width: 0.76,

@@ -21,7 +21,7 @@ class OrdersController extends GetxController {
   }
 
   Future<void> fetchOrders() async {
-    try {
+    // try {
       isLoading.value = true;
       final response = await _ordersService.getUserOrders();
       
@@ -35,12 +35,12 @@ class OrdersController extends GetxController {
         o.status == 'completed' || o.status == 'cancelled' || o.status == 'delivered' || o.status == 'delivery_received'
       ).toList());
       
-    } catch (e) {
-      cprint("sdsdsd :${e.toString()}");
-      showSnackBar(message: 'فشل في تحميل الطلبات', isError: true);
-    } finally {
-      isLoading.value = false;
-    }
+    // } catch (e) {
+    //   cprint("sdsdsd :${e.toString()}");
+    //   showSnackBar(message: 'فشل في تحميل الطلبات', isError: true);
+    // } finally {
+    //   isLoading.value = false;
+    // }
   }
 
   Future<void> refreshOrders() async {

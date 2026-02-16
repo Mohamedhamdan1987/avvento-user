@@ -1,3 +1,4 @@
+import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
@@ -95,293 +96,280 @@ class MarketsPage extends GetView<MarketsController> {
               ),
             ),
 
-            // --- Search Bar ---
-            Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Container(
-                height: 56.h,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24.r),
-                  border: Border.all(
-                    width: 0.76,
-                    color: const Color(0xFFE4E4E4),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(width: 8.w),
-                    Container(
-                      width: 40.w,
-                      height: 40.h,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE8E3FF),
-                        borderRadius: BorderRadius.circular(18.r),
-                      ),
-                      child: Center(
-                        child: SvgIcon(
-                          iconName: "assets/svg/client/search.svg",
-                          color: AppColors.purple,
-                          width: 20.w,
-                          height: 20.h,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: TextField(
-                        onChanged: (value) {
-                          Future.delayed(const Duration(milliseconds: 500), () {
-                            if (value == controller.searchQuery) return;
-                            controller.searchMarkets(value);
-                          });
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'ما الذي تشتهيه اليوم؟',
-                          hintStyle: const TextStyle().textColorBold(
-                            fontSize: 14,
-                            color: const Color(0xFFD1D5DC),
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                          isDense: true,
-                        ),
-                        textDirection: TextDirection.rtl,
-                        style: const TextStyle().textColorBold(
-                          fontSize: 14,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                  ],
-                ),
-              ),
-            ),
-
-            // --- Category Chips ---
-            Obx(() {
-              if (controller.isLoadingCategories &&
-                  controller.categories.isEmpty) {
-                return const SizedBox.shrink();
-              }
-              return SizedBox(
-                height: 48.h,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 12.w),
-                      child: _MarketCategoryChip(
-                        label: 'الكل',
-                        isSelected: controller.selectedCategoryId == null,
-                        onTap: () => controller.selectCategory(null),
-                      ),
-                    ),
-                    ...controller.categories.map(
-                      (MarketCategory cat) => Padding(
-                        padding: EdgeInsets.only(left: 12.w),
-                        child: _MarketCategoryChip(
-                          label: cat.name,
-                          icon: cat.icon,
-                          imageUrl: cat.image,
-                          isSelected:
-                              controller.selectedCategoryId == cat.id,
-                          onTap: () => controller.selectCategory(cat.id),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-
-            SizedBox(height: 8.h),
-
-            // --- Markets List ---
+            // --- Scrollable Content (Search + Categories + Markets) ---
             Expanded(
-              child: Obx(() {
-                // Loading state
-                if (controller.isLoading && controller.markets.isEmpty) {
-                  return _buildMarketsShimmer();
-                }
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (ScrollNotification scrollInfo) {
+                  if (scrollInfo.metrics.axis == Axis.vertical &&
+                      scrollInfo.metrics.pixels >=
+                          scrollInfo.metrics.maxScrollExtent - 200 &&
+                      controller.hasMore &&
+                      !controller.isLoadingMore) {
+                    controller.loadMore();
+                  }
+                  return false;
+                },
+                child: AppRefreshIndicator(
+                  onRefresh: controller.refreshMarkets,
+                  child: Obx(() {
+                    final sortedMarkets = controller.markets.isNotEmpty
+                        ? ([...controller.markets]
+                          ..sort((a, b) {
+                            if (a.isOpen == b.isOpen) return 0;
+                            return a.isOpen ? -1 : 1;
+                          }))
+                        : <Market>[];
 
-                // Error state
-                if (controller.hasError && controller.markets.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.red,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          controller.errorMessage,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: controller.fetchMarkets,
-                          child: const Text('إعادة المحاولة'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                // Empty state
-                if (controller.markets.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.store,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'لا توجد ماركتات',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                // Markets list
-                // Sort markets: open first, closed last
-                final sortedMarkets = [...controller.markets]
-                  ..sort((a, b) {
-                    if (a.isOpen == b.isOpen) return 0;
-                    return a.isOpen ? -1 : 1;
-                  });
-
-                return NotificationListener<ScrollNotification>(
-                  onNotification: (ScrollNotification scrollInfo) {
-                    if (scrollInfo.metrics.axis == Axis.vertical &&
-                        scrollInfo.metrics.pixels >=
-                            scrollInfo.metrics.maxScrollExtent - 200 &&
-                        controller.hasMore &&
-                        !controller.isLoadingMore) {
-                      controller.loadMore();
-                    }
-                    return false;
-                  },
-                  child: AppRefreshIndicator(
-                    onRefresh: controller.refreshMarkets,
-                    child: ListView.builder(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 24.w,
-                        vertical: 8.h,
-                      ),
+                    return CustomScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      itemCount: sortedMarkets.length +
-                          (controller.advertisements.isNotEmpty ? 1 : 0) +
-                          (controller.hasMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        // Advertisements as the first item
-                        if (controller.advertisements.isNotEmpty && index == 0) {
-                          return Padding(
-                            padding: EdgeInsets.only(bottom: 16.h),
-                            child: SizedBox(
-                              height: 144.h,
-                              child: PageView.builder(
-                                controller: PageController(
-                                  viewportFraction: controller.advertisements.length > 1 ? 0.92 : 1.0,
+                      slivers: [
+                        // --- Search Bar ---
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: TextField(
+                              controller: controller.searchTextController,
+                              onChanged: (value) {
+                                // Debounce search
+                                Future.delayed(
+                                  const Duration(milliseconds: 500),
+                                  () {
+                                    if (value == controller.searchQuery) return;
+                                    controller.searchMarkets(value);
+                                  },
+                                );
+                              },
+                              decoration: InputDecoration(
+                                filled: true,
+                                hintText: 'ابحث عن ماركت...',
+                                prefixIcon: const Icon(Icons.search),
+                                suffixIcon: CustomIconButtonApp(
+                                  childWidget: SvgIcon(
+                                    iconName: "assets/svg/client/search.svg",
+                                  ),
+                                  onTap: () {},
                                 ),
-                                itemCount: controller.advertisements.length,
-                                itemBuilder: (context, adIndex) {
-                                  final ad = controller.advertisements[adIndex];
-                                  return Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 4.w),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: CachedNetworkImage(
-                                        imageUrl: ad.image,
-                                        width: double.infinity,
-                                        height: 144.h,
-                                        fit: BoxFit.cover,
-                                        errorWidget: (context, url, error) =>
-                                            Container(
-                                              height: 144.h,
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey[200],
-                                                borderRadius: BorderRadius.circular(16),
-                                              ),
-                                              child: const Center(
-                                                child: Icon(
-                                                  Icons.image_outlined,
-                                                  size: 40,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                            ),
-                                      ),
-                                    ),
-                                  );
-                                },
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderSide: const BorderSide(
+                                    width: 0.76,
+                                    color: Color(0xFFE4E4E4),
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderSide: const BorderSide(
+                                    width: 0.76,
+                                    color: Color(0xFFE4E4E4),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderSide: const BorderSide(
+                                    width: 0.76,
+                                    color: Color(0xFFE4E4E4),
+                                  ),
+                                ),
                               ),
                             ),
-                          );
-                        }
+                          ),
+                        ),
 
-                        // Adjust index for markets
-                        final marketIndex = controller.advertisements.isNotEmpty
-                            ? index - 1
-                            : index;
+                        SliverToBoxAdapter(child: SizedBox(height: 8.h)),
 
-                        if (marketIndex == sortedMarkets.length) {
-                          return const Padding(
-                            padding: EdgeInsets.all(16.0),
+                        // --- Content based on state ---
+                        if (controller.isLoading && controller.markets.isEmpty)
+                          _buildMarketsShimmerSliver()
+                        else if (controller.hasError && controller.markets.isEmpty)
+                          SliverFillRemaining(
+                            hasScrollBody: false,
                             child: Center(
-                              child: CircularProgressIndicator(),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.error_outline,
+                                    size: 64,
+                                    color: Colors.red,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    controller.errorMessage,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: controller.fetchMarkets,
+                                    child: const Text('إعادة المحاولة'),
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        }
-                        final market = sortedMarkets[marketIndex];
-                        if (marketIndex == 0) {
-                          // First market: wrap in Obx for reactive product updates
-                          return Padding(
-                            padding: EdgeInsets.only(bottom: 24.h),
-                            child: Obx(() {
-                              final products = controller.firstMarketProducts;
-                              final productCount = controller.firstMarketProductCount;
-                              final isLoadingProducts = controller.isLoadingFirstMarketProducts;
-                              return MarketCard(
-                                market: market,
-                                productItems: products.isNotEmpty ? products : null,
-                                totalProductCount: productCount,
-                                isLoadingProducts: isLoadingProducts,
-                              );
-                            }),
-                          );
-                        }
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: 24.h),
-                          child: MarketCard(market: market),
-                        );
-                      },
-                    ),
-                  ),
-                );
-              }),
+                          )
+                        else if (controller.markets.isEmpty)
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.store,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'لا توجد ماركتات',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        else ...[
+                          // --- Advertisements ---
+                          if (controller.advertisements.isNotEmpty)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+                                child: SizedBox(
+                                  height: 144.h,
+                                  child: PageView.builder(
+                                    controller: PageController(
+                                      viewportFraction: controller.advertisements.length > 1 ? 0.92 : 1.0,
+                                    ),
+                                    itemCount: controller.advertisements.length,
+                                    itemBuilder: (context, adIndex) {
+                                      final ad = controller.advertisements[adIndex];
+                                      return Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 4.w),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(16),
+                                          child: CachedNetworkImage(
+                                            imageUrl: ad.image,
+                                            width: double.infinity,
+                                            height: 144.h,
+                                            fit: BoxFit.cover,
+                                            errorWidget: (context, url, error) =>
+                                                Container(
+                                                  height: 144.h,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.grey[200],
+                                                    borderRadius: BorderRadius.circular(16),
+                                                  ),
+                                                  child: const Center(
+                                                    child: Icon(
+                                                      Icons.image_outlined,
+                                                      size: 40,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+
+
+                          // --- Category Chips ---
+                          SliverToBoxAdapter(
+                            child: (controller.isLoadingCategories &&
+                                    controller.categories.isEmpty)
+                                ? const SizedBox.shrink()
+                                : Padding(
+                                    padding: EdgeInsetsDirectional.only(top: 12.h, bottom: 20.h, start: 10.w),
+                                    child: SizedBox(
+                                      height: 48.h,
+                                      child: ListView(
+                                        scrollDirection: Axis.horizontal,
+                                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.only(left: 12.w),
+                                            child: _MarketCategoryChip(
+                                              label: 'الكل',
+                                              isSelected: controller.selectedCategoryId == null,
+                                              onTap: () => controller.selectCategory(null),
+                                            ),
+                                          ),
+                                          ...controller.categories.map(
+                                            (MarketCategory cat) => Padding(
+                                              padding: EdgeInsets.only(left: 12.w),
+                                              child: _MarketCategoryChip(
+                                                label: cat.name,
+                                                icon: cat.icon,
+                                                imageUrl: cat.image,
+                                                isSelected:
+                                                    controller.selectedCategoryId == cat.id,
+                                                onTap: () => controller.selectCategory(cat.id),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                          ),
+
+                          // --- Markets List ---
+                          SliverPadding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 24.w,
+                            ),
+                            sliver: SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  if (index == sortedMarkets.length) {
+                                    return const Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+                                  }
+                                  final market = sortedMarkets[index];
+                                  if (index == 0) {
+                                    // First market: wrap in Obx for reactive product updates
+                                    return Padding(
+                                      padding: EdgeInsets.only(bottom: 24.h),
+                                      child: Obx(() {
+                                        final products = controller.firstMarketProducts;
+                                        final productCount = controller.firstMarketProductCount;
+                                        final isLoadingProducts = controller.isLoadingFirstMarketProducts;
+                                        return MarketCard(
+                                          market: market,
+                                          productItems: products.isNotEmpty ? products : null,
+                                          totalProductCount: productCount,
+                                          isLoadingProducts: isLoadingProducts,
+                                        );
+                                      }),
+                                    );
+                                  }
+                                  return Padding(
+                                    padding: EdgeInsets.only(bottom: 24.h),
+                                    child: MarketCard(market: market),
+                                  );
+                                },
+                                childCount: sortedMarkets.length +
+                                    (controller.hasMore ? 1 : 0),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  }),
+                ),
+              ),
             ),
           ],
         ),
@@ -389,81 +377,85 @@ class MarketsPage extends GetView<MarketsController> {
     );
   }
 
-  Widget _buildMarketsShimmer() {
-    return ListView.builder(
+  Widget _buildMarketsShimmerSliver() {
+    return SliverPadding(
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-      itemCount: 4,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: EdgeInsets.only(bottom: 24.h),
-          child: Container(
-            height: 240.h,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(32.r),
-              border: Border.all(
-              color: Colors.black.withValues(alpha: 0.05),
-              width: 0.76,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(20.w),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 64.w,
-                        height: 64.w,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Container(
-                              height: 20.h,
-                              width: 120.w,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF3F4F6),
-                                borderRadius: BorderRadius.circular(6.r),
-                              ),
-                            ),
-                            SizedBox(height: 8.h),
-                            Container(
-                              height: 14.h,
-                              width: 160.w,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF3F4F6),
-                                borderRadius: BorderRadius.circular(6.r),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: 24.h),
+              child: Container(
+                height: 240.h,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(32.r),
+                  border: Border.all(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    width: 0.76,
                   ),
                 ),
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.symmetric(horizontal: 20.w),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF9FAFB),
-                      borderRadius: BorderRadius.circular(24.r),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(20.w),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 64.w,
+                            height: 64.w,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Container(
+                                  height: 20.h,
+                                  width: 120.w,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF3F4F6),
+                                    borderRadius: BorderRadius.circular(6.r),
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                                Container(
+                                  height: 14.h,
+                                  width: 160.w,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF3F4F6),
+                                    borderRadius: BorderRadius.circular(6.r),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    Expanded(
+                      child: Container(
+                        margin: EdgeInsets.symmetric(horizontal: 20.w),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(24.r),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 1.h),
+                  ],
                 ),
-                SizedBox(height: 1.h),
-              ],
-            ),
-          ),
-        );
-      },
+              ),
+            );
+          },
+          childCount: 4,
+        ),
+      ),
     );
   }
 }
@@ -492,6 +484,7 @@ class MarketCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
+
         Get.to(() => MarketDetailsPage(marketId: market.id));
       },
       child: Stack(
@@ -788,7 +781,8 @@ class MarketCard extends StatelessWidget {
               color: const Color(0x3A7F22FE),
               borderRadius: BorderRadius.circular(32.r),
             ),
-            alignment: Alignment.center,
+            padding: EdgeInsets.all(10),
+            alignment: Alignment.bottomCenter,
             child: Text(
               'مغلق الأن',
               textAlign: TextAlign.center,
@@ -999,20 +993,20 @@ class _MarketCategoryChip extends StatelessWidget {
                 ? AppColors.purple
                 : const Color(0xFFE5E5E5),
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFFDDD6FF),
-                    blurRadius: 15,
-                    offset: const Offset(0, 10),
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFFDDD6FF),
-                    blurRadius: 6,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
+          // boxShadow: isSelected
+          //     ? [
+          //         BoxShadow(
+          //           color: const Color(0xFFDDD6FF),
+          //           blurRadius: 15,
+          //           offset: const Offset(0, 10),
+          //         ),
+          //         BoxShadow(
+          //           color: const Color(0xFFDDD6FF),
+          //           blurRadius: 6,
+          //           offset: const Offset(0, 4),
+          //         ),
+          //       ]
+          //     : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

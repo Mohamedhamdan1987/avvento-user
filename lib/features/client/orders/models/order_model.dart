@@ -26,7 +26,8 @@ class OrderItem {
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     // Handle item as Map (populated) or String (ID)
     // Also check for 'drink' key as fallback if 'item' is missing (for drinks added to order)
-    dynamic itemData = json['item'] ?? json['drink'];
+    // Also check for 'marketProduct' key for market orders
+    dynamic itemData = json['item'] ?? json['drink'] ?? json['marketProduct'];
     
     String itemId = '';
     String name = 'Unknown Item';
@@ -34,9 +35,23 @@ class OrderItem {
 
     if (itemData is Map) {
       final map = itemData as Map<String, dynamic>;
-      itemId = map['_id'] as String? ?? '';
-      name = (map['name'] as String?) ?? (map['nameAr'] as String?) ?? (map['nameEn'] as String?) ?? 'Unknown Item';
-      image = map['image'] as String?;
+      // For market products, the actual product info is nested under 'product'
+      final productData = map['product'];
+      if (productData is Map) {
+        final productMap = productData as Map<String, dynamic>;
+        itemId = productMap['_id'] as String? ?? map['_id'] as String? ?? '';
+        name = (productMap['name'] as String?) ?? (productMap['nameAr'] as String?) ?? (productMap['nameEn'] as String?) ?? 'Unknown Item';
+        final images = productMap['images'];
+        if (images is List && images.isNotEmpty) {
+          image = images.first as String?;
+        } else {
+          image = productMap['image'] as String?;
+        }
+      } else {
+        itemId = map['_id'] as String? ?? '';
+        name = (map['name'] as String?) ?? (map['nameAr'] as String?) ?? (map['nameEn'] as String?) ?? 'Unknown Item';
+        image = map['image'] as String?;
+      }
     } else if (itemData is String) {
       itemId = itemData;
     }
@@ -145,23 +160,30 @@ class OrderModel {
         ? (json['user'] as Map<String, dynamic>)['_id'] as String
         : json['user'] as String;
 
+    // Handle both restaurant and market orders
+    // Market orders have 'market' instead of 'restaurant'
+    final restaurantData = json['restaurant'] ?? json['market'];
+    final restaurant = restaurantData is Map
+        ? OrderRestaurant.fromJson(restaurantData as Map<String, dynamic>)
+        : OrderRestaurant(id: restaurantData as String? ?? '', name: 'Unknown');
+
     return OrderModel(
       id: json['_id'] as String,
       userId: userId,
-      restaurant: OrderRestaurant.fromJson(json['restaurant'] as Map<String, dynamic>),
+      restaurant: restaurant,
       items: (json['items'] as List<dynamic>)
           .map((i) => OrderItem.fromJson(i as Map<String, dynamic>))
           .toList(),
-      subtotal: (json['subtotal'] as num).toDouble(),
-      deliveryFee: (json['deliveryFee'] as num).toDouble(),
-      tax: (json['tax'] as num).toDouble(),
-      totalPrice: (json['totalPrice'] as num).toDouble(),
+      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
+      deliveryFee: (json['deliveryFee'] as num?)?.toDouble() ?? 0.0,
+      tax: (json['tax'] as num?)?.toDouble() ?? 0.0,
+      totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0.0,
       status: json['status'] as String,
       driver: (json['delivery'] ?? json['driver']) != null 
           ? OrderDriver.fromJson((json['delivery'] ?? json['driver']) as Map<String, dynamic>) 
           : null,
       deliveryAddress: json['deliveryAddress'] is Map 
-          ? (json['deliveryAddress'] as Map<String, dynamic>)['address'] as String? // Assuming structure if populated
+          ? (json['deliveryAddress'] as Map<String, dynamic>)['address'] as String?
           : json['deliveryAddress'] as String?,
       deliveryLat: json['deliveryLat'] != null ? (json['deliveryLat'] as num).toDouble() : null,
       deliveryLong: json['deliveryLong'] != null ? (json['deliveryLong'] as num).toDouble() : null,
@@ -186,13 +208,14 @@ class OrdersResponse {
   });
 
   factory OrdersResponse.fromJson(Map<String, dynamic> json) {
+    final ordersList = (json['orders'] as List<dynamic>)
+        .map((o) => OrderModel.fromJson(o as Map<String, dynamic>))
+        .toList();
     return OrdersResponse(
-      orders: (json['orders'] as List<dynamic>)
-          .map((o) => OrderModel.fromJson(o as Map<String, dynamic>))
-          .toList(),
-      total: json['total'] as int,
-      page: json['page'] as int,
-      limit: json['limit'] as int,
+      orders: ordersList,
+      total: json['total'] as int? ?? ordersList.length,
+      page: json['page'] as int? ?? 1,
+      limit: json['limit'] as int? ?? ordersList.length,
     );
   }
 }

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
+import 'package:avvento/features/client/home/pages/home_search_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -79,10 +80,10 @@ class _HomePageContentState extends State<_HomePageContent> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     _promoPageController = PageController(initialPage: widget.controller.currentPromoPage);
-    
+
     // Update FCM token on server
     NotificationService.instance.updateTokenOnServer();
-    
+
     // Connect to socket for real-time order updates
     try {
       final socketService = Get.find<SocketService>();
@@ -154,7 +155,7 @@ class _HomePageContentState extends State<_HomePageContent> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                '🧪 اختبار إشعارات الطلبات',
+                '� اختبار إشعارات الطلبات',
                 style: TextStyle().textColorBold(
                   fontSize: 18.sp,
                   color: Theme.of(context).textTheme.titleLarge?.color,
@@ -162,7 +163,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 24.h),
-              
+
               // Test single status buttons
               Text(
                 'اختبار حالة معينة:',
@@ -172,7 +173,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                 ),
               ),
               SizedBox(height: 12.h),
-              
+
               Wrap(
                 spacing: 8.w,
                 runSpacing: 8.h,
@@ -183,11 +184,11 @@ class _HomePageContentState extends State<_HomePageContent> {
                       NotificationService.instance.showTestOrderNotification(status);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: status == OrderStatus.cancelled 
-                          ? Colors.red 
-                          : status == OrderStatus.delivered 
-                              ? Colors.green 
-                              : AppColors.purple,
+                      backgroundColor: status == OrderStatus.cancelled
+                          ? Colors.red
+                          : status == OrderStatus.delivered
+                          ? Colors.green
+                          : AppColors.purple,
                       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.r),
@@ -203,9 +204,9 @@ class _HomePageContentState extends State<_HomePageContent> {
                   );
                 }).toList(),
               ),
-              
+
               SizedBox(height: 24.h),
-              
+
               // Test all statuses button
               ElevatedButton.icon(
                 onPressed: () {
@@ -228,9 +229,9 @@ class _HomePageContentState extends State<_HomePageContent> {
                   ),
                 ),
               ),
-              
+
               SizedBox(height: 12.h),
-              
+
               Text(
                 '⚠️ هذا الزر للاختبار فقط - احذفه قبل النشر',
                 style: TextStyle().textColorMedium(
@@ -239,7 +240,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               SizedBox(height: 16.h),
             ],
           ),
@@ -562,10 +563,13 @@ class _HomePageContentState extends State<_HomePageContent> {
               // SizedBox(height: 16.h),
 
               SizedBox(height: 24.h),
-              // Search bar
+
+              // Search bar ١
               Container(
                 height: 48.h,
                 decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF4D179A).withOpacity(0.1),
@@ -577,6 +581,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                 ),
                 child: CustomTextField(
                   hint: 'ابحث عن وجبتك المفضلة...',
+                  onTap: () => Get.to(() => const HomeSearchPage()),
                   fillColor: Theme.of(context).cardColor,
                   borderRadius: 16,
                   contentPadding: EdgeInsets.symmetric(
@@ -591,8 +596,11 @@ class _HomePageContentState extends State<_HomePageContent> {
                       height: 20.h,
                     ),
                   ),
+                  borderColor: Colors.transparent,
+
                 ),
               ),
+
               SizedBox(height: 16.h),
 
             ],
@@ -620,7 +628,7 @@ class _HomePageContentState extends State<_HomePageContent> {
               children: [
                 Container(
                   height: 216.h,
-                    padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+                  padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
                   child: PageView.builder(
                     controller: _promoPageController,
                     onPageChanged: (index) {
@@ -649,6 +657,8 @@ class _HomePageContentState extends State<_HomePageContent> {
 
                         },
                         onFavoriteTap: () => widget.controller.toggleFavorite(restaurant),
+                        color: Theme.of(context).scaffoldBackgroundColor
+
                       );
                     },
                     itemCount: widget.controller.featuredRestaurants.length,
@@ -720,7 +730,7 @@ class _HomePageContentState extends State<_HomePageContent> {
           SizedBox(height: 24.h),
           // Weekly Discounts Section
           _buildSectionHeader(
-            title: 'خصومات الاسبوع 🔥',
+            title: 'خصومات الاسبوع �',
             onViewAllTap: () {},
           ),
           SizedBox(height: 16.h),
@@ -790,3 +800,4 @@ class _HomePageContentState extends State<_HomePageContent> {
     );
   }
 }
+

@@ -11,6 +11,7 @@ class CustomTextField extends StatefulWidget {
   final Widget? suffixIcon;
   final bool obscureText;
   final TextEditingController? controller;
+  final VoidCallback? onTap;
   final Color? fillColor;
   final Color? borderColor;
   final double borderRadius;
@@ -29,6 +30,7 @@ class CustomTextField extends StatefulWidget {
     this.suffixIcon,
     this.obscureText = false,
     this.controller,
+    this.onTap,
     this.fillColor,
     this.borderRadius = 12,
     this.contentPadding,
@@ -80,6 +82,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
     }
 
     final textField = TextFormField(
+      onTap: widget.onTap,
+      readOnly: widget.onTap != null,
+      // enabled: widget.onTap == null, // إذا تم توفير onTap، اجعل الحقل غير قابل للتحريرق
       controller: widget.controller,
       obscureText: _obscureText,
       keyboardType: widget.keyboardType,

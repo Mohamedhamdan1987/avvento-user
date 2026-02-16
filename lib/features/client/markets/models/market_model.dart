@@ -211,6 +211,8 @@ class Market {
   final int? deliveryTimeMinutes;
   final int? totalProducts;
   final List<MarketProduct>? featuredProducts;
+  final List<String> categoryIds;
+  final bool isOpen;
 
   Market({
     required this.id,
@@ -234,13 +236,15 @@ class Market {
     this.deliveryTimeMinutes,
     this.totalProducts,
     this.featuredProducts,
+    this.categoryIds = const [],
+      this.isOpen = false,
   });
 
-  /// Market is open if user.isActive && workingStatus != 'stopped'
-  bool get isOpen {
-    if (user.workingStatus == 'stopped') return false;
-    return user.isActive;
-  }
+  // /// Market is open if user.isActive && workingStatus != 'stopped'
+  // bool get isOpen {
+  //   if (user.workingStatus == 'stopped') return false;
+  //   return user.isActive;
+  // }
 
   String get averageRatingDisplay {
     if (statistics != null && statistics!.rating.totalRatings > 0) {
@@ -293,6 +297,26 @@ class Market {
           .toList();
     }
 
+    // Parse category IDs from various possible response formats
+    List<String> categoryIds = [];
+    if (json['categories'] != null) {
+      categoryIds = (json['categories'] as List<dynamic>).map((e) {
+        if (e is String) return e;
+        if (e is Map<String, dynamic>) return (e['_id'] ?? e['id'] ?? '') as String;
+        return '';
+      }).where((id) => id.isNotEmpty).toList();
+    } else if (json['category'] != null) {
+      if (json['category'] is String) {
+        categoryIds = [json['category'] as String];
+      } else if (json['category'] is Map<String, dynamic>) {
+        final catId = (json['category']['_id'] ?? json['category']['id'] ?? '') as String;
+        if (catId.isNotEmpty) categoryIds = [catId];
+      }
+    } else if (json['categoryId'] != null) {
+      categoryIds = [json['categoryId'] as String];
+    }
+
+
     return Market(
       id: json['_id'] ?? json['id'] ?? '',
       user: MarketUser.fromJson(userData),
@@ -319,6 +343,8 @@ class Market {
       deliveryTimeMinutes: json['deliveryTimeMinutes'] as int?,
       totalProducts: json['totalProducts'] as int?,
       featuredProducts: featuredProducts,
+      categoryIds: categoryIds,
+      isOpen: json['isOpen'] as bool? ?? false,
     );
   }
 
@@ -344,6 +370,7 @@ class Market {
       if (featuredProducts != null)
         'featuredProducts':
             featuredProducts!.map((p) => p.toJson()).toList(),
+      'categories': categoryIds,
     };
   }
 
@@ -369,6 +396,7 @@ class Market {
     int? deliveryTimeMinutes,
     int? totalProducts,
     List<MarketProduct>? featuredProducts,
+    List<String>? categoryIds,
   }) {
     return Market(
       id: id ?? this.id,
@@ -392,6 +420,7 @@ class Market {
       deliveryTimeMinutes: deliveryTimeMinutes ?? this.deliveryTimeMinutes,
       totalProducts: totalProducts ?? this.totalProducts,
       featuredProducts: featuredProducts ?? this.featuredProducts,
+      categoryIds: categoryIds ?? this.categoryIds,
     );
   }
 }

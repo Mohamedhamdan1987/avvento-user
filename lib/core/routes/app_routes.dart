@@ -42,4 +42,5 @@ class AppRoutes {
   static const String restaurantCartDetails = '/restaurant-cart-details';
   static const String checkout = '/checkout';
   static const String wallet = '/wallet';
+  static const String orderSupport = '/order-support';
 }

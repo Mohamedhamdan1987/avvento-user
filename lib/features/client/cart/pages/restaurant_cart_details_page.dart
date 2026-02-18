@@ -76,7 +76,23 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
 
           final currentCart = controller.detailedCart;
           if (currentCart == null) {
-            return const Center(child: Text('فشل تحميل البيانات'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 48.r, color: Colors.grey),
+                  SizedBox(height: 12.h),
+                  const Text('فشل تحميل البيانات'),
+                  SizedBox(height: 12.h),
+                  TextButton(
+                    onPressed: () {
+                      controller.fetchRestaurantCart(widget.cart.restaurant.id!);
+                    },
+                    child: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
+            );
           }
 
           if (currentCart.items.isEmpty) {
@@ -147,9 +163,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
         Get.to(
           () => RestaurantDetailsScreen(
             restaurantId: widget.cart.restaurant.restaurantId!!,
+            fromCart: true,
           ),
         )?.then((value) {
-          controller.fetchRestaurantCart(widget.cart.restaurant.id!);
+          controller.fetchRestaurantCart(widget.cart.restaurant.id!, showLoading: false);
         });
       },
       child: Container(
@@ -461,9 +478,10 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
         Get.to(
           () => RestaurantDetailsScreen(
             restaurantId: widget.cart.restaurant.restaurantId!!,
+            fromCart: true,
           ),
         )?.then((value) {
-          controller.fetchRestaurantCart(widget.cart.restaurant.id!);
+          controller.fetchRestaurantCart(widget.cart.restaurant.id!, showLoading: false);
         });
       },
       child: Container(

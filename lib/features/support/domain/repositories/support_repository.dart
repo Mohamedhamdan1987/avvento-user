@@ -40,5 +40,18 @@ abstract class SupportRepository {
     int limit = 50,
   });
   Future<void> markMessagesAsRead(String conversationId);
+
+  // Order-level support
+  Future<SupportConversationEntity> getOrderChat(String orderId);
+  Future<MessagesResponse> getOrderChatMessages({
+    required String orderId,
+    int page = 1,
+    int limit = 50,
+  });
+  Future<MessageEntity> sendOrderChatMessage({
+    required String conversationId,
+    required String content,
+    String? type,
+  });
 }
 

@@ -1248,38 +1248,41 @@ class _MarketDetailsShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ShimmerLoading(
-      child: Column(
-        children: [
-          Container(height: 250.h, color: Colors.grey[300]),
-          SizedBox(height: 60.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            child: Column(
-              children: [
-                ShimmerBox(
-                    width: double.infinity,
-                    height: 60.h,
-                    borderRadius: 21),
-                SizedBox(height: 24.h),
-                ShimmerBox(
-                    width: double.infinity,
-                    height: 48.h,
-                    borderRadius: 16),
-                SizedBox(height: 24.h),
-                ...List.generate(
-                  3,
-                  (_) => Padding(
-                    padding: EdgeInsets.only(bottom: 16.h),
-                    child: ShimmerBox(
-                        width: double.infinity,
-                        height: 120.h,
-                        borderRadius: 24),
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            Container(height: 250.h, color: Colors.grey[300]),
+            SizedBox(height: 60.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Column(
+                children: [
+                  ShimmerBox(
+                      width: double.infinity,
+                      height: 60.h,
+                      borderRadius: 21),
+                  SizedBox(height: 24.h),
+                  ShimmerBox(
+                      width: double.infinity,
+                      height: 48.h,
+                      borderRadius: 16),
+                  SizedBox(height: 24.h),
+                  ...List.generate(
+                    3,
+                    (_) => Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: ShimmerBox(
+                          width: double.infinity,
+                          height: 120.h,
+                          borderRadius: 24),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

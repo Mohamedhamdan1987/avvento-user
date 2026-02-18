@@ -53,40 +53,22 @@ class ClientWalletController extends GetxController {
     }
   }
 
-  Future<void> initiatePaynetlyTopUp({
+  Future<void> initiateDepositPayment({
     required double amount,
     required String phone,
+    required String email,
   }) async {
-    // isLoading.value = true; // Avoid full screen loading to keep dialog context if needed, or use overlay
-    // Better to show loading in the button or a sterile loading dialog if needed.
-    // But here we just navigate to WebView.
-    
     try {
-      // if (!phone.startsWith('+')) {
-      //    // Assuming Libyan numbers for now or generic format
-      //    // Reference code added +218 if missing.
-      //    // If phone starts with 0, replace with +218?
-      //    // The reference code: if (!phone.startsWith('+')) phone = '+218$phone';
-      //    // Let's blindly follow reference logic or make it smarter.
-      //    // If it starts with 09, it adds +21809... which might be wrong double prefix if not careful.
-      //    // Standard format: +2189XXXXXXXX.
-      //    // If input is 091..., +218091... is usually acceptable by some gateways but incorrect standard.
-      //    // Let's assume the user enters local number.
-      //    // Reference: phone = '+218$phone';
-      //    phone = '+218$phone';
-      // }
-
-      final response = await _walletService.initiatePaynetlyPayment(
+      final response = await _walletService.initiateDepositPayment(
         amount: amount,
         phone: phone,
-        frontendUrl: 'https://yoursite.com/payment-success',
+        email: email,
       );
 
-      // Open SmartWebView
       final result = await Get.to(() => SmartWebView(
         url: response.paymentUrl,
-         appBar: AppBar(
-          title: const Text('طرق الدفع والسداد'),
+        appBar: AppBar(
+          title: const Text('إيداع رصيد'),
           backgroundColor: const Color(0xFFF7F7F7),
           centerTitle: true,
           actions: [
@@ -100,21 +82,18 @@ class ClientWalletController extends GetxController {
           ],
           leading: Container(),
         ),
-        closeWhenUrlContains: 'payment-success',
+        closeWhenUrlContains: 'deposit/success',
         onClose: () {
-           showSnackBar(message: 'تمت عملية الدفع بنجاح', isSuccess: true);
-           refreshWallet();
+          showSnackBar(message: 'تم إيداع الرصيد بنجاح', isSuccess: true);
+          refreshWallet();
         },
       ));
 
       if (result != null) {
         refreshWallet();
       }
-
     } catch (e) {
-      showSnackBar(message: 'حدث خطأ أثناء بدء الدفع: $e', isError: true);
-    } finally {
-      // isLoading.value = false;
+      showSnackBar(message: 'حدث خطأ أثناء بدء عملية الإيداع', isError: true);
     }
   }
 
@@ -122,26 +101,27 @@ class ClientWalletController extends GetxController {
     Get.dialog(
       EnterAmountDialog(
         onConfirm: (amount) async {
-           // Get phone logic
-           String phone = '0910000000'; // Default fallback
-           
-           // Try to get from storage directly as we don't have AuthController imported yet/surely
-           // Or import AuthController.
-           try {
-              final storage = GetStorage();
-              final userData = storage.read<Map<String, dynamic>>(AppConstants.userKey);
-              if (userData != null) {
-                 final userPhone = userData['phone'] as String?;
-                 if (userPhone != null) phone = userPhone;
-              }
-           } catch (e) {
-             print('Error getting phone: $e');
-           }
+          String phone = '0910000000';
+          String email = 'customer@example.com';
 
-           await initiatePaynetlyTopUp(
-             amount: amount,
-             phone: phone,
-           );
+          try {
+            final storage = GetStorage();
+            final userData = storage.read<Map<String, dynamic>>(AppConstants.userKey);
+            if (userData != null) {
+              final userPhone = userData['phone'] as String?;
+              final userEmail = userData['email'] as String?;
+              if (userPhone != null) phone = userPhone;
+              if (userEmail != null) email = userEmail;
+            }
+          } catch (e) {
+            print('Error getting user data: $e');
+          }
+
+          await initiateDepositPayment(
+            amount: amount,
+            phone: phone,
+            email: email,
+          );
         },
       ),
     );

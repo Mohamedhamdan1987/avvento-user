@@ -759,8 +759,9 @@ import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 
 class RestaurantDetailsScreen extends StatelessWidget {
   final String restaurantId;
+  final bool fromCart;
 
-  RestaurantDetailsScreen({super.key, required this.restaurantId}) {
+  RestaurantDetailsScreen({super.key, required this.restaurantId, this.fromCart = false}) {
     if (!Get.isRegistered<RestaurantsController>()) {
       Get.put(RestaurantsController());
     }
@@ -770,11 +771,19 @@ class RestaurantDetailsScreen extends StatelessWidget {
       // Use microtask to avoid "setState() or markNeedsBuild() called during build" error
       Future.microtask(() => Get.find<CartController>().fetchAllCarts());
     }
-    Get.delete<RestaurantDetailsController>(); // Ensure fresh controller
+    if (Get.isRegistered<RestaurantDetailsController>()) {
+      Get.delete<RestaurantDetailsController>(force: true);
+    }
     Get.put(RestaurantDetailsController(restaurantId: restaurantId));
   }
 
-  RestaurantDetailsController get controller => Get.find<RestaurantDetailsController>();
+  RestaurantDetailsController get controller {
+    if (Get.isRegistered<RestaurantDetailsController>()) {
+      return Get.find<RestaurantDetailsController>();
+    }
+    // Re-register if controller was cleaned up during navigation transition
+    return Get.put(RestaurantDetailsController(restaurantId: restaurantId));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -782,6 +791,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Obx(() {
+        if (!Get.isRegistered<CartController>()) return const SizedBox.shrink();
         final cartController = Get.find<CartController>();
         final cart = cartController.carts.firstWhereOrNull(
           (c) => c.restaurant.restaurantId == restaurantId,
@@ -796,6 +806,9 @@ class RestaurantDetailsScreen extends StatelessWidget {
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Obx(() {
+          if (!Get.isRegistered<RestaurantDetailsController>()) {
+            return const SizedBox.shrink();
+          }
           if (controller.isLoadingRestaurantDetails && controller.restaurant == null) {
             return const RestaurantDetailsShimmer();
           }
@@ -1806,7 +1819,11 @@ class RestaurantDetailsScreen extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 24.w),
         child: GestureDetector(
           onTap: () {
-            Get.to(() => RestaurantCartDetailsPage(cart: cart));
+            if (fromCart) {
+              Get.back();
+            } else {
+              Get.to(() => RestaurantCartDetailsPage(cart: cart));
+            }
           },
           child: Container(
             height: 56.h,
@@ -1886,7 +1903,11 @@ class RestaurantDetailsScreen extends StatelessWidget {
                   // "إتمام الطلب" pill button
                   GestureDetector(
                     onTap: () {
-                      Get.to(() => RestaurantCartDetailsPage(cart: cart));
+                      if (fromCart) {
+                        Get.back();
+                      } else {
+                        Get.to(() => RestaurantCartDetailsPage(cart: cart));
+                      }
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
@@ -2039,9 +2060,9 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
                     color: Colors.white.withOpacity(0.2),
                     childWidget: SvgIcon(
                       iconName: 'assets/svg/client/search.svg',
-                      color: Colors.white,
-                      width: 20.w,
-                      height: 20.h,
+                      // color: Colors.white,
+                      // width: 20.w,
+                      // height: 20.h,
                     ),
                   ),
                 ),

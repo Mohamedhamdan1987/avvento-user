@@ -385,7 +385,7 @@ class CurrentOrderCard extends StatelessWidget {
           child: CustomButtonApp(
             text: 'الدعم',
             onTap: () {
-              Get.toNamed(AppRoutes.restaurantSupport);
+              Get.toNamed(AppRoutes.orderSupport, arguments: order.id);
             },
             height: 40.h,
             borderRadius: 10.r,

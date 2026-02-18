@@ -46,38 +46,45 @@ class MarketsPage extends GetView<MarketsController> {
                     ),
                     onTap: () => Get.back(),
                   ),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () => Get.toNamed(AppRoutes.addressList),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            'التوصيل إلى',
-                            style: TextStyle(
-                              color: AppColors.purple,
-                              fontSize: 12,
-                              fontFamily: 'IBM Plex Sans Arabic',
-                              fontWeight: FontWeight.w700,
-                              height: 1.33,
+                  Flexible(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => Get.toNamed(AppRoutes.addressList),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              'التوصيل إلى',
+                              style: TextStyle(
+                                color: AppColors.purple,
+                                fontSize: 12,
+                                fontFamily: 'IBM Plex Sans Arabic',
+                                fontWeight: FontWeight.w700,
+                                height: 1.33,
+                              ),
                             ),
-                          ),
-                          Row(
-                            children: [
-                              Obx(
-                                () => Text(
-                                  "${addressController.activeAddress.value?.label ?? ''} - ${addressController.activeAddress.value?.address ?? ''}",
-                                  style: const TextStyle().textColorLight(
-                                    fontSize: 12,
-                                    color: const Color(0xFF101727),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Obx(
+                                    () => Text(
+                                      "${addressController.activeAddress.value?.label ?? ''} - ${addressController.activeAddress.value?.address ?? ''}",
+                                      style: const TextStyle().textColorLight(
+                                        fontSize: 12,
+                                        color: const Color(0xFF101727),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              SvgIcon(iconName: "assets/svg/arrow_down.svg"),
-                            ],
-                          ),
-                        ],
+                                SvgIcon(iconName: "assets/svg/arrow_down.svg"),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -248,28 +255,35 @@ class MarketsPage extends GetView<MarketsController> {
                                       final ad = controller.advertisements[adIndex];
                                       return Padding(
                                         padding: EdgeInsets.symmetric(horizontal: 4.w),
-                                        child: ClipRRect(
+                                        child: InkWell(
                                           borderRadius: BorderRadius.circular(16),
-                                          child: CachedNetworkImage(
-                                            imageUrl: ad.image,
-                                            width: double.infinity,
-                                            height: 144.h,
-                                            fit: BoxFit.cover,
-                                            errorWidget: (context, url, error) =>
-                                                Container(
-                                                  height: 144.h,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.grey[200],
-                                                    borderRadius: BorderRadius.circular(16),
-                                                  ),
-                                                  child: const Center(
-                                                    child: Icon(
-                                                      Icons.image_outlined,
-                                                      size: 40,
-                                                      color: Colors.grey,
+                                          onTap: () {
+                                            Get.toNamed(AppRoutes.marketDetails, arguments: ad.market!.id);
+
+                                          },
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(16),
+                                            child: CachedNetworkImage(
+                                              imageUrl: ad.image,
+                                              width: double.infinity,
+                                              height: 144.h,
+                                              fit: BoxFit.cover,
+                                              errorWidget: (context, url, error) =>
+                                                  Container(
+                                                    height: 144.h,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey[200],
+                                                      borderRadius: BorderRadius.circular(16),
+                                                    ),
+                                                    child: const Center(
+                                                      child: Icon(
+                                                        Icons.image_outlined,
+                                                        size: 40,
+                                                        color: Colors.grey,
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
+                                            ),
                                           ),
                                         ),
                                       );

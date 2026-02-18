@@ -2,6 +2,7 @@ import 'package:avvento/core/utils/show_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
 import 'package:avvento/core/constants/app_colors.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
@@ -23,6 +24,39 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
   final TextEditingController _labelController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   bool _isMoving = false;
+  bool _isGeocodingLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _reverseGeocode(_selectedLocation);
+  }
+
+  Future<void> _reverseGeocode(LatLng location) async {
+    if (_isGeocodingLoading) return;
+    _isGeocodingLoading = true;
+    if (mounted) setState(() {});
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        location.latitude,
+        location.longitude,
+      );
+      if (placemarks.isNotEmpty && mounted) {
+        final p = placemarks.first;
+        final parts = <String>[
+          if (p.subLocality != null && p.subLocality!.isNotEmpty) p.subLocality!,
+          if (p.locality != null && p.locality!.isNotEmpty) p.locality!,
+          if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) p.administrativeArea!,
+        ];
+        _addressController.text = parts.join('، ');
+      }
+    } catch (_) {
+      // Geocoding failed silently — user can type manually
+    } finally {
+      _isGeocodingLoading = false;
+      if (mounted) setState(() {});
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +87,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
               },
               onCameraIdle: () {
                 setState(() => _isMoving = false);
+                _reverseGeocode(_selectedLocation);
               },
               myLocationEnabled: true,
               myLocationButtonEnabled: true,
@@ -124,24 +159,51 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                       borderRadius: 12,
                     ),
                     SizedBox(height: 12.h),
-                    CustomTextField(
-                      controller: _addressController,
-                      hint: 'وصف العنوان (الشارع، رقم المبنى...)',
-                      fillColor: Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius: 12,
-                      maxLines: 2,
+                    Stack(
+                      alignment: AlignmentDirectional.centerEnd,
+                      children: [
+                        CustomTextField(
+                          controller: _addressController,
+                          hint: 'وصف العنوان (اختياري)',
+                          fillColor: Theme.of(context).scaffoldBackgroundColor,
+                          borderRadius: 12,
+                          maxLines: 2,
+                          suffixIcon: _isGeocodingLoading
+                              ? Padding(
+                                  padding: EdgeInsets.all(12.w),
+                                  child: SizedBox(
+                                    width: 20.w,
+                                    height: 20.w,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.purple,
+                                    ),
+                                  ),
+                                )
+                              : (_addressController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: Icon(Icons.clear, size: 20.r, color: Theme.of(context).hintColor),
+                                      onPressed: () {
+                                        setState(() {
+                                          _addressController.clear();
+                                        });
+                                      },
+                                    )
+                                  : null),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 24.h),
                     Obx(() => CustomButtonApp(
                       text: 'حفظ العنوان',
                       onTap: () {
-                        if (_labelController.text.isEmpty || _addressController.text.isEmpty) {
-                          showSnackBar(message: 'يرجى إكمال جميع الحقول', title: 'تنبیه');
+                        if (_labelController.text.isEmpty) {
+                          showSnackBar(message: 'يرجى إدخال اسم العنوان', title: 'تنبیه');
                           return;
                         }
                         controller.addAddress(
                           label: _labelController.text,
-                          address: _addressController.text,
+                          address: _addressController.text.trim(),
                           lat: _selectedLocation.latitude,
                           long: _selectedLocation.longitude,
                         );

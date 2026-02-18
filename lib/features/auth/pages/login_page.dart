@@ -195,89 +195,120 @@ class _LoginPageState extends State<LoginPage> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Row(
-                      spacing: 8,
                       children: [
-                        Obx(() {
-                          final controller = Get.find<AuthController>();
-                          return Expanded(
-                            child: Container(
-                              height: 56.h,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16.r),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.drawerPurple.withOpacity(0.3),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            Obx(() {
+                              final controller = Get.find<AuthController>();
+                              return Expanded(
+                                child: Container(
+                                  height: 56.h,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16.r),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.drawerPurple.withOpacity(0.3),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: CustomButtonApp(
-                                text: 'mohamed',
-                                color: AppColors.drawerPurple,
-                                onTap: () {
-                                  controller.login("mohamed", "1234567");
-                                },
-                                isLoading: controller.isLoading,
-                                borderRadius: 16,
-                              ),
-                            ),
-                          );
-                        }),
-                        Obx(() {
-                          final controller = Get.find<AuthController>();
-                          return Expanded(
-                            child: Container(
-                              height: 56.h,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16.r),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.drawerPurple.withOpacity(0.3),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
+                                  child: CustomButtonApp(
+                                    text: 'mohamed',
+                                    color: AppColors.drawerPurple,
+                                    onTap: () {
+                                      controller.login("mohamed", "1234567");
+                                    },
+                                    isLoading: controller.isLoading,
+                                    borderRadius: 16,
                                   ),
-                                ],
-                              ),
-                              child: CustomButtonApp(
-                                text: 'driver',
-                                color: AppColors.drawerPurple,
-                                onTap: () {
-                                  controller.login("driver", "1234567");
-                                },
-                                isLoading: controller.isLoading,
-                                borderRadius: 16,
-                              ),
-                            ),
-                          );
-                        }),
-                        Obx(() {
-                          final controller = Get.find<AuthController>();
-                          return Expanded(
-                            child: Container(
-                              height: 56.h,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16.r),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.drawerPurple.withOpacity(0.3),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
+                                ),
+                              );
+                            }),
+                            Obx(() {
+                              final controller = Get.find<AuthController>();
+                              return Expanded(
+                                child: Container(
+                                  height: 56.h,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16.r),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.drawerPurple.withOpacity(0.3),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: CustomButtonApp(
-                                text: 'masterpay',
-                                color: AppColors.drawerPurple,
-                                onTap: () {
-                                  controller.login("masterpay", "1234567");
-                                },
-                                isLoading: controller.isLoading,
-                                borderRadius: 16,
-                              ),
-                            ),
-                          );
-                        }),
+                                  child: CustomButtonApp(
+                                    text: 'mohamed1',
+                                    color: AppColors.drawerPurple,
+                                    onTap: () {
+                                      controller.login("mohamed1", "123456789");
+                                    },
+                                    isLoading: controller.isLoading,
+                                    borderRadius: 16,
+                                  ),
+                                ),
+                              );
+                            }),
+                            Obx(() {
+                              final controller = Get.find<AuthController>();
+                              return Expanded(
+                                child: Container(
+                                  height: 56.h,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16.r),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.drawerPurple.withOpacity(0.3),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: CustomButtonApp(
+                                    text: 'driver',
+                                    color: AppColors.drawerPurple,
+                                    onTap: () {
+                                      controller.login("driver", "1234567");
+                                    },
+                                    isLoading: controller.isLoading,
+                                    borderRadius: 16,
+                                  ),
+                                ),
+                              );
+                            }),
+                            Obx(() {
+                              final controller = Get.find<AuthController>();
+                              return Expanded(
+                                child: Container(
+                                  height: 56.h,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16.r),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.drawerPurple.withOpacity(0.3),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: CustomButtonApp(
+                                    text: 'masterpay',
+                                    color: AppColors.drawerPurple,
+                                    onTap: () {
+                                      controller.login("masterpay", "1234567");
+                                    },
+                                    isLoading: controller.isLoading,
+                                    borderRadius: 16,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
                       ],
                     ),
                   ),

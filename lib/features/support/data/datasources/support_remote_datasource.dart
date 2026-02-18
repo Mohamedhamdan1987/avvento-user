@@ -43,6 +43,19 @@ abstract class SupportRemoteDataSource {
     int limit = 50,
   });
   Future<void> markMessagesAsRead(String conversationId);
+
+  // Order-level support
+  Future<SupportConversationModel> getOrderChat(String orderId);
+  Future<MessagesResponse> getOrderChatMessages({
+    required String orderId,
+    int page = 1,
+    int limit = 50,
+  });
+  Future<MessageModel> sendOrderChatMessage({
+    required String conversationId,
+    required String content,
+    String? type,
+  });
 }
 
 class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
@@ -228,6 +241,85 @@ class SupportRemoteDataSourceImpl implements SupportRemoteDataSource {
       throw Exception(failure.message);
     } catch (e) {
       throw Exception('Failed to mark messages as read: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<SupportConversationModel> getOrderChat(String orderId) async {
+    try {
+      final response = await dioClient.get('support/order-chat/$orderId');
+      return SupportConversationModel.fromJson(response.data);
+    } on DioException catch (e) {
+      final failure = ApiException.handleException(e);
+      throw Exception(failure.message);
+    } catch (e) {
+      throw Exception('Failed to get order chat: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<MessagesResponse> getOrderChatMessages({
+    required String orderId,
+    int page = 1,
+    int limit = 50,
+  }) async {
+    try {
+      final response = await dioClient.get(
+        'support/order-chat/$orderId/messages',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      final data = response.data;
+      List<MessageModel> messages = [];
+      int total = 0;
+
+      if (data is Map<String, dynamic>) {
+        if (data['messages'] is List) {
+          messages = (data['messages'] as List)
+              .map((json) => MessageModel.fromJson(json as Map<String, dynamic>))
+              .toList();
+        }
+        total = data['total'] ?? 0;
+      } else if (data is List) {
+        messages = data
+            .map((json) => MessageModel.fromJson(json as Map<String, dynamic>))
+            .toList();
+        total = messages.length;
+      }
+
+      return MessagesResponse(messages: messages, total: total);
+    } on DioException catch (e) {
+      final failure = ApiException.handleException(e);
+      throw Exception(failure.message);
+    } catch (e) {
+      throw Exception('Failed to get order chat messages: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<MessageModel> sendOrderChatMessage({
+    required String conversationId,
+    required String content,
+    String? type,
+  }) async {
+    try {
+      final response = await dioClient.post(
+        'support/messages',
+        data: {
+          'conversationId': conversationId,
+          'content': content,
+          if (type != null) 'type': type,
+        },
+      );
+      return MessageModel.fromJson(response.data);
+    } on DioException catch (e) {
+      final failure = ApiException.handleException(e);
+      throw Exception(failure.message);
+    } catch (e) {
+      throw Exception('Failed to send order chat message: ${e.toString()}');
     }
   }
 }

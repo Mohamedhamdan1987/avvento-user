@@ -122,15 +122,21 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> register(String name, String phone, String password) async {
+  Future<void> register({
+    required String name,
+    required String username,
+    required String email,
+    required String phone,
+    required String password,
+  }) async {
     _isLoading.value = true;
     try {
-      // Create register request (name is used as username)
       final request = RegisterRequestModel(
-        username: name,
-        password: password,
+        username: username,
+        name: name,
         phone: phone,
-        language: 'ar',
+        email: email,
+        password: password,
       );
 
       // Call the API

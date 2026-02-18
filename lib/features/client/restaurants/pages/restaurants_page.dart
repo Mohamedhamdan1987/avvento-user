@@ -110,39 +110,45 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                     ),
                     onTap: () => Get.back(),
                   ),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () => Get.toNamed(AppRoutes.addressList),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            'التوصيل إلى',
-                            style: TextStyle(
-                              color: const Color(0xFF7F22FE),
-                              fontSize: 12,
-                              fontFamily: 'IBM Plex Sans Arabic',
-                              fontWeight: FontWeight.w700,
-                              height: 1.33,
+                  Flexible(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => Get.toNamed(AppRoutes.addressList),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              'التوصيل إلى',
+                              style: TextStyle(
+                                color: const Color(0xFF7F22FE),
+                                fontSize: 12,
+                                fontFamily: 'IBM Plex Sans Arabic',
+                                fontWeight: FontWeight.w700,
+                                height: 1.33,
+                              ),
                             ),
-                          ),
-                          Row(
-                            children: [
-                              Obx(
-                                () => Text(
-                                  "${addressController.activeAddress.value?.label} - ${addressController.activeAddress.value?.address}",
-                                  style: const TextStyle().textColorLight(
-                                    fontSize: 12,
-                                    color: const Color(0xFF101727),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Obx(
+                                    () => Text(
+                                      "${addressController.activeAddress.value?.label} - ${addressController.activeAddress.value?.address}",
+                                      style: const TextStyle().textColorLight(
+                                        fontSize: 12,
+                                        color: const Color(0xFF101727),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ),
-                              ),
-
-                              SvgIcon(iconName: "assets/svg/arrow_down.svg"),
-                            ],
-                          ),
-                        ],
+                                SvgIcon(iconName: "assets/svg/arrow_down.svg"),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -161,11 +167,22 @@ class RestaurantsPage extends GetView<RestaurantsController> {
               ),
             ),
             Expanded(
-              child: AppRefreshIndicator(
-                onRefresh: controller.refreshRestaurants,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (ScrollNotification scrollInfo) {
+                  if (scrollInfo.metrics.axis == Axis.vertical &&
+                      scrollInfo.metrics.pixels >=
+                          scrollInfo.metrics.maxScrollExtent - 200 &&
+                      controller.hasMore &&
+                      !controller.isLoadingMore) {
+                    controller.loadMore();
+                  }
+                  return false;
+                },
+                child: AppRefreshIndicator(
+                  onRefresh: controller.refreshRestaurants,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
                     children: [
                       // Search Bar
                       Padding(
@@ -216,6 +233,228 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                           ),
                         ),
                       ),
+
+                      // Restaurant Stories Section
+                      Padding(
+                        padding: EdgeInsetsDirectional.only(
+                          start: 24.w,
+                          top: 0.h,
+                          bottom: 8.h,
+                        ),
+                        child: Row(
+                          mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                SvgIcon(
+                                  iconName:
+                                  "assets/svg/client/fire.svg",
+                                  color: const Color(0xFFFFA800),
+                                  width: 24.w,
+                                  height: 24.h,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  'ستوري المطاعم',
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.titleLarge?.color,
+                                    fontSize: 18,
+                                    fontFamily: 'IBM Plex Sans Arabic',
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.56,
+                                  ).textColorBold(),
+                                ),
+                              ],
+                            ),
+                            if (controller.stories.isNotEmpty)
+                              GestureDetector(
+                                onTap: () {
+                                  Get.to(
+                                        () => AllStoriesPage(
+                                      stories: controller.stories,
+                                    ),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: EdgeInsetsDirectional.only(
+                                    end: 24.w,
+                                  ),
+                                  child: Text(
+                                    'مشاهدة الكل',
+                                    style:
+                                    const TextStyle(
+                                      color: Color(0xFF7F22FE),
+                                      fontSize: 12,
+                                      fontFamily:
+                                      'IBM Plex Sans Arabic',
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.33,
+                                    ).textColorBold(
+                                      color: const Color(
+                                        0xFF7F22FE,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      // Stories List (Horizontal) with gray placeholders to fill remaining space
+                      Builder(
+                        builder: (context) {
+                          final screenWidth = MediaQuery.of(
+                            context,
+                          ).size.width;
+                          // Each story item is ~72.w wide (60.w circle + 12.w padding)
+                          final itemWidth = 72.w;
+                          final horizontalPadding = 48.w; // 24.w * 2
+                          final visibleCount =
+                          ((screenWidth - horizontalPadding) /
+                              itemWidth)
+                              .ceil();
+                          final storiesCount =
+                          controller.stories.length > 10
+                              ? 10
+                              : controller.stories.length;
+                          final totalCount =
+                          storiesCount >= visibleCount
+                              ? storiesCount
+                              : visibleCount;
+
+                          return SizedBox(
+                            height: 100.h,
+                            child: ListView.builder(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 24.w,
+                              ),
+                              scrollDirection: Axis.horizontal,
+                              physics: storiesCount >= visibleCount
+                                  ? null
+                                  : const NeverScrollableScrollPhysics(),
+                              itemCount: totalCount,
+                              itemBuilder: (context, index) {
+                                // Real story
+                                if (index < storiesCount) {
+                                  final storyGroup =
+                                  controller.stories[index];
+                                  return Padding(
+                                    padding: EdgeInsetsDirectional.only(
+                                      end: 12.w,
+                                    ),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Get.to(
+                                              () => StoryViewPage(
+                                            stories: storyGroup.stories,
+                                            initialIndex: 0,
+                                          ),
+                                        );
+                                      },
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            width: 60.w,
+                                            height: 60.w,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color:
+                                                storyGroup.allViewed
+                                                    ? Colors.grey
+                                                    : const Color(
+                                                  0xFF7F22FE,
+                                                ),
+                                                width: 2,
+                                              ),
+                                            ),
+                                            padding:
+                                            const EdgeInsets.all(2),
+                                            child: ClipOval(
+                                              child: CachedNetworkImage(
+                                                imageUrl: storyGroup
+                                                    .restaurant
+                                                    .logo,
+                                                fit: BoxFit.cover,
+                                                errorWidget:
+                                                    (
+                                                    context,
+                                                    url,
+                                                    error,
+                                                    ) => const Icon(
+                                                  Icons.error,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(height: 4.h),
+                                          SizedBox(
+                                            width: 70.w,
+                                            child: Text(
+                                              storyGroup
+                                                  .restaurant
+                                                  .name,
+                                              maxLines: 1,
+                                              overflow:
+                                              TextOverflow.ellipsis,
+                                              textAlign:
+                                              TextAlign.center,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight:
+                                                FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                // Gray placeholder
+                                return Padding(
+                                  padding: EdgeInsetsDirectional.only(
+                                    end: 12.w,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        width: 60.w,
+                                        height: 60.w,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.grey[200]!.withOpacity(0.5),
+                                          border: Border.all(
+                                            color: Colors.grey[200]!.withOpacity(0.5),
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(height: 4.h),
+                                      Container(
+                                        width: 50.w,
+                                        height: 10.h,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[200]!.withOpacity(0.5),
+                                          borderRadius:
+                                          BorderRadius.circular(5),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+
+
                       // Category chips
                       Obx(() {
                         if (controller.isLoadingCategories &&
@@ -319,239 +558,9 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                         }
 
                         // Restaurants list
-                        return NotificationListener<ScrollNotification>(
-                          onNotification: (ScrollNotification scrollInfo) {
-                            if (scrollInfo.metrics.axis == Axis.vertical &&
-                                scrollInfo.metrics.pixels >=
-                                    scrollInfo.metrics.maxScrollExtent - 200 &&
-                                controller.hasMore &&
-                                !controller.isLoadingMore) {
-                              controller.loadMore();
-                            }
-                            return false;
-                          },
-                          child: Column(
+                        return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Restaurant Stories Section
-                              Padding(
-                                padding: EdgeInsetsDirectional.only(
-                                  start: 24.w,
-                                  top: 16.h,
-                                  bottom: 8.h,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        SvgIcon(
-                                          iconName:
-                                              "assets/svg/client/fire.svg",
-                                          color: const Color(0xFFFFA800),
-                                          width: 24.w,
-                                          height: 24.h,
-                                        ),
-                                        SizedBox(width: 4.w),
-                                        Text(
-                                          'ستوري المطاعم',
-                                          style: TextStyle(
-                                            color: Theme.of(
-                                              context,
-                                            ).textTheme.titleLarge?.color,
-                                            fontSize: 18,
-                                            fontFamily: 'IBM Plex Sans Arabic',
-                                            fontWeight: FontWeight.w700,
-                                            height: 1.56,
-                                          ).textColorBold(),
-                                        ),
-                                      ],
-                                    ),
-                                    if (controller.stories.isNotEmpty)
-                                      GestureDetector(
-                                        onTap: () {
-                                          Get.to(
-                                            () => AllStoriesPage(
-                                              stories: controller.stories,
-                                            ),
-                                          );
-                                        },
-                                        child: Padding(
-                                          padding: EdgeInsetsDirectional.only(
-                                            end: 24.w,
-                                          ),
-                                          child: Text(
-                                            'مشاهدة الكل',
-                                            style:
-                                                const TextStyle(
-                                                  color: Color(0xFF7F22FE),
-                                                  fontSize: 12,
-                                                  fontFamily:
-                                                      'IBM Plex Sans Arabic',
-                                                  fontWeight: FontWeight.w700,
-                                                  height: 1.33,
-                                                ).textColorBold(
-                                                  color: const Color(
-                                                    0xFF7F22FE,
-                                                  ),
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-
-                              // Stories List (Horizontal) with gray placeholders to fill remaining space
-                              Builder(
-                                builder: (context) {
-                                  final screenWidth = MediaQuery.of(
-                                    context,
-                                  ).size.width;
-                                  // Each story item is ~72.w wide (60.w circle + 12.w padding)
-                                  final itemWidth = 72.w;
-                                  final horizontalPadding = 48.w; // 24.w * 2
-                                  final visibleCount =
-                                      ((screenWidth - horizontalPadding) /
-                                              itemWidth)
-                                          .floor();
-                                  final storiesCount =
-                                      controller.stories.length > 10
-                                      ? 10
-                                      : controller.stories.length;
-                                  final totalCount =
-                                      storiesCount >= visibleCount
-                                      ? storiesCount
-                                      : visibleCount;
-
-                                  return SizedBox(
-                                    height: 100.h,
-                                    child: ListView.builder(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 24.w,
-                                      ),
-                                      scrollDirection: Axis.horizontal,
-                                      physics: storiesCount >= visibleCount
-                                          ? null
-                                          : const NeverScrollableScrollPhysics(),
-                                      itemCount: totalCount,
-                                      itemBuilder: (context, index) {
-                                        // Real story
-                                        if (index < storiesCount) {
-                                          final storyGroup =
-                                              controller.stories[index];
-                                          return Padding(
-                                            padding: EdgeInsetsDirectional.only(
-                                              end: 12.w,
-                                            ),
-                                            child: GestureDetector(
-                                              onTap: () {
-                                                Get.to(
-                                                  () => StoryViewPage(
-                                                    stories: storyGroup.stories,
-                                                    initialIndex: 0,
-                                                  ),
-                                                );
-                                              },
-                                              child: Column(
-                                                children: [
-                                                  Container(
-                                                    width: 60.w,
-                                                    height: 60.w,
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      border: Border.all(
-                                                        color:
-                                                            storyGroup.allViewed
-                                                            ? Colors.grey
-                                                            : const Color(
-                                                                0xFF7F22FE,
-                                                              ),
-                                                        width: 2,
-                                                      ),
-                                                    ),
-                                                    padding:
-                                                        const EdgeInsets.all(2),
-                                                    child: ClipOval(
-                                                      child: CachedNetworkImage(
-                                                        imageUrl: storyGroup
-                                                            .restaurant
-                                                            .logo,
-                                                        fit: BoxFit.cover,
-                                                        errorWidget:
-                                                            (
-                                                              context,
-                                                              url,
-                                                              error,
-                                                            ) => const Icon(
-                                                              Icons.error,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  SizedBox(height: 4.h),
-                                                  SizedBox(
-                                                    width: 70.w,
-                                                    child: Text(
-                                                      storyGroup
-                                                          .restaurant
-                                                          .name,
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        }
-
-                                        // Gray placeholder
-                                        return Padding(
-                                          padding: EdgeInsetsDirectional.only(
-                                            end: 12.w,
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              Container(
-                                                width: 60.w,
-                                                height: 60.w,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: Colors.grey[200],
-                                                  border: Border.all(
-                                                    color: Colors.grey[300]!,
-                                                    width: 2,
-                                                  ),
-                                                ),
-                                              ),
-                                              SizedBox(height: 4.h),
-                                              Container(
-                                                width: 50.w,
-                                                height: 10.h,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.grey[200],
-                                                  borderRadius:
-                                                      BorderRadius.circular(5),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  );
-                                },
-                              ),
 
                             if (controller.restaurants.isNotEmpty) ...[
                                 Padding(
@@ -656,7 +665,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                   final visibleCount =
                                       ((screenWidth - horizontalPadding) /
                                               itemWidth)
-                                          .floor();
+                                          .ceil();
                                   final bestCount =
                                       controller.bestRestaurants.length;
                                   final totalCount = bestCount >= visibleCount
@@ -764,7 +773,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                                 height: 70,
                                                 decoration: BoxDecoration(
                                                   shape: BoxShape.circle,
-                                                  color: Colors.grey[200],
+                                                  color: Colors.grey[200]!.withOpacity(0.5),
                                                 ),
                                               ),
                                               SizedBox(height: 4.h),
@@ -772,7 +781,7 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                                 width: 50.w,
                                                 height: 10.h,
                                                 decoration: BoxDecoration(
-                                                  color: Colors.grey[200],
+                                                  color: Colors.grey[200]!.withOpacity(0.5),
                                                   borderRadius:
                                                       BorderRadius.circular(5),
                                                 ),
@@ -825,11 +834,12 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                           ),
                                         ),
                                         if (controller.hasMore)
-                                          const Padding(
-                                            padding: EdgeInsets.all(16.0),
-                                            child: Center(
-                                              child:
-                                                  CircularProgressIndicator(),
+                                          ShimmerLoading(
+                                            child: Column(
+                                              children: List.generate(
+                                                2,
+                                                (_) => const RestaurantCardShimmer(),
+                                              ),
                                             ),
                                           ),
                                       ],
@@ -840,12 +850,12 @@ class RestaurantsPage extends GetView<RestaurantsController> {
 
                               SizedBox(height: 20.h),
                             ],
-                          ),
                         );
                       }),
                     ],
                   ),
                 ),
+              ),
               ),
             ),
           ],
@@ -1040,10 +1050,12 @@ class RestaurantCard extends StatelessWidget {
                           radius: 20,
                           color: Colors.white.withOpacity(0.7),
                           borderColor: Colors.grey.withOpacity(0.5),
-                          childWidget: SvgIcon(
-                            iconName: "assets/svg/client/fav.svg",
-                            color: isFavorite ? Colors.red : null,
+                          childWidget: Icon(
+                            (isFavorite) ? Icons.favorite : Icons.favorite_border,
+                            size: 16,
+                            color:  AppColors.primary,
                           ),
+
                         ),
                       ),
                       Positioned(

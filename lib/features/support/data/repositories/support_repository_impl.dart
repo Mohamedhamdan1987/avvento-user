@@ -91,5 +91,40 @@ class SupportRepositoryImpl implements SupportRepository {
   Future<void> markMessagesAsRead(String conversationId) async {
     await remoteDataSource.markMessagesAsRead(conversationId);
   }
+
+  @override
+  Future<SupportConversationEntity> getOrderChat(String orderId) async {
+    return await remoteDataSource.getOrderChat(orderId);
+  }
+
+  @override
+  Future<MessagesResponse> getOrderChatMessages({
+    required String orderId,
+    int page = 1,
+    int limit = 50,
+  }) async {
+    final remoteResponse = await remoteDataSource.getOrderChatMessages(
+      orderId: orderId,
+      page: page,
+      limit: limit,
+    );
+    return MessagesResponse(
+      messages: remoteResponse.messages,
+      total: remoteResponse.total,
+    );
+  }
+
+  @override
+  Future<MessageEntity> sendOrderChatMessage({
+    required String conversationId,
+    required String content,
+    String? type,
+  }) async {
+    return await remoteDataSource.sendOrderChatMessage(
+      conversationId: conversationId,
+      content: content,
+      type: type,
+    );
+  }
 }
 

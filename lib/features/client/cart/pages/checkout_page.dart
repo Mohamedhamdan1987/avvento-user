@@ -1002,10 +1002,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     SizedBox(height: 12.h),
                     _buildBillRow("التوصيل", calculated!.deliveryFee),
                   ],
-                  if (calculated?.tax != null && calculated!.tax > 0) ...[
-                    SizedBox(height: 12.h),
-                    _buildBillRow("الضريبة", calculated!.tax),
-                  ],
+                  SizedBox(height: 12.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "رسوم الخدمة",
+                        style: TextStyle().textColorNormal(fontSize: 14.sp, color: Theme.of(context).textTheme.bodyMedium?.color),
+                      ),
+                      Text(
+                        "مجانًا",
+                        style: TextStyle().textColorBold(fontSize: 14.sp, color: Colors.green),
+                      ),
+                    ],
+                  ),
                   if(calculated?.deliveryFeeDetails != null && calculated!.deliveryFeeDetails!.isNight)
                     Padding(
                       padding: EdgeInsets.only(top: 12.h),

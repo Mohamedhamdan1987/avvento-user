@@ -78,46 +78,34 @@ class AuthService {
 
   Future<LoginResult> register(RegisterRequestModel request) async {
     try {
-      // Use validateStatus to accept 201, 200-299 and 400 as normal response (not exception)
       final response = await _dioClient.post(
-        '/api/auth/register',
+        '/auth/register-user',
         data: request.toJson(),
         options: Options(
           validateStatus: (status) {
-            // Accept 200-299 and 400 as valid responses
-            return status != null && (status >= 200 && status < 300 || status == 400);
+            return status != null && (status >= 200 && status < 300 || status == 400 || status == 409);
           },
         ),
       );
 
-      // Parse the response
       final responseData = response.data as Map<String, dynamic>;
-      
-      // Check if registration was successful
-      if (responseData['success'] == true || responseData.containsKey('user')) {
-        // Check if OTP was sent (user needs verification)
-        final otpSent = responseData['otpSent'] as bool? ?? false;
-        final userData = responseData['user'] as Map<String, dynamic>?;
-        
-        if (otpSent || (userData?['isVerified'] as bool? ?? userData?['is_phone_verified'] as bool? ?? false) == false) {
-          return LoginResult.success(
-            LoginResponseModel.fromJson(responseData),
-          );
-        } else {
-          // User is already verified
-          return LoginResult.success(
-            LoginResponseModel.fromJson(responseData),
-          );
-        }
-      } else {
-        // Return error message from API
+
+      if (response.statusCode == 400 || response.statusCode == 409) {
         return LoginResult.failure(
           responseData['message'] as String? ?? 'فشل إنشاء الحساب',
         );
       }
+
+      if (responseData.containsKey('user') || responseData.containsKey('token')) {
+        return LoginResult.success(
+          LoginResponseModel.fromJson(responseData),
+        );
+      } else {
+        return LoginResult.success(
+          LoginResponseModel.fromJson(responseData),
+        );
+      }
     } on DioException {
-      // Only throw for actual network/connection errors
-      // 400 is handled above as normal response
       rethrow;
     }
   }

@@ -51,7 +51,8 @@ class HomeController extends GetxController {
   Future<void> fetchFeaturedRestaurants() async {
     try {
       final response = await _restaurantsService.getRestaurants(limit: 5);
-      featuredRestaurants.assignAll(response.data);
+      final openOnly = response.data.where((r) => r.isOpen).toList();
+      featuredRestaurants.assignAll(openOnly);
     } catch (e) {
       print('Error fetching featured restaurants: $e');
     }
@@ -60,7 +61,8 @@ class HomeController extends GetxController {
   Future<void> fetchFavoriteRestaurants() async {
     try {
       final favorites = await _restaurantsService.getFavoriteRestaurants();
-      favoriteRestaurants.assignAll(favorites);
+      final openOnly = favorites.where((r) => r.isOpen).toList();
+      favoriteRestaurants.assignAll(openOnly);
     } catch (e) {
       print('Error fetching favorite restaurants: $e');
     }

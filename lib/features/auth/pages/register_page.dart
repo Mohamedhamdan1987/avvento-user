@@ -219,16 +219,13 @@ class _RegisterPageState extends State<RegisterPage> {
                                 return;
                               }
 
-                              // controller.register(
-                              //   name: nameController.text.trim(),
-                              //   username: usernameController.text.trim(),
-                              //   email: emailController.text.trim(),
-                              //   phone: phoneController.text.trim(),
-                              //   password: passwordController.text,
-                              //   address: addressController.text.isNotEmpty
-                              //       ? addressController.text.trim()
-                              //       : null,
-                              // );
+                              controller.register(
+                                name: nameController.text.trim(),
+                                username: usernameController.text.trim(),
+                                email: emailController.text.trim(),
+                                phone: phoneController.text.trim(),
+                                password: passwordController.text,
+                              );
                             },
                       isLoading: controller.isLoading,
                       borderRadius: 16,

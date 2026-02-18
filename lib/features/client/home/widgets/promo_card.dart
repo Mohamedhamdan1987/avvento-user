@@ -100,16 +100,10 @@ class PromoCard extends StatelessWidget {
                               : Colors.white.withValues(alpha: 0.68),
                           shape: BoxShape.circle,
                         ),
-                        child: SvgPicture.asset(
-                          'assets/svg/client/home/favorite.svg',
-                          colorFilter: ColorFilter.mode(
-                            isFavorite
-                                ? AppColors.notificationRed
-                                : Colors.grey,
-                            BlendMode.srcIn,
-                          ),
-                          width: 16.w,
-                          height: 16.h,
+                        child: Icon(
+                            (isFavorite) ? Icons.favorite : Icons.favorite_border,
+                            size: 16,
+                          color:  AppColors.primary,
                         ),
                       ),
                     ),

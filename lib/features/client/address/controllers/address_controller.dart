@@ -84,9 +84,10 @@ class AddressController extends GetxController {
         long: long,
         isActive: false,
       );
-      await _addressService.addAddress(newAddress);
+      final created = await _addressService.addAddress(newAddress);
+      await _addressService.setActiveAddress(created.id);
       await fetchAddresses();
-      Get.back(); // Return to list
+      Get.back();
       showSnackBar(message: 'تم إضافة العنوان بنجاح', isSuccess: true);
     } catch (e) {
       showSnackBar(message: 'فشل في إضافة العنوان', isError: true);

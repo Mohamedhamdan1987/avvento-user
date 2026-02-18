@@ -164,6 +164,7 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
                 itemCount: controller.messages.length + (controller.isTyping.value ? 1 : 0),
                 itemBuilder: (context, index) {
                   // Typing indicator at the end
+
                   if (controller.isTyping.value && index == controller.messages.length) {
                     return Padding(
                       padding: EdgeInsets.only(top: 8.h, bottom: 8.h),

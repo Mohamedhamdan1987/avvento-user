@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../models/wallet_model.dart';
 
@@ -64,21 +64,20 @@ class WalletService {
       rethrow;
     }
   }
-  Future<InitPaymentResponse> initiatePaynetlyPayment({
+  Future<InitPaymentResponse> initiateDepositPayment({
     required double amount,
     required String phone,
-    required String frontendUrl,
+    required String email,
   }) async {
     try {
       final response = await _dioClient.post(
-        'https://avvento-server.onrender.com/payment/initiate',
+        'wallet/deposit/initiate',
         data: {
           "amount": amount,
           "phone": phone,
-          "email": "customer@example.com",
-          "backendUrl": "https://avvento-server.onrender.com/payment/webhook",
-          "frontendUrl": frontendUrl,
-          "customRef": "ORDER-${DateTime.now().millisecondsSinceEpoch}"
+          "email": email,
+          "backendUrl": "${AppConstants.baseUrl}payment/webhook",
+          "frontendUrl": "${AppConstants.baseUrl}wallet/deposit/success",
         },
       );
       return InitPaymentResponse.fromJson(response.data);

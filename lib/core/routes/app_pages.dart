@@ -7,6 +7,8 @@ import 'package:avvento/features/notifications/presentation/bindings/notificatio
 import 'package:avvento/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:avvento/features/support/presentation/bindings/support_binding.dart';
 import 'package:avvento/features/support/presentation/pages/support_page.dart';
+import 'package:avvento/features/client/orders/bindings/order_support_binding.dart';
+import 'package:avvento/features/client/orders/pages/order_support_page.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:avvento/features/profile/pages/change_password_page.dart';
@@ -238,6 +240,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.wallet,
       page: () => const ClientWalletPage(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: AppRoutes.orderSupport,
+      page: () => const OrderSupportPage(),
+      binding: OrderSupportBinding(),
       middlewares: [AuthMiddleware()],
     ),
   ];

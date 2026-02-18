@@ -70,7 +70,10 @@ class CartController extends GetxController {
   Future<void> fetchRestaurantCart(String restaurantId, {bool showLoading = true}) async {
     if (showLoading) {
       _isLoading.value = true;
-      _detailedCart.value = null; // Clear old data to prevent build errors
+      // Only clear data on initial load (when no data exists yet)
+      if (_detailedCart.value == null) {
+        _errorMessage.value = '';
+      }
     }
     _errorMessage.value = '';
     try {
@@ -80,7 +83,10 @@ class CartController extends GetxController {
       // Fetch drinks when cart is loaded
       fetchDrinks(restaurantId);
     } catch (e) {
-      if (showLoading) _errorMessage.value = 'فشل تحميل بيانات السلة';
+      // Only set error if we don't have existing data to show
+      if (_detailedCart.value == null) {
+        _errorMessage.value = 'فشل تحميل بيانات السلة';
+      }
       print('Error fetching restaurant cart: $e');
     } finally {
       if (showLoading) _isLoading.value = false;

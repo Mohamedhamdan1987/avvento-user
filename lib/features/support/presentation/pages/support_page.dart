@@ -3,7 +3,6 @@ import 'package:avvento/features/support/presentation/widgets/support_message_bu
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 import '../../../support/presentation/controllers/support_controller.dart';
@@ -18,17 +17,36 @@ class RestaurantSupportPage extends StatefulWidget {
 class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
   final textController = TextEditingController();
   final scrollController = ScrollController();
+  Worker? _messagesWorker;
 
   @override
   void initState() {
     super.initState();
+    final controller = Get.find<SupportController>();
+    // Auto-scroll when new messages arrive (via socket or send)
+    _messagesWorker = ever(controller.messages, (_) {
+      _scrollToBottom();
+    });
   }
 
   @override
   void dispose() {
+    _messagesWorker?.dispose();
     textController.dispose();
     scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToBottom() {
+    if (scrollController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    }
   }
 
   @override
@@ -126,32 +144,39 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
                         ),
                       ),
                       SizedBox(height: 2.h),
-                      Row(
-                        children: [
-                          Container(
-                            width: 6.w,
-                            height: 6.h,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF16A34A),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            'متصل الآن',
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: Theme.of(context).hintColor,
-                            ),
-                          ),
-                        ],
-                      ),
+                      Obx(() => Row(
+                            children: [
+                              Container(
+                                width: 6.w,
+                                height: 6.h,
+                                decoration: BoxDecoration(
+                                  color: controller.isConversationClosed.value
+                                      ? Colors.red
+                                      : const Color(0xFF16A34A),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              SizedBox(width: 4.w),
+                              Text(
+                                controller.isConversationClosed.value
+                                    ? 'المحادثة مغلقة'
+                                    : 'متصل الآن',
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  color: Theme.of(context).hintColor,
+                                ),
+                              ),
+                            ],
+                          )),
                     ],
                   ),
                 ),
               ],
             ),
           ),
+
+          // Closed banner
+          if (controller.isConversationClosed.value) _buildClosedBanner(context),
 
           // Messages List
           Expanded(
@@ -221,99 +246,130 @@ class _RestaurantSupportPageState extends State<RestaurantSupportPage> {
           ),
 
           // Input Field
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                        borderRadius: BorderRadius.circular(20.r),
-                      ),
-                      child: TextField(
-                        controller: textController,
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'اكتب رسالتك...',
-                          hintStyle: TextStyle(
-                            fontSize: 13.sp,
-                            color: Theme.of(context).hintColor,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 14.w,
-                            vertical: 10.h,
-                          ),
-                        ),
-                        maxLines: null,
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (text) {
-                          if (text.trim().isNotEmpty) {
-                            controller.sendMessage(text);
-                            textController.clear();
-                          }
-                        },
-                      ),
-                    ),
+          if (!controller.isConversationClosed.value)
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, -2),
                   ),
-                  SizedBox(width: 8.w),
-                  Obx(() => Container(
-                    width: 40.w,
-                    height: 40.h,
-                    decoration: BoxDecoration(
-                      color: controller.isLoading.value
-                          ? Theme.of(context).disabledColor
-                          : AppColors.purple,
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: controller.isLoading.value
-                          ? null
-                          : () {
-                              if (textController.text.trim().isNotEmpty) {
-                                controller.sendMessage(textController.text);
-                                textController.clear();
-                              }
-                            },
-                      icon: controller.isLoading.value
-                          ? SizedBox(
-                              width: 18.w,
-                              height: 18.h,
-                              child: const CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : Icon(
-                              Icons.send,
-                              color: Colors.white,
-                              size: 18.sp,
-                            ),
-                    ),
-                  )),
                 ],
+              ),
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        child: TextField(
+                          controller: textController,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'اكتب رسالتك...',
+                            hintStyle: TextStyle(
+                              fontSize: 13.sp,
+                              color: Theme.of(context).hintColor,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 14.w,
+                              vertical: 10.h,
+                            ),
+                          ),
+                          maxLines: null,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (text) {
+                            if (text.trim().isNotEmpty) {
+                              controller.sendMessage(text);
+                              textController.clear();
+                              _scrollToBottom();
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Obx(() => Container(
+                          width: 40.w,
+                          height: 40.h,
+                          decoration: BoxDecoration(
+                            color: controller.isLoading.value
+                                ? Theme.of(context).disabledColor
+                                : AppColors.purple,
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            onPressed: controller.isLoading.value
+                                ? null
+                                : () {
+                                    if (textController.text.trim().isNotEmpty) {
+                                      controller.sendMessage(textController.text);
+                                      textController.clear();
+                                      _scrollToBottom();
+                                    }
+                                  },
+                            icon: controller.isLoading.value
+                                ? SizedBox(
+                                    width: 18.w,
+                                    height: 18.h,
+                                    child: const CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor:
+                                          AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : Icon(
+                                    Icons.send,
+                                    color: Colors.white,
+                                    size: 18.sp,
+                                  ),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
+        ],
+        );
+      }),
+    );
+  }
+
+  Widget _buildClosedBanner(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      color: Colors.orange.withOpacity(0.1),
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 18.sp,
+            color: Colors.orange,
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              'تم إغلاق هذه المحادثة',
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: Colors.orange.shade800,
               ),
             ),
           ),
         ],
-        );
-      }),
+      ),
     );
   }
 

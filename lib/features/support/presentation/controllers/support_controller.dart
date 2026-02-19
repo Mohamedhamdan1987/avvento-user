@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/support_socket_service.dart';
 import '../../../../core/utils/show_snackbar.dart';
 import '../../../auth/models/user_model.dart';
+import '../../data/models/message_model.dart';
 import '../../domain/repositories/support_repository.dart';
 import '../../domain/entities/support_conversation_entity.dart';
 import '../../domain/entities/message_entity.dart';
@@ -10,6 +12,7 @@ import '../../domain/entities/message_entity.dart';
 class SupportController extends GetxController {
   final SupportRepository supportRepository;
   final GetStorage _storage = GetStorage();
+  late final SupportSocketService _socketService;
 
   SupportController({required this.supportRepository});
 
@@ -20,6 +23,7 @@ class SupportController extends GetxController {
   final RxBool isTyping = false.obs;
   final RxBool isLoadingMessages = false.obs;
   final RxString errorMessage = ''.obs;
+  final RxBool isConversationClosed = false.obs;
 
   // Pagination
   int currentPage = 1;
@@ -30,7 +34,103 @@ class SupportController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _socketService = SupportSocketService();
+    _setupSocketCallbacks();
+    _socketService.connect();
     initializeConversation();
+  }
+
+  @override
+  void onClose() {
+    final conversation = currentConversation.value;
+    if (conversation != null) {
+      _socketService.leaveConversation(conversation.id);
+    }
+    _socketService.disconnect();
+    super.onClose();
+  }
+
+  void _setupSocketCallbacks() {
+    _socketService.onNewMessage = _handleNewMessage;
+    _socketService.onConversationUpdated = _handleConversationUpdated;
+  }
+
+  void _handleNewMessage(Map<String, dynamic> data) {
+    try {
+      final conversation = currentConversation.value;
+      if (conversation == null) return;
+
+      final message = MessageModel.fromJson(data);
+      if (message.conversationId != conversation.id) return;
+
+      final exists = messages.any((m) => m.id == message.id);
+      if (!exists) {
+        messages.add(message);
+      }
+    } catch (_) {
+      // ignore invalid payloads
+    }
+  }
+
+  void _handleConversationUpdated(Map<String, dynamic> data) {
+    final conversation = currentConversation.value;
+    if (conversation == null) return;
+
+    final updatedId = (data['_id'] ?? data['id'] ?? data['conversationId'] ?? '').toString();
+    if (updatedId.isNotEmpty && updatedId != conversation.id) return;
+
+    final status = (data['status'] ?? '').toString().toLowerCase();
+
+    if (status == 'closed') {
+      isConversationClosed.value = true;
+      _replaceConversation(conversation, ConversationStatus.closed, data);
+    } else if (status == 'open') {
+      isConversationClosed.value = false;
+      _replaceConversation(conversation, ConversationStatus.open, data);
+    }
+  }
+
+  void _replaceConversation(
+    SupportConversationEntity current,
+    ConversationStatus status,
+    Map<String, dynamic> data,
+  ) {
+    MessageEntity? lastMessage = current.lastMessage;
+    DateTime? lastMessageAt = current.lastMessageAt;
+
+    if (data['lastMessage'] is Map) {
+      try {
+        lastMessage = MessageModel.fromJson(Map<String, dynamic>.from(data['lastMessage']));
+        lastMessageAt = lastMessage.createdAt;
+
+        final exists = messages.any((m) => m.id == lastMessage!.id);
+        if (!exists) {
+          messages.add(lastMessage);
+        }
+      } catch (_) {
+        // ignore invalid payloads
+      }
+    }
+
+    currentConversation.value = SupportConversationEntity(
+      id: current.id,
+      adminId: current.adminId,
+      restaurantId: current.restaurantId,
+      participantId: current.participantId,
+      status: status,
+      lastMessageId: current.lastMessageId,
+      lastMessageAt: lastMessageAt,
+      unreadCountSupport: current.unreadCountSupport,
+      unreadCountParticipant: current.unreadCountParticipant,
+      subject: current.subject,
+      supportType: current.supportType,
+      createdAt: current.createdAt,
+      updatedAt: DateTime.now(),
+      admin: current.admin,
+      restaurant: current.restaurant,
+      participant: current.participant,
+      lastMessage: lastMessage,
+    );
   }
 
   Future<void> initializeConversation() async {
@@ -58,6 +158,8 @@ class SupportController extends GetxController {
 
       if (openConversation != null) {
         currentConversation.value = openConversation;
+        isConversationClosed.value = openConversation.status == ConversationStatus.closed;
+        _socketService.joinConversation(openConversation.id);
         await loadMessages(openConversation.id);
       } else {
         // Create new conversation with admin (works for both users and restaurants now)
@@ -85,6 +187,8 @@ class SupportController extends GetxController {
       );
 
       currentConversation.value = conversation;
+      isConversationClosed.value = conversation.status == ConversationStatus.closed;
+      _socketService.joinConversation(conversation.id);
       await loadMessages(conversation.id);
     } catch (e) {
       errorMessage.value = e.toString();
@@ -150,7 +254,7 @@ class SupportController extends GetxController {
       return;
     }
 
-    if (conversation.status == ConversationStatus.closed) {
+    if (isConversationClosed.value || conversation.status == ConversationStatus.closed) {
       showSnackBar(
         title: 'خطأ',
         message: 'المحادثة مغلقة',

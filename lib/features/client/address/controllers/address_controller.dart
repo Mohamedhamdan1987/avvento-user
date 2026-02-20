@@ -1,5 +1,6 @@
 import 'package:avvento/features/client/address/models/address_model.dart';
 import 'package:avvento/features/client/address/services/address_service.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import '../../../../core/utils/location_utils.dart';
 import '../../../../core/utils/show_snackbar.dart';
@@ -13,6 +14,9 @@ class AddressController extends GetxController {
 
   /// IDs currently being deleted — prevents duplicate delete calls
   final RxSet<String> deletingIds = <String>{}.obs;
+
+  /// ID of address currently being set as active (for per-item loading)
+  final Rx<String?> settingActiveId = Rx<String?>(null);
 
   /// Minimum distance (in km) to consider the user at a "new" location
   static const double _locationMismatchThresholdKm = 0.5; // 500 meters
@@ -33,13 +37,8 @@ class AddressController extends GetxController {
     // If there are no saved addresses at all, prompt to add one
     if (addresses.isEmpty) return true;
 
-    final double deviceLat = LocationUtils.currentLatitude;
-    final double deviceLong = LocationUtils.currentLongitude;
-
     for (final addr in addresses) {
       final double distance = LocationUtils.calculateDistance(
-        userLat: deviceLat,
-        userLong: deviceLong,
         restaurantLat: addr.lat,
         restaurantLong: addr.long,
       );
@@ -85,10 +84,26 @@ class AddressController extends GetxController {
         isActive: false,
       );
       final created = await _addressService.addAddress(newAddress);
-      await _addressService.setActiveAddress(created.id);
-      await fetchAddresses();
-      Get.back();
-      showSnackBar(message: 'تم إضافة العنوان بنجاح', isSuccess: true);
+      if (created.id.isEmpty) {
+        showSnackBar(message: 'فشل في إضافة العنوان', isError: true);
+        return;
+      }
+      // Optional: set as active (don't fail the whole flow if this fails)
+      try {
+        await _addressService.setActiveAddress(created.id);
+      } catch (_) {
+        // Ignore; address was still added
+      }
+      // Refresh list; if it fails, still show success and pop
+      try {
+        await fetchAddresses();
+      } catch (_) {
+        // Refresh failed but address was added; list will update on next open
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.back();
+        showSnackBar(message: 'تم إضافة العنوان بنجاح', isSuccess: true);
+      });
     } catch (e) {
       showSnackBar(message: 'فشل في إضافة العنوان', isError: true);
     } finally {
@@ -97,14 +112,15 @@ class AddressController extends GetxController {
   }
 
   Future<void> setActive(String id) async {
+    if (settingActiveId.value == id) return;
     try {
-      isLoading.value = true;
+      settingActiveId.value = id;
       await _addressService.setActiveAddress(id);
       await fetchAddresses();
     } catch (e) {
       showSnackBar(message: 'فشل في تفعيل العنوان', isError: true);
     } finally {
-      isLoading.value = false;
+      settingActiveId.value = null;
     }
   }
 

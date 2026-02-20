@@ -3,6 +3,7 @@ import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:avvento/core/enums/order_status.dart';
@@ -131,33 +132,103 @@ class OrderTrackingDialog extends StatelessWidget {
     return status.label;
   }
 
+  /// مسار ملف Lottie حسب حالة الطلب (من مجلد assets/loti_files)
+  String? _getLottieAssetPath() {
+    switch (status) {
+      case OrderStatus.pendingRestaurant:
+        return 'assets/loti_files/pendingRestaurant.json';
+      case OrderStatus.confirmed:
+        return 'assets/loti_files/confirmed.json';
+      case OrderStatus.preparing:
+        return 'assets/loti_files/preparing.json';
+      case OrderStatus.deliveryReceived:
+        return 'assets/loti_files/deliveryReceived.json';
+      case OrderStatus.delivered:
+        return 'assets/loti_files/delivered.json';
+      default:
+        return null;
+    }
+  }
+
   Widget _buildAnimationSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final lottiePath = _getLottieAssetPath();
+
     return Container(
-      height: 160.h,
+      height: 200.h,
       decoration: BoxDecoration(
-        image: status == OrderStatus.preparing || status == OrderStatus.onTheWay
-            ? DecorationImage(
-                image: AssetImage('assets/images/orders/order_tracking_bg.png'),
-                fit: BoxFit.cover,
-                opacity: Theme.of(context).brightness == Brightness.dark ? 0.3 : 1.0,
-              )
-            : null,
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Theme.of(context).scaffoldBackgroundColor,
-            Theme.of(context).cardColor,
-          ],
-        ),
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: Theme.of(context).dividerColor, width: 0.76.w),
+        border: Border.all(color: theme.dividerColor, width: 0.76.w),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: _getAnimationWidget(context),
+      clipBehavior: Clip.antiAlias,
+      child: lottiePath != null
+          ? _buildLottieSection(context, lottiePath)
+          : _getFallbackAnimationWidget(context),
     );
   }
 
-  Widget _getAnimationWidget(BuildContext context) {
+  /// عرض Lottie بشكل احترافي مع نص فرعي عند الحاجة
+  Widget _buildLottieSection(BuildContext context, String assetPath) {
+    final theme = Theme.of(context);
+    final subtitle = _getLottieSubtitle();
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Center(
+            child: Lottie.asset(
+              assetPath,
+              fit: BoxFit.contain,
+              repeat: true,
+              options: LottieOptions(enableMergePaths: true),
+              addRepaintBoundary: true,
+              height: 140.h,
+            ),
+          ),
+        ),
+        if (subtitle != null) ...[
+          Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+            child: Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle().textColorBold(
+                fontSize: 14.sp,
+                color: theme.textTheme.titleMedium?.color ?? AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  String? _getLottieSubtitle() {
+    switch (status) {
+      case OrderStatus.confirmed:
+        return 'تم القبول!';
+      case OrderStatus.preparing:
+        return 'جاري التحضير...';
+      case OrderStatus.deliveryReceived:
+        return 'تم استلام الطلب بنجاح!';
+      case OrderStatus.delivered:
+        return 'بالهناء والشفاء!';
+      default:
+        return null;
+    }
+  }
+
+  /// عناصر الحركة للحالات التي لا يوجد لها ملف Lottie
+  Widget _getFallbackAnimationWidget(BuildContext context) {
     switch (status) {
       case OrderStatus.pendingRestaurant:
         return Center(
@@ -192,75 +263,18 @@ class OrderTrackingDialog extends StatelessWidget {
           ),
         );
 
-      case OrderStatus.confirmed:
+      case OrderStatus.onTheWay:
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 80.w,
-                height: 80.h,
-                decoration: BoxDecoration(
-                  color: Color(0xFF00C950),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Icon(Icons.check, color: Colors.white, size: 40.sp),
-                ),
-              ),
+              Icon(Icons.delivery_dining, size: 72.sp, color: AppColors.primary),
               SizedBox(height: 8.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Text(
-                  'تم القبول!',
-                  style: TextStyle().textColorBold(
-                    fontSize: 14.sp,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-
-      case OrderStatus.preparing:
-        return Center(
-          child: Text('🥩', style: TextStyle(fontSize: 60.sp)),
-        );
-
-      case OrderStatus.onTheWay:
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text('🛵', style: TextStyle(fontSize: 60.sp)),
-
-              Container(
-                width: double.infinity,
-                height: 40.h,
-                decoration: ShapeDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.7),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(24.r),
-                      bottomRight: Radius.circular(24.r),
-                    ),
-                    side: BorderSide(
-                      width: 0.76,
-                      color: Theme.of(context).dividerColor,
-                    ),
-                  ),
+              Text(
+                'في الطريق إليك',
+                style: TextStyle().textColorBold(
+                  fontSize: 14.sp,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
             ],
@@ -272,81 +286,39 @@ class OrderTrackingDialog extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('🏠', style: TextStyle(fontSize: 60.sp)),
+              Icon(Icons.location_on, size: 72.sp, color: AppColors.primary),
               SizedBox(height: 8.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Text(
-                  'الكابتن أفينتو بالخارج...',
-                  style: TextStyle().textColorBold(
-                    fontSize: 12.sp,
-                    color: AppColors.primary,
-                  ),
+              Text(
+                'الكابتن أفينتو بالخارج...',
+                style: TextStyle().textColorBold(
+                  fontSize: 12.sp,
+                  color: AppColors.primary,
                 ),
               ),
             ],
           ),
         );
 
-      case OrderStatus.delivered:
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('😋', style: TextStyle(fontSize: 72.sp)),
-              SizedBox(height: 8.h),
-              Text(
-                'بالهناء والشفاء!',
-                style: TextStyle().textColorBold(
-                  fontSize: 18.sp,
-                  color: Theme.of(context).textTheme.titleLarge?.color,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                'نتمنى لك وجبة لذيذة',
-                style: TextStyle().textColorNormal(
-                  fontSize: 12.sp,
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
-              ),
-            ],
-          ),
-        );
-      case OrderStatus.deliveryReceived:
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('🎉', style: TextStyle(fontSize: 72.sp)),
-              SizedBox(height: 8.h),
-              Text(
-                'تم استلام الطلب بنجاح!',
-                style: TextStyle().textColorBold(
-                  fontSize: 18.sp,
-                  color: Theme.of(context).textTheme.titleLarge?.color,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                'شكراً لاستخدامك أفينتو',
-                style: TextStyle().textColorNormal(
-                  fontSize: 12.sp,
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
-              ),
-            ],
-          ),
-        );
       case OrderStatus.cancelled:
-        // TODO: Handle this case.
         return Center(
-          child: Text('تم الغاء الطلب', style: TextStyle(fontSize: 30.sp)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.cancel_outlined, size: 64.sp, color: Theme.of(context).colorScheme.error),
+              SizedBox(height: 8.h),
+              Text(
+                'تم إلغاء الطلب',
+                style: TextStyle().textColorBold(
+                  fontSize: 16.sp,
+                  color: Theme.of(context).textTheme.titleMedium?.color,
+                ),
+              ),
+            ],
+          ),
         );
+
+      default:
+        return const SizedBox.shrink();
     }
   }
 
@@ -400,7 +372,7 @@ class OrderTrackingDialog extends StatelessWidget {
               _buildTimelineItem(
                 context,
                 time: '12:45',
-                title: 'استلم المستخدم الطلب',
+                title: 'استلم السائق الطلب',
                 isActive: status.index >= 3,
                 isCurrent: status == OrderStatus.deliveryReceived,
                 icon: "assets/svg/client/orders/delivered.svg",

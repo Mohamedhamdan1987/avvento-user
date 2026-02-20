@@ -1,4 +1,3 @@
-
 //
 // import 'package:avvento/core/theme/app_text_styles.dart';
 // import 'package:avvento/core/widgets/reusable/svg_icon.dart';
@@ -732,10 +731,10 @@
 //   }
 // }
 
-
 import 'dart:math';
 import 'dart:ui';
 import 'package:avvento/core/theme/app_text_styles.dart';
+import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/core/utils/show_snackbar.dart';
 import 'package:avvento/features/client/restaurants/models/menu_item_model.dart';
 import 'package:avvento/features/client/restaurants/models/restaurant_model.dart';
@@ -749,6 +748,7 @@ import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_a
 import '../../../../core/widgets/reusable/svg_icon.dart';
 import '../controllers/restaurant_details_controller.dart';
 import '../../../../core/utils/location_utils.dart';
+import '../../address/controllers/address_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../cart/models/cart_model.dart';
 import '../../cart/pages/restaurant_cart_details_page.dart';
@@ -756,12 +756,17 @@ import '../controllers/restaurants_controller.dart';
 import 'meal_details_dialog.dart';
 import 'restaurant_search_page.dart';
 import '../../../../core/widgets/shimmer/shimmer_loading.dart';
+import '../../../../core/widgets/reusable/app_refresh_indicator.dart';
 
 class RestaurantDetailsScreen extends StatelessWidget {
   final String restaurantId;
   final bool fromCart;
 
-  RestaurantDetailsScreen({super.key, required this.restaurantId, this.fromCart = false}) {
+  RestaurantDetailsScreen({
+    super.key,
+    required this.restaurantId,
+    this.fromCart = false,
+  }) {
     if (!Get.isRegistered<RestaurantsController>()) {
       Get.put(RestaurantsController());
     }
@@ -809,7 +814,8 @@ class RestaurantDetailsScreen extends StatelessWidget {
           if (!Get.isRegistered<RestaurantDetailsController>()) {
             return const SizedBox.shrink();
           }
-          if (controller.isLoadingRestaurantDetails && controller.restaurant == null) {
+          if (controller.isLoadingRestaurantDetails &&
+              controller.restaurant == null) {
             return const RestaurantDetailsShimmer();
           }
 
@@ -842,9 +848,11 @@ class RestaurantDetailsScreen extends StatelessWidget {
             return const Center(child: Text('المطعم غير موجود'));
           }
 
-
-          return CustomScrollView(
-            slivers: [
+          return AppRefreshIndicator(
+            onRefresh: controller.refreshData,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
               // Shrinking Header
               SliverPersistentHeader(
                 pinned: true,
@@ -852,11 +860,13 @@ class RestaurantDetailsScreen extends StatelessWidget {
                   restaurant: controller.restaurant!,
                   onBack: () => Navigator.pop(context),
                   onSearch: () {
-                    Get.to(() => RestaurantSearchPage(
-                          restaurant: controller.restaurant!,
-                          categories: controller.categories,
-                          allItems: controller.allItems,
-                        ));
+                    Get.to(
+                      () => RestaurantSearchPage(
+                        restaurant: controller.restaurant!,
+                        categories: controller.categories,
+                        allItems: controller.allItems,
+                      ),
+                    );
                   },
                 ),
               ),
@@ -889,6 +899,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
                 ),
               ),
             ],
+            ),
           );
         }),
       ),
@@ -911,7 +922,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Obx(() {
-                  final isOpen = controller.restaurant?.isOpen?? false;
+                  final isOpen = controller.restaurant?.isOpen ?? false;
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -923,7 +934,8 @@ class RestaurantDetailsScreen extends StatelessWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: (isOpen ? Colors.green : Colors.red).withOpacity(0.4),
+                              color: (isOpen ? Colors.green : Colors.red)
+                                  .withOpacity(0.4),
                               blurRadius: 4,
                               spreadRadius: 1,
                             ),
@@ -946,8 +958,12 @@ class RestaurantDetailsScreen extends StatelessWidget {
                   final status = controller.schedule?.currentDayStatus;
                   if (status == null) return const SizedBox.shrink();
 
-                  final nextTime = status.isCurrentlyOpen ? status.closeTime : status.openTime;
-                  final text = status.isCurrentlyOpen ? 'يغلق الساعة $nextTime' : 'يفتح الساعة $nextTime';
+                  final nextTime = status.isCurrentlyOpen
+                      ? status.closeTime
+                      : status.openTime;
+                  final text = status.isCurrentlyOpen
+                      ? 'يغلق الساعة $nextTime'
+                      : 'يفتح الساعة $nextTime';
 
                   return Text(
                     text,
@@ -990,7 +1006,12 @@ class RestaurantDetailsScreen extends StatelessWidget {
       builder: (context) => Directionality(
         textDirection: TextDirection.rtl,
         child: Container(
-          padding: EdgeInsetsDirectional.only(top: 16.w, start: 16.w, bottom: 24.w, end: 8.w),
+          padding: EdgeInsetsDirectional.only(
+            top: 16.w,
+            start: 16.w,
+            bottom: 24.w,
+            end: 8.w,
+          ),
           decoration: BoxDecoration(
             color: Theme.of(context).scaffoldBackgroundColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
@@ -1019,7 +1040,8 @@ class RestaurantDetailsScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: SvgIcon(
-                      iconName: 'assets/svg/client/restaurant_details/clock.svg',
+                      iconName:
+                          'assets/svg/client/restaurant_details/clock.svg',
                       width: 24.w,
                       height: 24.h,
                       color: AppColors.purple,
@@ -1034,7 +1056,9 @@ class RestaurantDetailsScreen extends StatelessWidget {
                           'مواعيد العمل',
                           style: TextStyle().textColorBold(
                             fontSize: 18.sp,
-                            color: Theme.of(context).textTheme.titleLarge?.color,
+                            color: Theme.of(
+                              context,
+                            ).textTheme.titleLarge?.color,
                           ),
                         ),
                         Text(
@@ -1049,7 +1073,10 @@ class RestaurantDetailsScreen extends StatelessWidget {
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: Icon(Icons.close, color: Theme.of(context).textTheme.bodySmall?.color),
+                    icon: Icon(
+                      Icons.close,
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
                   ),
                 ],
               ),
@@ -1061,19 +1088,30 @@ class RestaurantDetailsScreen extends StatelessWidget {
                 if (controller.isLoadingSchedule) {
                   return ShimmerLoading(
                     child: Column(
-                      children: List.generate(7, (_) => Padding(
-                        padding: EdgeInsets.only(bottom: 12.h),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.w),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              ShimmerBox(width: 60.w, height: 14.h, borderRadius: 6),
-                              ShimmerBox(width: 100.w, height: 14.h, borderRadius: 6),
-                            ],
+                      children: List.generate(
+                        7,
+                        (_) => Padding(
+                          padding: EdgeInsets.only(bottom: 12.h),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                ShimmerBox(
+                                  width: 60.w,
+                                  height: 14.h,
+                                  borderRadius: 6,
+                                ),
+                                ShimmerBox(
+                                  width: 100.w,
+                                  height: 14.h,
+                                  borderRadius: 6,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      )),
+                      ),
                     ),
                   );
                 }
@@ -1095,9 +1133,18 @@ class RestaurantDetailsScreen extends StatelessWidget {
 
                 return Column(
                   children: schedule.weeklySchedule.map((s) {
-                    final isCurrent = s.day.toLowerCase() == schedule.currentDayStatus.day.toLowerCase();
-                    final hoursText = s.isClosed ? 'مغلق' : '${s.openTime} - ${s.closeTime}';
-                    return _buildDayRow(context, daysArabic[s.day.toLowerCase()] ?? s.day, hoursText, isCurrent: isCurrent);
+                    final isCurrent =
+                        s.day.toLowerCase() ==
+                        schedule.currentDayStatus.day.toLowerCase();
+                    final hoursText = s.isClosed
+                        ? 'مغلق'
+                        : '${s.openTime} - ${s.closeTime}';
+                    return _buildDayRow(
+                      context,
+                      daysArabic[s.day.toLowerCase()] ?? s.day,
+                      hoursText,
+                      isCurrent: isCurrent,
+                    );
                   }).toList(),
                 );
               }),
@@ -1133,14 +1180,23 @@ class RestaurantDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDayRow(BuildContext context, String day, String hours, {bool isCurrent = false}) {
+  Widget _buildDayRow(
+    BuildContext context,
+    String day,
+    String hours, {
+    bool isCurrent = false,
+  }) {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: isCurrent ? AppColors.purple.withOpacity(0.05) : Colors.transparent,
+        color: isCurrent
+            ? AppColors.purple.withOpacity(0.05)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(12.r),
-        border: isCurrent ? Border.all(color: AppColors.purple.withOpacity(0.2)) : null,
+        border: isCurrent
+            ? Border.all(color: AppColors.purple.withOpacity(0.2))
+            : null,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1149,14 +1205,18 @@ class RestaurantDetailsScreen extends StatelessWidget {
             day,
             style: TextStyle().textColorMedium(
               fontSize: 14.sp,
-              color: isCurrent ? AppColors.purple : Theme.of(context).textTheme.titleMedium?.color,
+              color: isCurrent
+                  ? AppColors.purple
+                  : Theme.of(context).textTheme.titleMedium?.color,
             ),
           ),
           Text(
             hours,
             style: TextStyle().textColorBold(
               fontSize: 14.sp,
-              color: isCurrent ? AppColors.purple : Theme.of(context).textTheme.bodyMedium?.color,
+              color: isCurrent
+                  ? AppColors.purple
+                  : Theme.of(context).textTheme.bodyMedium?.color,
             ),
           ),
         ],
@@ -1167,16 +1227,35 @@ class RestaurantDetailsScreen extends StatelessWidget {
   Widget _buildStatsRow(BuildContext context) {
     String distanceText = '--';
     String priceText = '--';
-    final restaurantsController = Get.find<RestaurantsController>();
-    if (restaurantsController.userLat != null && restaurantsController.userLong != null) {
+    final addressController = Get.find<AddressController>();
+    final activeAddress = addressController.activeAddress.value;
+
+    if (activeAddress != null) {
       final distance = LocationUtils.calculateDistance(
-        userLat: restaurantsController.userLat!,
-        userLong: restaurantsController.userLong!,
+        userLat: activeAddress.lat,
+        userLong: activeAddress.long,
         restaurantLat: controller.restaurant!.lat,
         restaurantLong: controller.restaurant!.long,
       );
+
       distanceText = LocationUtils.formatDistance(distance);
-      final price = LocationUtils.calculateDeliveryPrice(distanceInKm: distance, );
+      final price = LocationUtils.calculateDeliveryPrice(
+        distanceInKm: distance,
+      );
+      priceText = LocationUtils.formatPrice(price);
+    } else if (LocationUtils.isInitialized &&
+        LocationUtils.currentLatitude != null &&
+        LocationUtils.currentLongitude != null) {
+      // Fallback to device location if no active address
+      final distance = LocationUtils.calculateDistance(
+        restaurantLat: controller.restaurant!.lat,
+        restaurantLong: controller.restaurant!.long,
+      );
+
+      distanceText = LocationUtils.formatDistance(distance);
+      final price = LocationUtils.calculateDeliveryPrice(
+        distanceInKm: distance,
+      );
       priceText = LocationUtils.formatPrice(price);
     }
 
@@ -1186,10 +1265,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
       decoration: ShapeDecoration(
         color: const Color(0x11D9D9D9),
         shape: RoundedRectangleBorder(
-          side: BorderSide(
-            width: 1,
-            color: const Color(0x33E3E3E3),
-          ),
+          side: BorderSide(width: 1, color: const Color(0x33E3E3E3)),
           borderRadius: BorderRadius.circular(21),
         ),
       ),
@@ -1199,7 +1275,8 @@ class RestaurantDetailsScreen extends StatelessWidget {
           _buildStatItem(
             context,
             icon: 'assets/svg/client/restaurant_details/clock.svg',
-            value: '${controller.restaurant!.averagePreparationTimeMinutes} دقيقة',
+            value:
+                '${controller.restaurant!.averagePreparationTimeMinutes} دقيقة',
             label: 'التحضير',
           ),
           Container(width: 1.w, height: 32.h, color: Color(0xFFF3F4F6)),
@@ -1301,7 +1378,10 @@ class RestaurantDetailsScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(24.r),
-              border: Border.all(color: Theme.of(context).dividerColor, width: 0.76.w),
+              border: Border.all(
+                color: Theme.of(context).dividerColor,
+                width: 0.76.w,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -1342,7 +1422,9 @@ class RestaurantDetailsScreen extends StatelessWidget {
                         width: 32.w,
                         height: 32.h,
                         radius: 100.r,
-                        color: Color(0xFF101828), // This button color might need check, maybe dark compliant or kept as brand
+                        color: Color(
+                          0xFF101828,
+                        ), // This button color might need check, maybe dark compliant or kept as brand
                         onTap: () {},
                         childWidget: SvgIcon(
                           iconName: 'assets/svg/plus-solid.svg',
@@ -1377,7 +1459,9 @@ class RestaurantDetailsScreen extends StatelessWidget {
                               'شريحة لحم بقري، جبنة شيدر، خس، طماطم، صوص خاص',
                               style: TextStyle().textColorNormal(
                                 fontSize: 12.sp,
-                                color: Theme.of(context).textTheme.bodySmall?.color,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodySmall?.color,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -1397,7 +1481,9 @@ class RestaurantDetailsScreen extends StatelessWidget {
                                 'د.ل',
                                 style: TextStyle().textColorNormal(
                                   fontSize: 12.sp,
-                                  color: Theme.of(context).textTheme.bodySmall?.color,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodySmall?.color,
                                 ),
                               ),
                             ],
@@ -1416,7 +1502,6 @@ class RestaurantDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildBrowseMenuSection(BuildContext context) {
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1436,7 +1521,8 @@ class RestaurantDetailsScreen extends StatelessWidget {
         SizedBox(
           height: 140.h,
           child: Obx(() {
-            if (controller.isLoadingCategories && controller.categories.isEmpty) {
+            if (controller.isLoadingCategories &&
+                controller.categories.isEmpty) {
               return const MenuCategoriesShimmer();
             }
             if (controller.categories.isEmpty) {
@@ -1450,18 +1536,21 @@ class RestaurantDetailsScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final category = controller.categories[index];
                 return GestureDetector(
-                   behavior: HitTestBehavior.opaque,
+                  behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    Get.to(() => CategoryMenuPage(
-                          restaurant: controller.restaurant!,
-                          category: category,
-                        ));
+                    Get.to(
+                      () => CategoryMenuPage(
+                        restaurant: controller.restaurant!,
+                        category: category,
+                      ),
+                    );
                   },
                   child: _buildMenuCategoryCard(
                     imageUrl: category.image ?? "",
                     title: category.name,
                     count: "",
-                    isSelected: false, // No selection state on the main screen anymore
+                    isSelected:
+                        false, // No selection state on the main screen anymore
                   ),
                 );
               },
@@ -1483,7 +1572,9 @@ class RestaurantDetailsScreen extends StatelessWidget {
       height: 140.h,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24.r),
-        border: isSelected ? Border.all(color: Color(0xFF7F22FE), width: 2.w) : null,
+        border: isSelected
+            ? Border.all(color: Color(0xFF7F22FE), width: 2.w)
+            : null,
       ),
       child: Stack(
         children: [
@@ -1580,7 +1671,10 @@ class RestaurantDetailsScreen extends StatelessWidget {
                       controller.items[i].categoryId !=
                           controller.items[i - 1].categoryId)
                     Padding(
-                      padding: EdgeInsetsDirectional.only(top: 16.h, bottom: 8.h),
+                      padding: EdgeInsetsDirectional.only(
+                        top: 16.h,
+                        bottom: 8.h,
+                      ),
                       child: Text(
                         controller.items[i].categoryName,
                         style: const TextStyle().textColorBold(
@@ -1601,7 +1695,10 @@ class RestaurantDetailsScreen extends StatelessWidget {
 
   Widget _buildItemCard(BuildContext context, MenuItem item) {
     final cartController = Get.find<CartController>();
-    final quantity = cartController.getItemQuantityInCart(restaurantId, item.id);
+    final quantity = cartController.getItemQuantityInCart(
+      restaurantId,
+      item.id,
+    );
 
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
@@ -1609,7 +1706,10 @@ class RestaurantDetailsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: Theme.of(context).dividerColor, width: 0.76.w),
+        border: Border.all(
+          color: Theme.of(context).dividerColor,
+          width: 0.76.w,
+        ),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -1629,16 +1729,15 @@ class RestaurantDetailsScreen extends StatelessWidget {
                   ),
                   child: (item.image?.isNotEmpty ?? false)
                       ? CachedNetworkImage(
-                    imageUrl: item.image!,
-                    width: 96.w,
-                    height: 96.h,
-                    fit: BoxFit.cover,
-                  )
+                          imageUrl: item.image!,
+                          width: 96.w,
+                          height: 96.h,
+                          fit: BoxFit.cover,
+                        )
                       : Icon(Icons.fastfood, size: 40.w, color: Colors.grey),
                 ),
               ),
             ),
-
 
             SizedBox(width: 12.w),
 
@@ -1658,7 +1757,9 @@ class RestaurantDetailsScreen extends StatelessWidget {
                             item.name,
                             style: TextStyle().textColorBold(
                               fontSize: 16.sp,
-                              color: Theme.of(context).textTheme.titleMedium?.color,
+                              color: Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.color,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1666,83 +1767,124 @@ class RestaurantDetailsScreen extends StatelessWidget {
                         ),
                         quantity > 0
                             ? Container(
-                          height: 28.h,
-                          padding: EdgeInsets.symmetric(horizontal: 8.w),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF101828),
-                            borderRadius: BorderRadius.circular(100.r),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: cartController.isItemUpdating(item.id)
-                                    ? null
-                                    : () => _updateQuantity(context, item, quantity - 1),
-                                child: AnimatedOpacity(
-                                  opacity: cartController.isItemUpdating(item.id) ? 0.4 : 1.0,
-                                  duration: const Duration(milliseconds: 200),
-                                  child: Icon(Icons.remove, color: Colors.white, size: 16.w),
+                                height: 28.h,
+                                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF101828),
+                                  borderRadius: BorderRadius.circular(100.r),
                                 ),
-                              ),
-                              SizedBox(width: 8.w),
-                              SizedBox(
-                                width: 18.w,
-                                height: 18.h,
-                                child: Center(
-                                  child: cartController.isItemUpdating(item.id)
-                                      ? SizedBox(
-                                          width: 14.w,
-                                          height: 14.h,
-                                          child: const CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : Text(
-                                          '$quantity',
-                                          style: TextStyle().textColorBold(fontSize: 14.sp, color: Colors.white),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    GestureDetector(
+                                      onTap:
+                                          cartController.isItemUpdating(item.id)
+                                          ? null
+                                          : () => _updateQuantity(
+                                              context,
+                                              item,
+                                              quantity - 1,
+                                            ),
+                                      child: AnimatedOpacity(
+                                        opacity:
+                                            cartController.isItemUpdating(
+                                              item.id,
+                                            )
+                                            ? 0.4
+                                            : 1.0,
+                                        duration: const Duration(
+                                          milliseconds: 200,
                                         ),
+                                        child: Icon(
+                                          Icons.remove,
+                                          color: Colors.white,
+                                          size: 16.w,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    SizedBox(
+                                      width: 18.w,
+                                      height: 18.h,
+                                      child: Center(
+                                        child:
+                                            cartController.isItemUpdating(
+                                              item.id,
+                                            )
+                                            ? SizedBox(
+                                                width: 14.w,
+                                                height: 14.h,
+                                                child:
+                                                    const CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      color: Colors.white,
+                                                    ),
+                                              )
+                                            : Text(
+                                                '$quantity',
+                                                style: TextStyle()
+                                                    .textColorBold(
+                                                      fontSize: 14.sp,
+                                                      color: Colors.white,
+                                                    ),
+                                              ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    GestureDetector(
+                                      onTap:
+                                          cartController.isItemUpdating(item.id)
+                                          ? null
+                                          : () => _updateQuantity(
+                                              context,
+                                              item,
+                                              quantity + 1,
+                                            ),
+                                      child: AnimatedOpacity(
+                                        opacity:
+                                            cartController.isItemUpdating(
+                                              item.id,
+                                            )
+                                            ? 0.4
+                                            : 1.0,
+                                        duration: const Duration(
+                                          milliseconds: 200,
+                                        ),
+                                        child: Icon(
+                                          Icons.add,
+                                          color: Colors.white,
+                                          size: 16.w,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              SizedBox(width: 8.w),
-                              GestureDetector(
-                                onTap: cartController.isItemUpdating(item.id)
-                                    ? null
-                                    : () => _updateQuantity(context, item, quantity + 1),
-                                child: AnimatedOpacity(
-                                  opacity: cartController.isItemUpdating(item.id) ? 0.4 : 1.0,
-                                  duration: const Duration(milliseconds: 200),
-                                  child: Icon(Icons.add, color: Colors.white, size: 16.w),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
+                              )
                             : CustomIconButtonApp(
-                          width: 32.w,
-                          height: 32.h,
-                          radius: 100.r,
-                          color: const Color(0xFF101828),
-                          onTap: () {
-                            if (item.variations.isEmpty && item.addOns.isEmpty) {
-                              controller.addToCart(
-                                itemId: item.id,
-                                quantity: 1,
-                                selectedVariations: [],
-                                selectedAddOns: [],
-                              );
-                            } else {
-                              _showMealDetails(context, item);
-                            }
-                          },
-                          childWidget: SvgIcon(
-                            iconName: 'assets/svg/plus-solid.svg',
-                            width: 16.w,
-                            height: 16.h,
-                            color: Colors.white,
-                          ),
-                        ),
+                                width: 32.w,
+                                height: 32.h,
+                                radius: 100.r,
+                                color: const Color(0xFF101828),
+                                onTap: () {
+                                  if (item.variations.isEmpty &&
+                                      item.addOns.isEmpty) {
+                                    controller.addToCart(
+                                      itemId: item.id,
+                                      quantity: 1,
+                                      selectedVariations: [],
+                                      selectedAddOns: [],
+                                    );
+                                  } else {
+                                    _showMealDetails(context, item);
+                                  }
+                                },
+                                childWidget: SvgIcon(
+                                  iconName: 'assets/svg/plus-solid.svg',
+                                  width: 16.w,
+                                  height: 16.h,
+                                  color: Colors.white,
+                                ),
+                              ),
                       ],
                     ),
                     Text(
@@ -1806,13 +1948,14 @@ class RestaurantDetailsScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => MealDetailsDialog(
-        menuItem: item,
-      ),
+      builder: (context) => MealDetailsDialog(menuItem: item),
     );
   }
 
-  Widget _buildViewCartButton(BuildContext context, RestaurantCartResponse cart) {
+  Widget _buildViewCartButton(
+    BuildContext context,
+    RestaurantCartResponse cart,
+  ) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Padding(
@@ -1910,7 +2053,10 @@ class RestaurantDetailsScreen extends StatelessWidget {
                       }
                     },
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 8.h,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16.r),
@@ -1948,13 +2094,20 @@ class RestaurantDetailsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _updateQuantity(BuildContext context, MenuItem item, int newQuantity) async {
+  Future<void> _updateQuantity(
+    BuildContext context,
+    MenuItem item,
+    int newQuantity,
+  ) async {
     final cartController = Get.find<CartController>();
     if (cartController.isItemUpdating(item.id)) return;
 
     cartController.setItemUpdating(item.id);
     try {
-      final itemIndex = cartController.getItemIndexInCart(restaurantId, item.id);
+      final itemIndex = cartController.getItemIndexInCart(
+        restaurantId,
+        item.id,
+      );
 
       if (newQuantity == 0) {
         if (itemIndex != -1) {
@@ -1962,7 +2115,11 @@ class RestaurantDetailsScreen extends StatelessWidget {
         }
       } else {
         if (itemIndex != -1) {
-          await cartController.updateCartItemQuantity(cartController.detailedCart!.restaurant.id, itemIndex, newQuantity);
+          await cartController.updateCartItemQuantity(
+            cartController.detailedCart!.restaurant.id,
+            itemIndex,
+            newQuantity,
+          );
         } else {
           await controller.addToCart(
             itemId: item.id,
@@ -1990,7 +2147,11 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
   });
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     final double progress = shrinkOffset / maxExtent;
     // Calculate values based on progress
     final double avatarSize = 100.w * (1 - progress).clamp(0.6, 1.0);
@@ -2013,7 +2174,8 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
                 width: double.infinity,
                 height: double.infinity,
                 fit: BoxFit.cover,
-                errorWidget: (context, url, error) => Container(color: Colors.grey[300]),
+                errorWidget: (context, url, error) =>
+                    Container(color: Colors.grey[300]),
               ),
               BackdropFilter(
                 filter: ImageFilter.blur(
@@ -2039,14 +2201,21 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
               CustomIconButtonApp(
                 onTap: onBack,
                 color: Colors.white.withOpacity(0.2),
-                childWidget: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                childWidget: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
               // Fade in title when scrolled
               Opacity(
                 opacity: titleOpacity,
                 child: Text(
                   restaurant.name,
-                  style: TextStyle().textColorBold(fontSize: 18.sp, color: Colors.white),
+                  style: TextStyle().textColorBold(
+                    fontSize: 18.sp,
+                    color: Colors.white,
+                  ),
                 ),
               ),
 
@@ -2054,7 +2223,7 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
                 duration: const Duration(milliseconds: 200),
                 opacity: progress < 0.5 ? 1 : 0,
                 child: IgnorePointer(
-                    ignoring: progress >= 0.5,
+                  ignoring: progress >= 0.5,
                   child: CustomIconButtonApp(
                     onTap: onSearch,
                     color: Colors.white.withOpacity(0.2),
@@ -2074,7 +2243,11 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
         // Profile Picture (Avatar)
         PositionedDirectional(
           // top: avatarTop.clamp(MediaQuery.of(context).padding.top + 10.h, 200.h),
-          top: lerpDouble(200.h, MediaQuery.of(context).padding.top + 10.h, progress+0.05)!,
+          top: lerpDouble(
+            200.h,
+            MediaQuery.of(context).padding.top + 10.h,
+            progress + 0.05,
+          )!,
           end: 24.w,
           child: Container(
             width: avatarSize,
@@ -2094,8 +2267,8 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
               child: CachedNetworkImage(
                 imageUrl: restaurant.logo ?? '',
                 fit: BoxFit.cover,
-                errorWidget: (context, url, error) => Container(color: Colors.grey[300]),
-
+                errorWidget: (context, url, error) =>
+                    Container(color: Colors.grey[300]),
               ),
             ),
           ),
@@ -2103,39 +2276,39 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
 
         // Name & Info (Bottom of header)
         if (progress < 0.8)
-        PositionedDirectional(
-          bottom: 20.h,
-          start: 24.w,
-          // right: 130.w, // Leave room for avatar
-          child: Opacity(
-            opacity: (1 - progress * 2).clamp(0, 1),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  restaurant.name,
-                  style: TextStyle().textColorBold(
-                    fontSize: 24.sp,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Row(
-                  children: [
-                    Text(
-                      'الحد الأدنى للطلب: 25 د.ل',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.white.withOpacity(0.8),
-                      ),
+          PositionedDirectional(
+            bottom: 20.h,
+            start: 24.w,
+            // right: 130.w, // Leave room for avatar
+            child: Opacity(
+              opacity: (1 - progress * 2).clamp(0, 1),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    restaurant.name,
+                    style: TextStyle().textColorBold(
+                      fontSize: 24.sp,
+                      color: Colors.white,
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  SizedBox(height: 4.h),
+                  Row(
+                    children: [
+                      Text(
+                        'الحد الأدنى للطلب: 25 د.ل',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -2149,4 +2322,3 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant RestaurantHeaderDelegate oldDelegate) => true;
 }
-

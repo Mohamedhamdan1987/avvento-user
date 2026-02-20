@@ -63,7 +63,7 @@ class MenuItem {
     required this.isAvailable,
     required this.isFav,
     required this.preparationTime,
-     this.calories,
+    this.calories,
     required this.restaurant,
     required this.variations,
     required this.addOns,
@@ -72,7 +72,8 @@ class MenuItem {
   });
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
-    final category = json['category'] as Map<String, dynamic>? ?? {'_id': '', 'name': ''};
+    final category =
+        json['category'] as Map<String, dynamic>? ?? {'_id': '', 'name': ''};
     return MenuItem(
       id: json['_id'] as String,
       name: json['name'] as String,
@@ -86,7 +87,7 @@ class MenuItem {
       preparationTime: json['preparationTime'] as int? ?? 0,
       calories: json['calories'] as num? ?? 0,
       restaurant: json['restaurant'] is String
-          ? json['restaurant'] as String 
+          ? json['restaurant'] as String
           : (json['restaurant'] as Map<String, dynamic>)['_id'] as String,
       variations: (json['variations'] as List<dynamic>? ?? [])
           .map((v) => Variation.fromJson(v as Map<String, dynamic>))
@@ -94,8 +95,12 @@ class MenuItem {
       addOns: (json['addOns'] as List<dynamic>? ?? [])
           .map((a) => AddOn.fromJson(a as Map<String, dynamic>))
           .toList(),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 
@@ -106,10 +111,7 @@ class MenuItem {
       'description': description,
       'price': price,
       'image': image,
-      'category': {
-        '_id': categoryId,
-        'name': categoryName,
-      },
+      'category': {'_id': categoryId, 'name': categoryName},
       'isAvailable': isAvailable,
       'isFav': isFav,
       'preparationTime': preparationTime,

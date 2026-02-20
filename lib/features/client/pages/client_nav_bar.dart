@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/widgets/reusable/bottom_nav_bar.dart';
+import '../../../core/utils/location_utils.dart';
 import '../home/pages/home_page.dart';
 import '../orders/pages/orders_page.dart';
+import '../orders/controllers/orders_controller.dart';
 import '../cart/pages/cart_list_page.dart';
 import '../cart/controllers/cart_controller.dart';
 import '../account/pages/account_page.dart';
@@ -31,10 +33,25 @@ class _ClientNavBarState extends State<ClientNavBar> {
       final controller = Get.find<ClientNavBarController>();
       controller.setIndex(args['tabIndex'] as int);
     }
+    // Request location permission when nav bar loads
+    _requestLocationPermission();
+  }
+
+  Future<void> _requestLocationPermission() async {
+    // Wait a bit for the UI to be ready
+    await Future.delayed(const Duration(milliseconds: 500));
+    // Request location permission if not already granted
+    if (!LocationUtils.isInitialized) {
+      await LocationUtils.ensureLocationPermission();
+    }
   }
 
   void _onTap(int index) {
-    if (index == 2) {
+    if (index == 1) {
+      if (Get.isRegistered<OrdersController>()) {
+        Get.find<OrdersController>().fetchOrders();
+      }
+    } else if (index == 2) {
       if (Get.isRegistered<CartController>()) {
         Get.find<CartController>().fetchAllCarts();
       }

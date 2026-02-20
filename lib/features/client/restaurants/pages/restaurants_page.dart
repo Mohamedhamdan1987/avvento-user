@@ -1,3 +1,4 @@
+import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
@@ -9,6 +10,7 @@ import 'package:avvento/features/client/restaurants/models/favorite_restaurant_m
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -28,9 +30,10 @@ class RestaurantsPage extends GetView<RestaurantsController> {
   @override
   Widget build(BuildContext context) {
     final addressController = Get.find<AddressController>();
+    final theme = Theme.of(context);
+    final bool isLight = theme.brightness == Brightness.light;
     return Scaffold(
-      // backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      backgroundColor: AppColors.white,
+      backgroundColor: isLight ? Colors.white : theme.scaffoldBackgroundColor,
       // appBar:
       // CustomAppBar(
       //   titleWidget: Column(
@@ -113,7 +116,12 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                   Flexible(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
-                      onTap: () => Get.toNamed(AppRoutes.addressList),
+                      onTap: () {
+                         Get.toNamed(AppRoutes.addressList)!.then((_) {
+                          // Refresh restaurants when coming back from address selection
+                          controller.refreshRestaurants();
+                        });
+                      },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
@@ -134,17 +142,23 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                 Flexible(
                                   child: Obx(
                                     () => Text(
-                                      "${addressController.activeAddress.value?.label} - ${addressController.activeAddress.value?.address}",
+                              (addressController.activeAddress.value != null)
+                          ? "${addressController.activeAddress.value?.label} - ${addressController.activeAddress.value?.address}"
+                      : "اختر عنوان",
                                       style: const TextStyle().textColorLight(
                                         fontSize: 12,
-                                        color: const Color(0xFF101727),
+                                        color: isLight ? const Color(0xFF101727) : Colors.grey,
+
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ),
-                                SvgIcon(iconName: "assets/svg/arrow_down.svg"),
+                                Padding(
+                                  padding: EdgeInsetsDirectional.only(top: 4, start: 4),
+                                  child: SvgIcon(iconName: "assets/svg/arrow_down.svg"),
+                                ),
                               ],
                             ),
                           ],
@@ -183,386 +197,367 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: Column(
-                    children: [
-                      // Search Bar
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: TextField(
-                          onChanged: (value) {
-                            // Debounce search
-                            Future.delayed(
-                              const Duration(milliseconds: 500),
-                              () {
-                                if (value == controller.searchQuery) return;
-                                controller.searchRestaurants(value);
-                              },
-                            );
-                          },
-                          decoration: InputDecoration(
-                            filled: true,
-                            // fillColor: Colors.white,
-                            hintText: 'ابحث عن مطعم...',
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon: CustomIconButtonApp(
-                              childWidget: SvgIcon(
-                                iconName: "assets/svg/client/search.svg",
+                      children: [
+                        // Search Bar
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: TextField(
+                            onChanged: (value) {
+                              // Debounce search
+                              Future.delayed(
+                                const Duration(milliseconds: 500),
+                                () {
+                                  if (value == controller.searchQuery) return;
+                                  controller.searchRestaurants(value);
+                                },
+                              );
+                            },
+                            decoration: InputDecoration(
+                              filled: true,
+                              // fillColor: Colors.white,
+                              hintText: 'ابحث عن مطعم...',
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon: CustomIconButtonApp(
+                                childWidget: SvgIcon(
+                                  iconName: "assets/svg/client/search.svg",
+                                ),
+                                onTap: () {},
                               ),
-                              onTap: () {},
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: const BorderSide(
-                                width: 0.76,
-                                color: Color(0xFFE4E4E4),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: const BorderSide(
+                                  width: 0.76,
+                                  color: Color(0xFFE4E4E4),
+                                ),
                               ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: const BorderSide(
-                                width: 0.76,
-                                color: Color(0xFFE4E4E4),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: const BorderSide(
+                                  width: 0.76,
+                                  color: Color(0xFFE4E4E4),
+                                ),
                               ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: const BorderSide(
-                                width: 0.76,
-                                color: Color(0xFFE4E4E4),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: const BorderSide(
+                                  width: 0.76,
+                                  color: Color(0xFFE4E4E4),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
 
-                      // Restaurant Stories Section
-                      Padding(
-                        padding: EdgeInsetsDirectional.only(
-                          start: 24.w,
-                          top: 0.h,
-                          bottom: 8.h,
-                        ),
-                        child: Row(
-                          mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                        // Restaurant Stories Section
+                        Obx(() => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                SvgIcon(
-                                  iconName:
-                                  "assets/svg/client/fire.svg",
-                                  color: const Color(0xFFFFA800),
-                                  width: 24.w,
-                                  height: 24.h,
-                                ),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  'ستوري المطاعم',
-                                  style: TextStyle(
-                                    color: Theme.of(
-                                      context,
-                                    ).textTheme.titleLarge?.color,
-                                    fontSize: 18,
-                                    fontFamily: 'IBM Plex Sans Arabic',
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.56,
-                                  ).textColorBold(),
-                                ),
-                              ],
-                            ),
-                            if (controller.stories.isNotEmpty)
-                              GestureDetector(
-                                onTap: () {
-                                  Get.to(
-                                        () => AllStoriesPage(
-                                      stories: controller.stories,
-                                    ),
-                                  );
-                                },
-                                child: Padding(
-                                  padding: EdgeInsetsDirectional.only(
-                                    end: 24.w,
+                            Padding(
+                              padding: EdgeInsetsDirectional.only(
+                                start: 24.w,
+                                top: 0.h,
+                                bottom: 8.h,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      SvgIcon(
+                                        iconName: "assets/svg/client/fire.svg",
+                                        color: const Color(0xFFFFA800),
+                                        width: 24.w,
+                                        height: 24.h,
+                                      ),
+                                      SizedBox(width: 4.w),
+                                      Text(
+                                        'ستوري المطاعم',
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).textTheme.titleLarge?.color,
+                                          fontSize: 18,
+                                          fontFamily: 'IBM Plex Sans Arabic',
+                                          fontWeight: FontWeight.w700,
+                                          height: 1.56,
+                                        ).textColorBold(),
+                                      ),
+                                    ],
                                   ),
-                                  child: Text(
-                                    'مشاهدة الكل',
-                                    style:
-                                    const TextStyle(
-                                      color: Color(0xFF7F22FE),
-                                      fontSize: 12,
-                                      fontFamily:
-                                      'IBM Plex Sans Arabic',
-                                      fontWeight: FontWeight.w700,
-                                      height: 1.33,
-                                    ).textColorBold(
-                                      color: const Color(
-                                        0xFF7F22FE,
+                                  if (controller.stories.isNotEmpty)
+                                    GestureDetector(
+                                      onTap: () {
+                                        Get.to(
+                                          () => AllStoriesPage(
+                                            stories: controller.stories,
+                                          ),
+                                        );
+                                      },
+                                      child: Padding(
+                                        padding: EdgeInsetsDirectional.only(
+                                          end: 24.w,
+                                        ),
+                                        child: Text(
+                                          'مشاهدة الكل',
+                                          style:
+                                              const TextStyle(
+                                                color: Color(0xFF7F22FE),
+                                                fontSize: 12,
+                                                fontFamily: 'IBM Plex Sans Arabic',
+                                                fontWeight: FontWeight.w700,
+                                                height: 1.33,
+                                              ).textColorBold(
+                                                color: const Color(0xFF7F22FE),
+                                              ),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
+                                ],
                               ),
-                          ],
-                        ),
-                      ),
+                            ),
+                            // Stories List
+                            Builder(
+                              builder: (context) {
+                                final screenWidth = MediaQuery.of(context).size.width;
+                                final itemWidth = 72.w;
+                                final horizontalPadding = 48.w;
+                                final visibleCount =
+                                    ((screenWidth - horizontalPadding) / itemWidth).ceil();
+                                final storiesCount = controller.stories.length > 10
+                                    ? 10
+                                    : controller.stories.length;
+                                final totalCount = storiesCount >= visibleCount
+                                    ? storiesCount
+                                    : visibleCount;
+                                return SizedBox(
+                              height: 100.h,
+                              child: ListView.builder(
+                                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                                scrollDirection: Axis.horizontal,
+                                physics: storiesCount >= visibleCount
+                                    ? null
+                                    : const NeverScrollableScrollPhysics(),
+                                itemCount: totalCount,
+                                itemBuilder: (context, index) {
+                                  // Real story
+                                  if (index < storiesCount) {
+                                    final storyGroup =
+                                        controller.stories[index];
+                                    return Padding(
+                                      padding: EdgeInsetsDirectional.only(
+                                        end: 12.w,
+                                      ),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Get.to(
+                                            () => StoryViewPage(
+                                              stories: storyGroup.stories,
+                                              initialIndex: 0,
+                                            ),
+                                          );
+                                        },
+                                        child: Column(
+                                          children: [
+                                            Container(
+                                              width: 60.w,
+                                              height: 60.w,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: storyGroup.allViewed
+                                                      ? Colors.grey
+                                                      : const Color(0xFF7F22FE),
+                                                  width: 2,
+                                                ),
+                                              ),
+                                              padding: const EdgeInsets.all(2),
+                                              child: ClipOval(
+                                                child: CachedNetworkImage(
+                                                  imageUrl: storyGroup
+                                                      .restaurant
+                                                      .logo,
+                                                  fit: BoxFit.cover,
+                                                  errorWidget:
+                                                      (context, url, error) =>
+                                                          const Icon(
+                                                            Icons.error,
+                                                          ),
+                                                ),
+                                              ),
+                                            ),
+                                            SizedBox(height: 4.h),
+                                            SizedBox(
+                                              width: 70.w,
+                                              child: Text(
+                                                storyGroup.restaurant.name,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }
 
-                      // Stories List (Horizontal) with gray placeholders to fill remaining space
-                      Builder(
-                        builder: (context) {
-                          final screenWidth = MediaQuery.of(
-                            context,
-                          ).size.width;
-                          // Each story item is ~72.w wide (60.w circle + 12.w padding)
-                          final itemWidth = 72.w;
-                          final horizontalPadding = 48.w; // 24.w * 2
-                          final visibleCount =
-                          ((screenWidth - horizontalPadding) /
-                              itemWidth)
-                              .ceil();
-                          final storiesCount =
-                          controller.stories.length > 10
-                              ? 10
-                              : controller.stories.length;
-                          final totalCount =
-                          storiesCount >= visibleCount
-                              ? storiesCount
-                              : visibleCount;
-
-                          return SizedBox(
-                            height: 100.h,
-                            child: ListView.builder(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 24.w,
-                              ),
-                              scrollDirection: Axis.horizontal,
-                              physics: storiesCount >= visibleCount
-                                  ? null
-                                  : const NeverScrollableScrollPhysics(),
-                              itemCount: totalCount,
-                              itemBuilder: (context, index) {
-                                // Real story
-                                if (index < storiesCount) {
-                                  final storyGroup =
-                                  controller.stories[index];
+                                  // Gray placeholder
                                   return Padding(
                                     padding: EdgeInsetsDirectional.only(
                                       end: 12.w,
                                     ),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Get.to(
-                                              () => StoryViewPage(
-                                            stories: storyGroup.stories,
-                                            initialIndex: 0,
-                                          ),
-                                        );
-                                      },
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            width: 60.w,
-                                            height: 60.w,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color:
-                                                storyGroup.allViewed
-                                                    ? Colors.grey
-                                                    : const Color(
-                                                  0xFF7F22FE,
-                                                ),
-                                                width: 2,
-                                              ),
-                                            ),
-                                            padding:
-                                            const EdgeInsets.all(2),
-                                            child: ClipOval(
-                                              child: CachedNetworkImage(
-                                                imageUrl: storyGroup
-                                                    .restaurant
-                                                    .logo,
-                                                fit: BoxFit.cover,
-                                                errorWidget:
-                                                    (
-                                                    context,
-                                                    url,
-                                                    error,
-                                                    ) => const Icon(
-                                                  Icons.error,
-                                                ),
-                                              ),
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          width: 60.w,
+                                          height: 60.w,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.grey[200]!
+                                                .withOpacity(0.5),
+                                            border: Border.all(
+                                              color: Colors.grey[200]!
+                                                  .withOpacity(0.5),
+                                              width: 2,
                                             ),
                                           ),
-                                          SizedBox(height: 4.h),
-                                          SizedBox(
-                                            width: 70.w,
-                                            child: Text(
-                                              storyGroup
-                                                  .restaurant
-                                                  .name,
-                                              maxLines: 1,
-                                              overflow:
-                                              TextOverflow.ellipsis,
-                                              textAlign:
-                                              TextAlign.center,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight:
-                                                FontWeight.w500,
-                                              ),
+                                        ),
+                                        SizedBox(height: 4.h),
+                                        Container(
+                                          width: 50.w,
+                                          height: 10.h,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[200]!
+                                                .withOpacity(0.5),
+                                            borderRadius: BorderRadius.circular(
+                                              5,
                                             ),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
                                   );
-                                }
-
-                                // Gray placeholder
-                                return Padding(
-                                  padding: EdgeInsetsDirectional.only(
-                                    end: 12.w,
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        width: 60.w,
-                                        height: 60.w,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.grey[200]!.withOpacity(0.5),
-                                          border: Border.all(
-                                            color: Colors.grey[200]!.withOpacity(0.5),
-                                            width: 2,
-                                          ),
-                                        ),
-                                      ),
-                                      SizedBox(height: 4.h),
-                                      Container(
-                                        width: 50.w,
-                                        height: 10.h,
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey[200]!.withOpacity(0.5),
-                                          borderRadius:
-                                          BorderRadius.circular(5),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
+                                },
+                              ),
+                            );
                               },
                             ),
-                          );
-                        },
-                      ),
+                          ],
+                        )),
 
-
-                      // Category chips
-                      Obx(() {
-                        if (controller.isLoadingCategories &&
-                            controller.categories.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        return SizedBox(
-                          height: 40.h,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.only(left: 8.w),
-                                child: _CategoryChip(
-                                  label: 'الكل',
-                                  icon: '🍽️',
-                                  imageUrl: null,
-                                  isSelected:
-                                      controller.selectedCategoryId == null,
-                                  onTap: () => controller.selectCategory(null),
-                                ),
-                              ),
-                              ...controller.categories.map(
-                                (CategorySelection cat) => Padding(
+                        // Category chips
+                        Obx(() {
+                          if (controller.isLoadingCategories &&
+                              controller.categories.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return SizedBox(
+                            height: 40.h,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              padding: EdgeInsets.symmetric(horizontal: 16.w),
+                              children: [
+                                Padding(
                                   padding: EdgeInsets.only(left: 8.w),
                                   child: _CategoryChip(
-                                    label: cat.name,
-                                    icon: cat.icon,
-                                    imageUrl: cat.image,
+                                    label: 'الكل',
+                                    icon: '🍽️',
+                                    imageUrl: null,
                                     isSelected:
-                                        controller.selectedCategoryId == cat.id,
+                                        controller.selectedCategoryId == null,
                                     onTap: () =>
-                                        controller.selectCategory(cat.id),
+                                        controller.selectCategory(null),
                                   ),
                                 ),
+                                ...controller.categories.map(
+                                  (CategorySelection cat) => Padding(
+                                    padding: EdgeInsets.only(left: 8.w),
+                                    child: _CategoryChip(
+                                      label: cat.name,
+                                      icon: cat.icon,
+                                      imageUrl: cat.image,
+                                      isSelected:
+                                          controller.selectedCategoryId ==
+                                          cat.id,
+                                      onTap: () =>
+                                          controller.selectCategory(cat.id),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                        SizedBox(height: 8.h),
+                        // Restaurants List
+                        Obx(() {
+                          // Loading state
+                          if (controller.isLoading &&
+                              controller.restaurants.isEmpty) {
+                            return const RestaurantsPageShimmer();
+                          }
+
+                          // Error state
+                          if (controller.hasError &&
+                              controller.restaurants.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.error_outline,
+                                    size: 64,
+                                    color: Colors.red,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    controller.errorMessage,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: controller.fetchRestaurants,
+                                    child: const Text('إعادة المحاولة'),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        );
-                      }),
-                      SizedBox(height: 8.h),
-                      // Restaurants List
-                      Obx(() {
-                        // Loading state
-                        if (controller.isLoading &&
-                            controller.restaurants.isEmpty) {
-                          return const RestaurantsPageShimmer();
-                        }
+                            );
+                          }
 
-                        // Error state
-                        if (controller.hasError &&
-                            controller.restaurants.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.error_outline,
-                                  size: 64,
-                                  color: Colors.red,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  controller.errorMessage,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: controller.fetchRestaurants,
-                                  child: const Text('إعادة المحاولة'),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        // Empty state
-                        if (controller.restaurants.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.restaurant,
-                                  size: 64,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'لا توجد مطاعم',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.grey[600],
+                          // Empty state
+                          if (controller.restaurants.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.restaurant,
+                                    size: 64,
+                                    color: Colors.grey[400],
                                   ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'لا توجد مطاعم',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
 
-                        // Restaurants list
-                        return Column(
+                          // Restaurants list
+                          return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-
-                            if (controller.restaurants.isNotEmpty) ...[
+                              if (controller.restaurants.isNotEmpty) ...[
                                 Padding(
                                   padding: EdgeInsetsDirectional.only(
                                     start: 24.w,
@@ -625,8 +620,8 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                               child: RestaurantCard(
                                                 restaurant: restaurant,
                                                 showClosedOverlay: false,
-                                                  // color: Theme.of(context).scaffoldBackgroundColor
-                                                  color: AppColors.white
+                                                // color: Theme.of(context).scaffoldBackgroundColor
+                                                // color: AppColors.white,
                                               ),
                                             ),
                                           );
@@ -773,7 +768,8 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                                 height: 70,
                                                 decoration: BoxDecoration(
                                                   shape: BoxShape.circle,
-                                                  color: Colors.grey[200]!.withOpacity(0.5),
+                                                  color: Colors.grey[200]!
+                                                      .withOpacity(0.5),
                                                 ),
                                               ),
                                               SizedBox(height: 4.h),
@@ -781,7 +777,8 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                                 width: 50.w,
                                                 height: 10.h,
                                                 decoration: BoxDecoration(
-                                                  color: Colors.grey[200]!.withOpacity(0.5),
+                                                  color: Colors.grey[200]!
+                                                      .withOpacity(0.5),
                                                   borderRadius:
                                                       BorderRadius.circular(5),
                                                 ),
@@ -838,7 +835,8 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                                             child: Column(
                                               children: List.generate(
                                                 2,
-                                                (_) => const RestaurantCardShimmer(),
+                                                (_) =>
+                                                    const RestaurantCardShimmer(),
                                               ),
                                             ),
                                           ),
@@ -850,12 +848,12 @@ class RestaurantsPage extends GetView<RestaurantsController> {
 
                               SizedBox(height: 20.h),
                             ],
-                        );
-                      }),
-                    ],
+                          );
+                        }),
+                      ],
+                    ),
                   ),
                 ),
-              ),
               ),
             ),
           ],
@@ -913,25 +911,47 @@ class _CategoryChip extends StatelessWidget {
                   width: 24.w,
                   height: 24.w,
                   fit: BoxFit.cover,
-                  errorWidget: (context, url, error) => Icon(
-                    Icons.category_outlined,
-                    size: 24.sp,
-                    color: textColor,
-                  ),
+                  errorWidget: (context, url, error) {
+                   if (icon != null && icon!.isNotEmpty) {
+                    cprint("$label");
+                     return SvgPicture.network(icon!, errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.category,
+                          size: 16,
+                          color: Colors.grey,
+                        );
+                     },);
+                   }
+                   else {
+                     return const Icon(
+                       Icons.category,
+                       size: 16,
+                       color: Colors.grey,
+                     );
+                   }
+                  }
                 ),
               ),
               SizedBox(width: 8.w),
-            ] else if (icon != null && icon!.isNotEmpty) ...[
-              Text(
+            ]
+            else if (icon != null && icon!.isNotEmpty) ...[
+              SvgPicture.network(
                 icon!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 14.sp,
-                  fontFamily: 'IBM Plex Sans Arabic',
-                  fontWeight: FontWeight.w700,
-                  height: 1.43,
-                ),
+                width: 24.w,
+                height: 24.w,
+                color: textColor,
+                errorBuilder: (context, error, stackTrace) {
+                  return SizedBox(
+                    width: 24.w,
+                    height: 24.w,
+                    // color: Colors.grey[300],
+                    child: const Icon(
+                      Icons.category,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
+                  );
+                },
               ),
               SizedBox(width: 6.w),
             ],
@@ -956,8 +976,7 @@ class _CategoryChip extends StatelessWidget {
 class RestaurantCard extends StatelessWidget {
   final dynamic restaurant;
   final bool showClosedOverlay;
-    final Color? color;
-
+  final Color? color;
 
   const RestaurantCard({
     super.key,
@@ -968,6 +987,8 @@ class RestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bool isLight = theme.brightness == Brightness.light;
     final bool isFavorite = restaurant.isFavorite;
     final bool isActive = restaurant is Restaurant
         ? restaurant.isOpen
@@ -979,10 +1000,19 @@ class RestaurantCard extends StatelessWidget {
     final String? backgroundImage = restaurant.backgroundImage;
     final double lat = restaurant.lat;
     final double long = restaurant.long;
+    final String ratingDisplay = restaurant is Restaurant
+        ? restaurant.averageRatingDisplay
+        : (restaurant is BestRestaurant
+            ? (restaurant.rating.average != null
+                ? (restaurant.rating.average is num
+                    ? (restaurant.rating.average as num).toStringAsFixed(1)
+                    : restaurant.rating.average.toString())
+                : '0.0')
+            : '0.0');
 
     return Card(
       elevation: 0,
-      color: color,
+      color: color ?? (isLight ? Colors.white : theme.cardColor),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
@@ -1051,11 +1081,12 @@ class RestaurantCard extends StatelessWidget {
                           color: Colors.white.withOpacity(0.7),
                           borderColor: Colors.grey.withOpacity(0.5),
                           childWidget: Icon(
-                            (isFavorite) ? Icons.favorite : Icons.favorite_border,
+                            (isFavorite)
+                                ? Icons.favorite
+                                : Icons.favorite_border,
                             size: 16,
-                            color:  AppColors.primary,
+                            color: AppColors.primary,
                           ),
-
                         ),
                       ),
                       Positioned(
@@ -1077,7 +1108,7 @@ class RestaurantCard extends StatelessWidget {
                               ),
                               SizedBox(width: 4.w),
                               Text(
-                                '4.5',
+                                ratingDisplay,
                                 style: const TextStyle().textColorBold(
                                   fontSize: 10,
                                   color: const Color(0xFF101727),
@@ -1149,64 +1180,71 @@ class RestaurantCard extends StatelessWidget {
 
                     Builder(
                       builder: (context) {
-                        if (!Get.isRegistered<RestaurantsController>()) {
-                          return const SizedBox();
+                        String distanceText = '--';
+                        String priceText = '--';
+
+                        // Use selected address as the user's location when available.
+                        final addressController = Get.find<AddressController>();
+                        final activeAddress =
+                            addressController.activeAddress.value;
+
+                        if (activeAddress != null) {
+                          final distance = LocationUtils.calculateDistance(
+                            userLat: activeAddress.lat,
+                            userLong: activeAddress.long,
+                            restaurantLat: lat,
+                            restaurantLong: long,
+                          );
+                          distanceText = LocationUtils.formatDistance(distance);
+
+                          final price = LocationUtils.calculateDeliveryPrice(
+                            distanceInKm: distance,
+                          );
+                          priceText = LocationUtils.formatPrice(price);
+                        } else if (LocationUtils.isInitialized &&
+                            LocationUtils.currentLatitude != null &&
+                            LocationUtils.currentLongitude != null) {
+                          // Fallback to device location if no active address
+                          final distance = LocationUtils.calculateDistance(
+                            restaurantLat: lat,
+                            restaurantLong: long,
+                          );
+                          distanceText = LocationUtils.formatDistance(distance);
+
+                          final price = LocationUtils.calculateDeliveryPrice(
+                            distanceInKm: distance,
+                          );
+                          priceText = LocationUtils.formatPrice(price);
                         }
 
-                        final controller = Get.find<RestaurantsController>();
-                        return Obx(() {
-                          final userLat = controller.userLat;
-                          final userLong = controller.userLong;
-
-                          String distanceText = '--';
-                          String priceText = '--';
-
-                          if (userLat != null && userLong != null) {
-                            final distance = LocationUtils.calculateDistance(
-                              userLat: userLat,
-                              userLong: userLong,
-                              restaurantLat: lat,
-                              restaurantLong: long,
-                            );
-                            distanceText = LocationUtils.formatDistance(
-                              distance,
-                            );
-
-                            final price = LocationUtils.calculateDeliveryPrice(
-                              distanceInKm: distance,
-                            );
-                            priceText = LocationUtils.formatPrice(price);
-                          }
-
-                          return Row(
-                            children: [
-                              Text(
-                                "التوصيل: $priceText",
-                                style: const TextStyle().textColorMedium(
-                                  fontSize: 10.sp,
-                                  color: const Color(0xFF697282),
+                        return Row(
+                          children: [
+                            Text(
+                              "التوصيل: $priceText",
+                              style: const TextStyle().textColorMedium(
+                                fontSize: 10.sp,
+                                color: const Color(0xFF697282),
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Row(
+                              children: [
+                                SvgIcon(
+                                  iconName: "assets/svg/client/location.svg",
+                                  color: const Color(0xFF738DAD),
                                 ),
-                              ),
-                              SizedBox(width: 8.w),
-                              Row(
-                                children: [
-                                  SvgIcon(
-                                    iconName: "assets/svg/client/location.svg",
-                                    color: const Color(0xFF738DAD),
+                                SizedBox(width: 2.w),
+                                Text(
+                                  "المسافة: $distanceText",
+                                  style: const TextStyle().textColorMedium(
+                                    fontSize: 11.sp,
+                                    color: const Color(0xFF697282),
                                   ),
-                                  SizedBox(width: 2.w),
-                                  Text(
-                                    "المسافة: $distanceText",
-                                    style: const TextStyle().textColorMedium(
-                                      fontSize: 11.sp,
-                                      color: const Color(0xFF697282),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                        });
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
                       },
                     ),
                   ],

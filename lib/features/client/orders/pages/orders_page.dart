@@ -76,11 +76,13 @@ class OrdersPage extends StatelessWidget {
 
   Widget _buildTabSwitcher(BuildContext context) {
     final controller = Get.find<OrdersController>();
+    final theme = Theme.of(context);
+    final bool isLight = theme.brightness == Brightness.light;
     return Container(
       height: 48.h,
       decoration: BoxDecoration(
         // color: Theme.of(context).colorScheme.surface,
-        color:  Color(0xCCF3F4F6),
+        color:  isLight ?  Color(0xCCF3F4F6) :  Color(0xFF0F121A),
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: TabBar(

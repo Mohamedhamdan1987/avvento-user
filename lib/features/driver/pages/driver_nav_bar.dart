@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../../core/widgets/reusable/bottom_nav_bar.dart';
+import '../../../core/utils/location_utils.dart';
 import '../home/pages/driver_home_page.dart';
 import '../orders/pages/driver_my_orders_page.dart';
 import '../wallet/pages/driver_wallet_page.dart';
@@ -22,6 +22,22 @@ class _DriverNavBarState extends State<DriverNavBar> {
     const DriverWalletPage(),
     const DriverAccountPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Request location permission when nav bar loads
+    _requestLocationPermission();
+  }
+
+  Future<void> _requestLocationPermission() async {
+    // Wait a bit for the UI to be ready
+    await Future.delayed(const Duration(milliseconds: 500));
+    // Request location permission if not already granted
+    if (!LocationUtils.isInitialized) {
+      await LocationUtils.ensureLocationPermission();
+    }
+  }
 
   void _onTap(int index) {
     setState(() {

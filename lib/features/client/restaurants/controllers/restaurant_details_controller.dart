@@ -1,3 +1,4 @@
+import 'package:avvento/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/utils/show_snackbar.dart';
@@ -13,6 +14,7 @@ class RestaurantDetailsController extends GetxController {
   final RestaurantsService _restaurantsService = RestaurantsService();
   final String restaurantId;
 
+
   RestaurantDetailsController({required this.restaurantId});
 
   // Observable state
@@ -22,10 +24,10 @@ class RestaurantDetailsController extends GetxController {
   final RxList<SubCategory> _subCategories = <SubCategory>[].obs;
   final RxList<MenuItem> _allItems = <MenuItem>[].obs;
   final RxList<MenuItem> _filteredItems = <MenuItem>[].obs;
-  
+
   final RxString _selectedCategoryId = ''.obs;
   final RxString _selectedSubCategoryId = ''.obs;
-  
+
   final RxBool _isLoadingRestaurantDetails = false.obs;
   final RxBool _isLoadingCategories = false.obs;
   final RxBool _isLoadingSchedule = false.obs;
@@ -41,10 +43,10 @@ class RestaurantDetailsController extends GetxController {
   List<SubCategory> get subCategories => _subCategories;
   List<MenuItem> get allItems => _allItems;
   List<MenuItem> get items => _filteredItems;
-  
+
   String get selectedCategoryId => _selectedCategoryId.value;
   String get selectedSubCategoryId => _selectedSubCategoryId.value;
-  
+
   bool get isLoadingRestaurantDetails => _isLoadingRestaurantDetails.value;
   bool get isLoadingSchedule => _isLoadingSchedule.value;
   bool get isLoadingCategories => _isLoadingCategories.value;
@@ -63,11 +65,7 @@ class RestaurantDetailsController extends GetxController {
   Future<void> fetchInitialData() async {
     await getRestaurantDetails();
     if (restaurant != null) {
-      await Future.wait([
-        fetchCategories(),
-        fetchItems(),
-        fetchSchedule(),
-      ]);
+      await Future.wait([fetchCategories(), fetchItems(), fetchSchedule()]);
     }
   }
 
@@ -75,14 +73,13 @@ class RestaurantDetailsController extends GetxController {
     return _allItems.firstWhereOrNull((i) => i.id == itemId)?.isFav ?? false;
   }
 
-
   Future<void> toggleFavorite(String itemId) async {
     final index = _allItems.indexWhere((i) => i.id == itemId);
     if (index == -1) return;
-    
+
     final currentItem = _allItems[index];
     final bool wasFav = currentItem.isFav;
-    
+
     try {
       // Optimistic update
       _allItems[index] = currentItem.copyWith(isFav: !wasFav);
@@ -98,7 +95,9 @@ class RestaurantDetailsController extends GetxController {
       // Rollback on error
       final rollbackIndex = _allItems.indexWhere((i) => i.id == itemId);
       if (rollbackIndex != -1) {
-        _allItems[rollbackIndex] = _allItems[rollbackIndex].copyWith(isFav: wasFav);
+        _allItems[rollbackIndex] = _allItems[rollbackIndex].copyWith(
+          isFav: wasFav,
+        );
         _filterItems();
       }
     }
@@ -106,9 +105,12 @@ class RestaurantDetailsController extends GetxController {
 
   Future<void> getRestaurantDetails() async {
     try {
-      _isLoadingRestaurantDetails.value = true; // Or use a separate loading for restaurant details?
+      _isLoadingRestaurantDetails.value =
+          true; // Or use a separate loading for restaurant details?
       _errorMessage.value = '';
-      final restaurant = await _restaurantsService.getRestaurantDetails(restaurantId);
+      final restaurant = await _restaurantsService.getRestaurantDetails(
+        restaurantId,
+      );
       _restaurant.value = restaurant;
     } catch (e) {
       _errorMessage.value = 'فشل تحميل بيانات المطعم: ${e.toString()}';
@@ -120,7 +122,9 @@ class RestaurantDetailsController extends GetxController {
   Future<void> fetchSchedule() async {
     try {
       _isLoadingSchedule.value = true;
-      final schedule = await _restaurantsService.getRestaurantSchedule(restaurantId);
+      final schedule = await _restaurantsService.getRestaurantSchedule(
+        restaurantId,
+      );
       _schedule.value = schedule;
     } catch (e) {
       print('Error fetching schedule: $e');
@@ -134,7 +138,9 @@ class RestaurantDetailsController extends GetxController {
       _isLoadingCategories.value = true;
       _errorMessage.value = '';
       if (restaurant == null) return;
-      final categories = await _restaurantsService.getMenuCategories(restaurant!.user.id);
+      final categories = await _restaurantsService.getMenuCategories(
+        restaurant!.user.id,
+      );
       _categories.assignAll(categories);
     } catch (e) {
       _errorMessage.value = 'فشل تحميل التصنيفات: ${e.toString()}';
@@ -148,18 +154,19 @@ class RestaurantDetailsController extends GetxController {
       _isLoadingItems.value = true;
       _errorMessage.value = '';
       if (restaurant == null) return;
+      cprint("-=-=-=-=-=-");
       final items = await _restaurantsService.getMenuItems(restaurant!.user.id);
-      
+
       // Sort items based on category order
       if (_categories.isNotEmpty) {
         items.sort((a, b) {
           var indexA = _categories.indexWhere((c) => c.id == a.categoryId);
           var indexB = _categories.indexWhere((c) => c.id == b.categoryId);
-          
+
           // Put items with unknown categories at the end
           if (indexA == -1) indexA = 999999;
           if (indexB == -1) indexB = 999999;
-          
+
           return indexA.compareTo(indexB);
         });
       }
@@ -184,7 +191,7 @@ class RestaurantDetailsController extends GetxController {
       await fetchSubCategories(categoryId);
     }
     // As per user request: selecting a category does NOT filter "All Items"
-    _filterItems(); 
+    _filterItems();
   }
 
   Future<void> fetchSubCategories(String categoryId) async {
@@ -209,26 +216,33 @@ class RestaurantDetailsController extends GetxController {
   }
 
   void _filterItems() {
-    // If no subcategory is selected, show all items (or filter by category if that was intended, 
+    // If no subcategory is selected, show all items (or filter by category if that was intended,
     // but user said "All Items has no relation to category selection")
     // Let's assume subcategory selection DOES filter items.
-    
+    _filteredItems.assignAll(_allItems);
+
     if (_selectedSubCategoryId.value.isEmpty) {
       // If we want to filter by category when NO subcategory is selected, we can uncomment below.
       // However, user said "جميع الاصناف ليس لها علاقة بالضغط على كاتيجوري معين"
-      // So if no subcategory is selected, we show everything? 
+      // So if no subcategory is selected, we show everything?
       // Or maybe we filter by category but the user felt it was wrong?
-      // "جميع الاصناف ليس لها علاقة بالضغط على كاتيجوري معين" -> This means 
+      // "جميع الاصناف ليس لها علاقة بالضغط على كاتيجوري معين" -> This means
       // selecting a category shouldn't filter the bottom list.
-      
+
       _filteredItems.assignAll(_allItems);
     } else {
-      // Filter by subcategory (we need subCategoryId in MenuItem model maybe? 
+      // Filter by subcategory (we need subCategoryId in MenuItem model maybe?
       // I added it to the model earlier)
       _filteredItems.assignAll(
-        _allItems.where((item) => item.variations.any((v) => v.id == _selectedSubCategoryId.value)).toList(), 
+        _allItems
+            .where(
+              (item) => item.variations.any(
+                (v) => v.id == _selectedSubCategoryId.value,
+              ),
+            )
+            .toList(),
       );
-      // Actually, let's fetch from API to be safe if local model doesn't have subcategory yet 
+      // Actually, let's fetch from API to be safe if local model doesn't have subcategory yet
       // or if it's complex.
       _fetchFilteredItems();
     }
@@ -266,7 +280,7 @@ class RestaurantDetailsController extends GetxController {
         selectedAddOns: selectedAddOns,
         notes: notes,
       );
-      
+
       // Refresh cart controller if it exists
       if (Get.isRegistered<CartController>()) {
         Get.find<CartController>().refreshCarts();

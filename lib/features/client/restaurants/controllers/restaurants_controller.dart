@@ -152,11 +152,7 @@ class RestaurantsController extends GetxController {
         );
       }
 
-      if (refresh) {
-        _restaurants.value = response.data;
-      } else {
-        _restaurants.assignAll(response.data);
-      }
+      _restaurants.assignAll(response.data);
 
       _totalPages.value = response.pagination.totalPages;
       _currentPage.value = response.pagination.page;
@@ -225,6 +221,7 @@ class RestaurantsController extends GetxController {
       fetchRestaurants(refresh: true),
       fetchBestRestaurants(),
       fetchStories(),
+      fetchCategories(),
     ]);
   }
 

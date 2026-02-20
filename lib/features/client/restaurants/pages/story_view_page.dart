@@ -29,8 +29,8 @@ class _StoryViewPageState extends State<StoryViewPage> {
   List<StoryItem> _storyItems = [];
   int _currentIndex = 0;
   bool _isLoading = true;
-  final Map<String, bool> _lovedState = {};
-  final Map<String, bool> _viewedState = {};
+  // final Map<String, bool> _lovedState = {};
+  // final Map<String, bool> _viewedState = {};
   final TextEditingController _replyController = TextEditingController();
   final FocusNode _replyFocusNode = FocusNode();
 
@@ -40,10 +40,10 @@ class _StoryViewPageState extends State<StoryViewPage> {
     super.initState();
     _currentIndex = widget.initialIndex;
     // Initialize loved & viewed state from API data
-    for (final story in widget.stories) {
-      _lovedState[story.id] = story.isLoved;
-      _viewedState[story.id] = story.isViewed;
-    }
+    // for (final story in widget.stories) {
+    //   _lovedState[story.id] = story.isLoved;
+    //   _viewedState[story.id] = story.isViewed;
+    // }
     _initializeStories();
   }
 
@@ -165,8 +165,8 @@ class _StoryViewPageState extends State<StoryViewPage> {
                  final story = widget.stories[storyIndex];
 
                  // Only call viewStory API if not already viewed
-                 if (_viewedState[story.id] != true) {
-                   _viewedState[story.id] = true;
+                 if (story.isViewed != true) {
+
                    Get.find<RestaurantsController>().viewStory(story.id);
                  }
 
@@ -353,11 +353,11 @@ class _StoryViewPageState extends State<StoryViewPage> {
                 GestureDetector(
                   onTap: () async {
                     final story = widget.stories[_currentIndex];
-                    final isCurrentlyLoved = _lovedState[story.id] ?? false;
+                    final isCurrentlyLoved = story.isLoved ?? false;
                     // Optimistic toggle
-                    setState(() {
-                      _lovedState[story.id] = !isCurrentlyLoved;
-                    });
+                    // setState(() {
+                    //   _lovedState[story.id] = !isCurrentlyLoved;
+                    // });
                     
                     // Call API
                     await Get.find<RestaurantsController>().loveStory(story.id);
@@ -365,7 +365,7 @@ class _StoryViewPageState extends State<StoryViewPage> {
                   child: Builder(
                     builder: (context) {
                       final story = widget.stories[_currentIndex];
-                      final isLoved = _lovedState[story.id] ?? false;
+                      final isLoved = story.isLoved;
                       return Container(
                         width: 54.w,
                         height: 54.w,

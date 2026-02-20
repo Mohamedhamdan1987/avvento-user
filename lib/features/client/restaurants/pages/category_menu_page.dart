@@ -1,4 +1,5 @@
 import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
+import 'package:avvento/core/widgets/shimmer/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -51,7 +52,7 @@ class CategoryMenuPage extends StatelessWidget {
             // Subcategories Horizontal List
             Obx(() {
               if (controller.isLoadingSubCategories && controller.subCategories.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
+                return const _SubCategoriesShimmer();
               }
               if (controller.subCategories.isEmpty) return const SizedBox.shrink();
               
@@ -121,7 +122,7 @@ class CategoryMenuPage extends StatelessWidget {
             Expanded(
               child: Obx(() {
                 if (controller.isLoadingItems && controller.items.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const _ItemsListShimmer();
                 }
                 
                 // When we are in this page, we only want to see items 
@@ -275,6 +276,66 @@ class CategoryMenuPage extends StatelessWidget {
           ),
           Icon(Icons.add, size: 14.w, color: Colors.white),
         ],
+      ),
+    );
+  }
+}
+
+class _SubCategoriesShimmer extends StatelessWidget {
+  const _SubCategoriesShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoading(
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 16.h),
+        height: 72.h,
+        child: ListView.separated(
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          scrollDirection: Axis.horizontal,
+          itemCount: 6,
+          separatorBuilder: (_, __) => SizedBox(width: 8.w),
+          itemBuilder: (_, __) => ShimmerBox(
+            width: 80.w,
+            height: 40.h,
+            borderRadius: 20,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ItemsListShimmer extends StatelessWidget {
+  const _ItemsListShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoading(
+      child: ListView.builder(
+        padding: EdgeInsets.symmetric(horizontal: 24.w),
+        itemCount: 6,
+        itemBuilder: (_, __) => Padding(
+          padding: EdgeInsets.only(bottom: 16.h),
+          child: Row(
+            children: [
+              ShimmerBox(width: 88.w, height: 76.h, borderRadius: 10),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShimmerBox(width: 140.w, height: 14.h, borderRadius: 8),
+                    SizedBox(height: 8.h),
+                    ShimmerBox(width: double.infinity, height: 12.h, borderRadius: 6),
+                    SizedBox(height: 8.h),
+                    ShimmerBox(width: 60.w, height: 12.h, borderRadius: 6),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

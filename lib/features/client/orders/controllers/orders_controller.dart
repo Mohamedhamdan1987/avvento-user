@@ -1,4 +1,4 @@
-import 'package:avvento/core/utils/logger.dart';
+import 'package:avvento/core/utils/logger.dart' show cprint;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -21,26 +21,29 @@ class OrdersController extends GetxController {
   }
 
   Future<void> fetchOrders() async {
-    // try {
+    try {
       isLoading.value = true;
       final response = await _ordersService.getUserOrders();
-      
+
       // Filter orders into active and previous
       // Assuming 'completed' and 'cancelled' are previous, everything else is active
-      activeOrders.assignAll(response.orders.where((o) => 
-        o.status != 'completed' && o.status != 'cancelled' && o.status != 'delivered' && o.status != 'delivery_received'
-      ).toList());
-      
-      previousOrders.assignAll(response.orders.where((o) => 
-        o.status == 'completed' || o.status == 'cancelled' || o.status == 'delivered' || o.status == 'delivery_received'
-      ).toList());
-      
-    // } catch (e) {
-    //   cprint("sdsdsd :${e.toString()}");
-    //   showSnackBar(message: 'فشل في تحميل الطلبات', isError: true);
-    // } finally {
-    //   isLoading.value = false;
-    // }
+      activeOrders.assignAll(response.orders.where((o) =>
+          o.status != 'completed' &&
+          o.status != 'cancelled' &&
+          o.status != 'delivered' &&
+          o.status != 'delivery_received').toList());
+
+      previousOrders.assignAll(response.orders.where((o) =>
+          o.status == 'completed' ||
+          o.status == 'cancelled' ||
+          o.status == 'delivered' ||
+          o.status == 'delivery_received').toList());
+    } catch (e) {
+      cprint('فشل في تحميل الطلبات: $e');
+      showSnackBar(message: 'فشل في تحميل الطلبات', isError: true);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> refreshOrders() async {

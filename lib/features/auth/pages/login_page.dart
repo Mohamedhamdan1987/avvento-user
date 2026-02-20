@@ -6,6 +6,7 @@ import '../../../core/routes/app_routes.dart';
 import '../../../core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import '../../../core/widgets/reusable/custom_text_field.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/location_utils.dart';
 import '../controllers/auth_controller.dart';
 
 class LoginPage extends StatefulWidget {
@@ -30,6 +31,17 @@ class _LoginPageState extends State<LoginPage> {
       // // usernameController.text = 'mohamed';
       // usernameController.text = 'driver';
       // passwordController.text = '1234567';
+    }
+    // Request location permission when login page loads
+    _requestLocationPermission();
+  }
+
+  Future<void> _requestLocationPermission() async {
+    // Wait a bit for the UI to be ready
+    await Future.delayed(const Duration(milliseconds: 500));
+    // Request location permission if not already granted
+    if (!LocationUtils.isInitialized) {
+      await LocationUtils.ensureLocationPermission();
     }
   }
 

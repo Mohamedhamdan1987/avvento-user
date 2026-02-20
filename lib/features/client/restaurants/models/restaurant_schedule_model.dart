@@ -15,11 +15,11 @@ class WeeklySchedule {
 
   factory WeeklySchedule.fromJson(Map<String, dynamic> json) {
     return WeeklySchedule(
-      day: json['day'] as String,
-      isClosed: json['isClosed'] as bool,
-      openTime: json['openTime'] as String,
-      closeTime: json['closeTime'] as String,
-      note: json['note'] as String? ?? '',
+      day: json['day']?.toString() ?? '',
+      isClosed: json['isClosed'] == true,
+      openTime: json['openTime']?.toString() ?? '00:00',
+      closeTime: json['closeTime']?.toString() ?? '23:59',
+      note: json['note']?.toString() ?? '',
     );
   }
 
@@ -53,12 +53,12 @@ class CurrentDayStatus {
 
   factory CurrentDayStatus.fromJson(Map<String, dynamic> json) {
     return CurrentDayStatus(
-      day: json['day'] as String,
-      isClosed: json['isClosed'] as bool,
-      openTime: json['openTime'] as String,
-      closeTime: json['closeTime'] as String,
-      note: json['note'] as String? ?? '',
-      isCurrentlyOpen: json['isCurrentlyOpen'] as bool,
+      day: json['day']?.toString() ?? '',
+      isClosed: json['isClosed'] == true,
+      openTime: json['openTime']?.toString() ?? '00:00',
+      closeTime: json['closeTime']?.toString() ?? '23:59',
+      note: json['note']?.toString() ?? '',
+      isCurrentlyOpen: json['isCurrentlyOpen'] == true,
     );
   }
 }
@@ -68,25 +68,41 @@ class RestaurantSchedule {
   final List<WeeklySchedule> weeklySchedule;
   final bool isOpen;
   final CurrentDayStatus currentDayStatus;
-  final DateTime lastUpdatedAt;
+  final DateTime? lastUpdatedAt;
 
   RestaurantSchedule({
     required this.restaurantId,
     required this.weeklySchedule,
     required this.isOpen,
     required this.currentDayStatus,
-    required this.lastUpdatedAt,
+    this.lastUpdatedAt,
   });
 
   factory RestaurantSchedule.fromJson(Map<String, dynamic> json) {
+    final lastUpdatedAtRaw = json['lastUpdatedAt'];
+    final weeklyScheduleRaw = json['weeklySchedule'];
+    final currentDayStatusRaw = json['currentDayStatus'];
     return RestaurantSchedule(
-      restaurantId: json['restaurantId'] as String,
-      weeklySchedule: (json['weeklySchedule'] as List<dynamic>)
-          .map((e) => WeeklySchedule.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      isOpen: json['isOpen'] as bool,
-      currentDayStatus: CurrentDayStatus.fromJson(json['currentDayStatus'] as Map<String, dynamic>),
-      lastUpdatedAt: DateTime.parse(json['lastUpdatedAt'] as String),
+      restaurantId: json['restaurantId']?.toString() ?? '',
+      weeklySchedule: weeklyScheduleRaw is List
+          ? (weeklyScheduleRaw)
+              .map((e) => WeeklySchedule.fromJson(Map<String, dynamic>.from(e as Map)))
+              .toList()
+          : [],
+      isOpen: json['isOpen'] == true,
+      currentDayStatus: currentDayStatusRaw is Map
+          ? CurrentDayStatus.fromJson(Map<String, dynamic>.from(currentDayStatusRaw))
+          : CurrentDayStatus(
+              day: '',
+              isClosed: true,
+              openTime: '00:00',
+              closeTime: '23:59',
+              note: '',
+              isCurrentlyOpen: false,
+            ),
+      lastUpdatedAt: lastUpdatedAtRaw != null
+          ? DateTime.tryParse(lastUpdatedAtRaw.toString())
+          : null,
     );
   }
 }

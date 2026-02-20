@@ -116,7 +116,9 @@ class AddressListPage extends StatelessWidget {
               // Return selected address
               Get.back(result: address);
             }
-          : null,
+          : (!address.isActive
+              ? () => controller.setActive(address.id)
+              : null),
       child: Container(
         margin: EdgeInsets.only(bottom: 16.h),
         padding: EdgeInsets.all(16.w),
@@ -208,14 +210,34 @@ class AddressListPage extends StatelessWidget {
             if (!isSelectionMode)
               Row(
                 children: [
-                  if (!address.isActive)
-                    IconButton(
-                      onPressed: () => controller.setActive(address.id),
-                      icon: const Icon(
-                        Icons.check_circle_outline,
-                        color: AppColors.textPlaceholder,
-                      ),
-                    ),
+                  // Check / loading indicator
+                  Obx(() {
+                    final isSettingActive =
+                        controller.settingActiveId.value == address.id;
+                    if (isSettingActive) {
+                      return SizedBox(
+                        width: 24.w,
+                        height: 24.h,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.purple,
+                        ),
+                      );
+                    }
+                    if (address.isActive) {
+                      return Icon(
+                        Icons.check_circle,
+                        color: AppColors.successGreen,
+                        size: 24.r,
+                      );
+                    }
+                    return Icon(
+                      Icons.check_circle_outline,
+                      color: AppColors.textPlaceholder,
+                      size: 24.r,
+                    );
+                  }),
+                  SizedBox(width: 4.w),
                   IconButton(
                     onPressed: () =>
                         _showDeleteConfirmation(address, controller),

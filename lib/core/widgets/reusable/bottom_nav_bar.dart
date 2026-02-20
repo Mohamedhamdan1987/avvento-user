@@ -29,7 +29,7 @@ class BottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      height: 73.h,
+      height: 80.h,
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF111827) : Theme.of(context).cardColor,
         border: Border(
@@ -50,6 +50,7 @@ class BottomNavBar extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: navItems.asMap().entries.map((entry) {
           final index = entry.key;
           final item = entry.value;

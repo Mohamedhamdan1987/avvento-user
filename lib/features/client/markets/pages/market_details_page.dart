@@ -1,13 +1,13 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:avvento/core/theme/app_text_styles.dart';
-import 'package:avvento/core/utils/logger.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/location_utils.dart';
+import '../../address/controllers/address_controller.dart';
 import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
 import '../../../../core/widgets/reusable/svg_icon.dart';
 import '../../../../core/widgets/shimmer/shimmer_loading.dart';
@@ -471,18 +471,39 @@ class MarketDetailsPage extends StatelessWidget {
             label: 'التقييم',
           ),
           Container(width: 1.w, height: 32.h, color: const Color(0xFFF3F4F6)),
-          _buildStatItem(
-            context,
-            icon: 'assets/svg/client/restaurant_details/clock.svg',
-            value: LocationUtils.formatDistance(
-              LocationUtils.calculateDistance(
-                userLat: LocationUtils.currentLatitude,
-                userLong: LocationUtils.currentLongitude,
-                restaurantLat: controller.market!.lat,
-                restaurantLong: controller.market!.long,
-              ),
-            ),
-            label: 'المسافة',
+          Builder(
+            builder: (context) {
+              final addressController = Get.find<AddressController>();
+              String distanceText = '--';
+
+              // Prefer selected address as the user's location
+              final activeAddress = addressController.activeAddress.value;
+              if (activeAddress != null) {
+                final distance = LocationUtils.calculateDistance(
+                  userLat: activeAddress.lat,
+                  userLong: activeAddress.long,
+                  restaurantLat: controller.market!.lat,
+                  restaurantLong: controller.market!.long,
+                );
+                distanceText = LocationUtils.formatDistance(distance);
+              } else if (LocationUtils.isInitialized &&
+                  LocationUtils.currentLatitude != null &&
+                  LocationUtils.currentLongitude != null) {
+                // Fallback to device location if no active address
+                final distance = LocationUtils.calculateDistance(
+                  restaurantLat: controller.market!.lat,
+                  restaurantLong: controller.market!.long,
+                );
+                distanceText = LocationUtils.formatDistance(distance);
+              }
+
+              return _buildStatItem(
+                context,
+                icon: 'assets/svg/client/restaurant_details/clock.svg',
+                value: distanceText,
+                label: 'المسافة',
+              );
+            },
           ),
         ],
       ),

@@ -22,16 +22,18 @@ class AddressModel {
   });
 
   factory AddressModel.fromJson(Map<String, dynamic> json) {
+    final latRaw = json['lat'];
+    final longRaw = json['long'];
     return AddressModel(
-      id: json['_id'] ?? '',
-      user: json['user'] ?? '',
-      label: json['label'] ?? '',
-      address: json['address'] ?? '',
-      lat: (json['lat'] as num).toDouble(),
-      long: (json['long'] as num).toDouble(),
-      isActive: json['isActive'] ?? false,
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      user: json['user']?.toString() ?? '',
+      label: json['label']?.toString() ?? '',
+      address: json['address']?.toString() ?? '',
+      lat: (latRaw is num) ? latRaw.toDouble() : double.tryParse(latRaw?.toString() ?? '') ?? 0.0,
+      long: (longRaw is num) ? longRaw.toDouble() : double.tryParse(longRaw?.toString() ?? '') ?? 0.0,
+      isActive: json['isActive'] == true,
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'].toString()) : null,
     );
   }
 

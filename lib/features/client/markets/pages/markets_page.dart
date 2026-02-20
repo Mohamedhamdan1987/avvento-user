@@ -1,4 +1,3 @@
-import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_icon_button_app.dart';
@@ -22,9 +21,11 @@ class MarketsPage extends GetView<MarketsController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final addressController = Get.find<AddressController>();
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -35,14 +36,10 @@ class MarketsPage extends GetView<MarketsController> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomIconButtonApp(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF111827)
-                        : const Color(0xFFF9FAFB),
+                    color: isDark ? AppColors.surface : const Color(0xFFF9FAFB),
                     childWidget: SvgIcon(
                       iconName: 'assets/svg/arrow-right.svg',
-                      color:
-                          Theme.of(context).textTheme.titleLarge?.color ??
-                          AppColors.textDark,
+                      color: theme.textTheme.titleLarge?.color ?? AppColors.textDark,
                     ),
                     onTap: () => Get.back(),
                   ),
@@ -70,10 +67,12 @@ class MarketsPage extends GetView<MarketsController> {
                                 Flexible(
                                   child: Obx(
                                     () => Text(
-                                      "${addressController.activeAddress.value?.label ?? ''} - ${addressController.activeAddress.value?.address ?? ''}",
-                                      style: const TextStyle().textColorLight(
+                                      (addressController.activeAddress.value != null)
+                                          ? "${addressController.activeAddress.value?.label ?? ''} - ${addressController.activeAddress.value?.address ?? ''}"
+                                          : "اختر عنوان",
+                                      style: TextStyle().textColorLight(
                                         fontSize: 12,
-                                        color: const Color(0xFF101727),
+                                        color: theme.textTheme.bodyMedium?.color ?? AppColors.textDark,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -89,9 +88,7 @@ class MarketsPage extends GetView<MarketsController> {
                     ),
                   ),
                   CustomIconButtonApp(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF111827)
-                        : const Color(0xFFF9FAFB),
+                    color: isDark ? AppColors.surface : const Color(0xFFF9FAFB),
                     childWidget: SvgIcon(
                       iconName: "assets/svg/wallet/wallet.svg",
                     ),
@@ -146,10 +143,21 @@ class MarketsPage extends GetView<MarketsController> {
                                   },
                                 );
                               },
+                              style: TextStyle(
+                                color: theme.textTheme.bodyLarge?.color,
+                              ),
                               decoration: InputDecoration(
                                 filled: true,
+                                fillColor: theme.cardColor,
                                 hintText: 'ابحث عن ماركت...',
-                                prefixIcon: const Icon(Icons.search),
+                                hintStyle: TextStyle(
+                                  color: theme.hintColor,
+                                  fontFamily: 'IBM Plex Sans Arabic',
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  color: theme.iconTheme.color ?? theme.hintColor,
+                                ),
                                 suffixIcon: CustomIconButtonApp(
                                   childWidget: SvgIcon(
                                     iconName: "assets/svg/client/search.svg",
@@ -158,23 +166,23 @@ class MarketsPage extends GetView<MarketsController> {
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(24),
-                                  borderSide: const BorderSide(
+                                  borderSide: BorderSide(
                                     width: 0.76,
-                                    color: Color(0xFFE4E4E4),
+                                    color: theme.dividerColor,
                                   ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(24),
-                                  borderSide: const BorderSide(
+                                  borderSide: BorderSide(
                                     width: 0.76,
-                                    color: Color(0xFFE4E4E4),
+                                    color: theme.dividerColor,
                                   ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(24),
-                                  borderSide: const BorderSide(
+                                  borderSide: BorderSide(
                                     width: 0.76,
-                                    color: Color(0xFFE4E4E4),
+                                    color: AppColors.purple,
                                   ),
                                 ),
                               ),
@@ -186,7 +194,7 @@ class MarketsPage extends GetView<MarketsController> {
 
                         // --- Content based on state ---
                         if (controller.isLoading && controller.markets.isEmpty)
-                          _buildMarketsShimmerSliver()
+                          _buildMarketsShimmerSliver(context)
                         else if (controller.hasError && controller.markets.isEmpty)
                           SliverFillRemaining(
                             hasScrollBody: false,
@@ -194,16 +202,19 @@ class MarketsPage extends GetView<MarketsController> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.error_outline,
                                     size: 64,
-                                    color: Colors.red,
+                                    color: theme.colorScheme.error,
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
                                     controller.errorMessage,
                                     textAlign: TextAlign.center,
-                                    style: const TextStyle(fontSize: 16),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: theme.textTheme.bodyLarge?.color,
+                                    ),
                                   ),
                                   const SizedBox(height: 16),
                                   ElevatedButton(
@@ -224,14 +235,14 @@ class MarketsPage extends GetView<MarketsController> {
                                   Icon(
                                     Icons.store,
                                     size: 64,
-                                    color: Colors.grey[400],
+                                    color: theme.disabledColor,
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
                                     'لا توجد ماركتات',
                                     style: TextStyle(
                                       fontSize: 18,
-                                      color: Colors.grey[600],
+                                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ],
@@ -272,14 +283,14 @@ class MarketsPage extends GetView<MarketsController> {
                                                   Container(
                                                     height: 144.h,
                                                     decoration: BoxDecoration(
-                                                      color: Colors.grey[200],
+                                                      color: theme.cardColor,
                                                       borderRadius: BorderRadius.circular(16),
                                                     ),
-                                                    child: const Center(
+                                                    child: Center(
                                                       child: Icon(
                                                         Icons.image_outlined,
                                                         size: 40,
-                                                        color: Colors.grey,
+                                                        color: theme.disabledColor,
                                                       ),
                                                     ),
                                                   ),
@@ -391,7 +402,14 @@ class MarketsPage extends GetView<MarketsController> {
     );
   }
 
-  Widget _buildMarketsShimmerSliver() {
+  Widget _buildMarketsShimmerSliver(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = theme.cardColor;
+    final shimmerColor = isDark ? theme.colorScheme.surface : const Color(0xFFF3F4F6);
+    final bottomColor = isDark ? theme.colorScheme.surface : const Color(0xFFF9FAFB);
+    final borderColor = isDark ? theme.dividerColor : Colors.black.withValues(alpha: 0.05);
+
     return SliverPadding(
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
       sliver: SliverList(
@@ -402,10 +420,10 @@ class MarketsPage extends GetView<MarketsController> {
               child: Container(
                 height: 240.h,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardColor,
                   borderRadius: BorderRadius.circular(32.r),
                   border: Border.all(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: borderColor,
                     width: 0.76,
                   ),
                 ),
@@ -420,7 +438,7 @@ class MarketsPage extends GetView<MarketsController> {
                             width: 64.w,
                             height: 64.w,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF3F4F6),
+                              color: shimmerColor,
                               borderRadius: BorderRadius.circular(20.r),
                             ),
                           ),
@@ -433,7 +451,7 @@ class MarketsPage extends GetView<MarketsController> {
                                   height: 20.h,
                                   width: 120.w,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF3F4F6),
+                                    color: shimmerColor,
                                     borderRadius: BorderRadius.circular(6.r),
                                   ),
                                 ),
@@ -442,7 +460,7 @@ class MarketsPage extends GetView<MarketsController> {
                                   height: 14.h,
                                   width: 160.w,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF3F4F6),
+                                    color: shimmerColor,
                                     borderRadius: BorderRadius.circular(6.r),
                                   ),
                                 ),
@@ -456,7 +474,7 @@ class MarketsPage extends GetView<MarketsController> {
                       child: Container(
                         margin: EdgeInsets.symmetric(horizontal: 20.w),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
+                          color: bottomColor,
                           borderRadius: BorderRadius.circular(24.r),
                         ),
                       ),
@@ -491,10 +509,17 @@ class MarketCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final bool hasProducts = productItems != null && productItems!.isNotEmpty;
     final int totalProducts = totalProductCount;
 
     final bool isOpen = market.isOpen;
+    final borderColor = isDark ? theme.dividerColor : Colors.black.withValues(alpha: 0.05);
+    final titleColor = theme.textTheme.titleLarge?.color ?? AppColors.textDark;
+    final secondaryColor = theme.textTheme.bodySmall?.color ?? const Color(0xFF99A1AF);
+    final productsSectionBg = isDark ? theme.colorScheme.surface : const Color(0xFFF9FAFB);
+    final logoBorderColor = isDark ? theme.dividerColor : const Color(0xFFF3F4F6);
 
     return GestureDetector(
       onTap: () {
@@ -505,10 +530,10 @@ class MarketCard extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(32.r),
               border: Border.all(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: borderColor,
                 width: 0.76,
               ),
             ),
@@ -528,7 +553,7 @@ class MarketCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20.r),
                           border: Border.all(
-                            color: const Color(0xFFF3F4F6),
+                            color: logoBorderColor,
                             width: 0.76,
                           ),
                         ),
@@ -539,9 +564,9 @@ class MarketCard extends StatelessWidget {
                                   imageUrl: market.logo!,
                                   fit: BoxFit.cover,
                                   errorWidget: (context, url, error) =>
-                                      _buildLogoPlaceholder(),
+                                      _buildLogoPlaceholder(context),
                                 )
-                              : _buildLogoPlaceholder(),
+                              : _buildLogoPlaceholder(context),
                         ),
                       ),
                       SizedBox(width: 12.w),
@@ -555,9 +580,9 @@ class MarketCard extends StatelessWidget {
                                 Flexible(
                                   child: Text(
                                     market.name,
-                                    style: const TextStyle().textColorBold(
+                                    style: TextStyle().textColorBold(
                                       fontSize: 18,
-                                      color: AppColors.textDark,
+                                      color: titleColor,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                     textDirection: TextDirection.rtl,
@@ -567,6 +592,7 @@ class MarketCard extends StatelessWidget {
                                 // Rating badge
                                 _RatingBadge(
                                   rating: market.averageRatingDisplay,
+                                  isDark: isDark,
                                 ),
                                 // Delivery info row
                               ],
@@ -598,8 +624,8 @@ class MarketCard extends StatelessWidget {
                                   child: Container(
                                     width: 4.w,
                                     height: 4.w,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFD1D5DC),
+                                    decoration: BoxDecoration(
+                                      color: theme.dividerColor,
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -611,16 +637,16 @@ class MarketCard extends StatelessWidget {
                                     Icon(
                                       Icons.access_time_rounded,
                                       size: 12.sp,
-                                      color: const Color(0xFF99A1AF),
+                                      color: secondaryColor,
                                     ),
                                     SizedBox(width: 2.w),
                                     Text(
                                       market.deliveryTime > 0
                                           ? '${market.deliveryTime} د'
                                           : '-- د',
-                                      style: const TextStyle().textColorMedium(
+                                      style: TextStyle().textColorMedium(
                                         fontSize: 12,
-                                        color: const Color(0xFF99A1AF),
+                                        color: secondaryColor,
                                       ),
                                       textDirection: TextDirection.rtl,
                                     ),
@@ -632,8 +658,8 @@ class MarketCard extends StatelessWidget {
                                   child: Container(
                                     width: 4.w,
                                     height: 4.w,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFD1D5DC),
+                                    decoration: BoxDecoration(
+                                      color: theme.dividerColor,
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -642,9 +668,9 @@ class MarketCard extends StatelessWidget {
                                 Flexible(
                                   child: Text(
                                     market.deliveryFeeDisplay,
-                                    style: const TextStyle().textColorMedium(
+                                    style: TextStyle().textColorMedium(
                                       fontSize: 12,
-                                      color: const Color(0xFF99A1AF),
+                                      color: secondaryColor,
                                     ),
                                     textDirection: TextDirection.rtl,
                                     overflow: TextOverflow.ellipsis,
@@ -664,14 +690,14 @@ class MarketCard extends StatelessWidget {
             // Text("${isLoadingProducts} - ${hasProducts} - $totalProducts"),
             if (isLoadingProducts) ...[
               SizedBox(height: 20.h),
-              _buildProductsShimmer(),
+              _buildProductsShimmer(context),
             ] else if (hasProducts || totalProducts > 0) ...[
               SizedBox(height: 20.h),
               Container(
                 margin: EdgeInsets.fromLTRB(20.w, 0, 20.w, 1.h),
                 padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
+                  color: productsSectionBg,
                   borderRadius: BorderRadius.circular(24.r),
                 ),
                 child: Column(
@@ -686,9 +712,9 @@ class MarketCard extends StatelessWidget {
                           // "منتجات مختارة"
                           Text(
                             'منتجات مختارة',
-                            style: const TextStyle().textColorBold(
+                            style: TextStyle().textColorBold(
                               fontSize: 10,
-                              color: const Color(0xFF99A1AF),
+                              color: secondaryColor,
                             ),
                             textDirection: TextDirection.rtl,
                           ),
@@ -742,7 +768,9 @@ class MarketCard extends StatelessWidget {
                               width: 60.w,
                               height: 60.w,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFEDE9FE),
+                                color: isDark
+                                    ? AppColors.purple.withValues(alpha: 0.25)
+                                    : const Color(0xFFEDE9FE),
                                 borderRadius: BorderRadius.circular(14.r),
                               ),
                               child: Stack(
@@ -812,13 +840,16 @@ class MarketCard extends StatelessWidget {
     );
   }
 
-  Widget _buildProductsShimmer() {
+  Widget _buildProductsShimmer(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = isDark ? theme.colorScheme.surface : const Color(0xFFF9FAFB);
     return ShimmerLoading(
       child: Container(
         margin: EdgeInsets.fromLTRB(20.w, 0, 20.w, 1.h),
         padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 0),
         decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
+          color: bgColor,
           borderRadius: BorderRadius.circular(24.r),
         ),
         child: Column(
@@ -864,13 +895,16 @@ class MarketCard extends StatelessWidget {
     );
   }
 
-  Widget _buildLogoPlaceholder() {
+  Widget _buildLogoPlaceholder(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = isDark ? theme.colorScheme.surface : const Color(0xFFF3F4F6);
     return Container(
-      color: const Color(0xFFF3F4F6),
+      color: bgColor,
       child: Icon(
         Icons.store_rounded,
         size: 32.sp,
-        color: Colors.grey[400],
+        color: theme.disabledColor,
       ),
     );
   }
@@ -879,16 +913,20 @@ class MarketCard extends StatelessWidget {
 // ─── Rating Badge (yellow bg with star) ────────────────────────────
 class _RatingBadge extends StatelessWidget {
   final String rating;
+  final bool isDark;
 
-  const _RatingBadge({required this.rating});
+  const _RatingBadge({required this.rating, this.isDark = false});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bgColor = isDark ? const Color(0xFF3D3A2E) : const Color(0xFFFEFCE8);
+    final textColor = theme.textTheme.bodyMedium?.color ?? AppColors.textDark;
     return Container(
       height: 24.h,
       padding: EdgeInsets.symmetric(horizontal: 8.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEFCE8),
+        color: bgColor,
         borderRadius: BorderRadius.circular(10.r),
       ),
       child: Row(
@@ -904,9 +942,9 @@ class _RatingBadge extends StatelessWidget {
             padding: const EdgeInsets.only(top:1),
             child: Text(
               rating,
-              style: const TextStyle().textColorBold(
+              style: TextStyle().textColorBold(
                 fontSize: 12,
-                color: AppColors.textDark,
+                color: textColor,
               ),
             ),
           ),
@@ -924,29 +962,36 @@ class _ProductItemThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final imageUrl = productItem.thumbnailUrl;
+    final bgColor = theme.cardColor;
+    final borderColor = theme.dividerColor;
+    final shadowColor = isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.1);
     return Container(
       width: 60.w,
       height: 60.w,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: bgColor,
         borderRadius: BorderRadius.circular(14.r),
         border: Border.all(
-          color: const Color(0xFFF3F4F6),
+          color: borderColor,
           width: 0.76,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 2,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: shadowColor,
+                  blurRadius: 3,
+                  offset: const Offset(0, 1),
+                ),
+                BoxShadow(
+                  color: shadowColor,
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
+                ),
+              ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14.r),
@@ -955,20 +1000,23 @@ class _ProductItemThumbnail extends StatelessWidget {
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
                 errorWidget: (context, url, error) =>
-                    _buildProductPlaceholder(),
+                    _buildProductPlaceholder(context),
               )
-            : _buildProductPlaceholder(),
+            : _buildProductPlaceholder(context),
       ),
     );
   }
 
-  Widget _buildProductPlaceholder() {
+  Widget _buildProductPlaceholder(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = isDark ? theme.colorScheme.surface : const Color(0xFFF3F4F6);
     return Container(
-      color: const Color(0xFFF3F4F6),
+      color: bgColor,
       child: Icon(
         Icons.shopping_bag_outlined,
         size: 24.sp,
-        color: Colors.grey[400],
+        color: theme.disabledColor,
       ),
     );
   }
@@ -992,20 +1040,23 @@ class _MarketCategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isSelected ? Colors.white : const Color(0xFF6A7282);
+    final theme = Theme.of(context);
+    final textColor = isSelected
+        ? Colors.white
+        : (theme.textTheme.bodyMedium?.color ?? const Color(0xFF6A7282));
+    final unselectedBg = theme.cardColor;
+    final unselectedBorder = theme.dividerColor;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
         constraints: BoxConstraints(minWidth: 88.w, minHeight: 45.h),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.purple : Colors.white,
+          color: isSelected ? AppColors.purple : unselectedBg,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
             width: 0.76,
-            color: isSelected
-                ? AppColors.purple
-                : const Color(0xFFE5E5E5),
+            color: isSelected ? AppColors.purple : unselectedBorder,
           ),
           // boxShadow: isSelected
           //     ? [

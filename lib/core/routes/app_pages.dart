@@ -5,6 +5,9 @@ import 'package:avvento/features/driver/pages/driver_nav_bar.dart';
 import 'package:avvento/features/auth/models/user_model.dart';
 import 'package:avvento/features/notifications/presentation/bindings/notifications_binding.dart';
 import 'package:avvento/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:avvento/features/auth/pages/address_selection_page.dart';
+import 'package:avvento/features/onboarding/bindings/onboarding_binding.dart';
+import 'package:avvento/features/onboarding/pages/onboarding_page.dart';
 import 'package:avvento/features/support/presentation/bindings/support_binding.dart';
 import 'package:avvento/features/support/presentation/pages/support_page.dart';
 import 'package:avvento/features/client/orders/bindings/order_support_binding.dart';
@@ -45,31 +48,40 @@ import 'app_routes.dart';
 class AppPages {
   AppPages._();
 
-  // Get initial route based on authentication status
   static String getInitialRoute() {
     final storage = GetStorage();
+
+    final onboardingSeen =
+        storage.read<bool>(AppConstants.onboardingSeenKey) ?? false;
+    if (!onboardingSeen) {
+      return AppRoutes.onboarding;
+    }
+
     final token = storage.read<String>(AppConstants.tokenKey);
     final userData = storage.read<Map<String, dynamic>>(AppConstants.userKey);
 
-    // cprint("userData: ${userData}");
-    // return AppRoutes.driverNavBar;
-
-    // If token and user data exist, go to appropriate main page based on role
     if (token != null && token.isNotEmpty && userData != null) {
       final user = UserModel.fromJson(userData);
-      // print("user.type: ${user.role}");
       return user.role == 'delivery'
           ? AppRoutes.driverNavBar
           : AppRoutes.clientNavBar;
     }
 
-    // Otherwise, go to login page
-    return AppRoutes.login;
+    return AppRoutes.addressSelection;
   }
 
   static const initial = AppRoutes.login;
 
   static final routes = [
+    GetPage(
+      name: AppRoutes.onboarding,
+      page: () => const OnboardingPage(),
+      binding: OnboardingBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.addressSelection,
+      page: () => const AddressSelectionPage(),
+    ),
     GetPage(
       name: AppRoutes.login,
       page: () => const LoginPage(),

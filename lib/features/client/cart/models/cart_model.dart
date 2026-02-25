@@ -1,5 +1,34 @@
 import '../../restaurants/models/menu_item_model.dart';
 
+class CartDeliveryFeeEstimate {
+  final double deliveryFee;
+  final double finalPrice;
+  final double distance;
+  final double dayPrice;
+  final double nightPrice;
+  final bool isNight;
+
+  CartDeliveryFeeEstimate({
+    required this.deliveryFee,
+    required this.finalPrice,
+    required this.distance,
+    required this.dayPrice,
+    required this.nightPrice,
+    required this.isNight,
+  });
+
+  factory CartDeliveryFeeEstimate.fromJson(Map<String, dynamic> json) {
+    return CartDeliveryFeeEstimate(
+      deliveryFee: (json['deliveryFee'] as num?)?.toDouble() ?? 0,
+      finalPrice: (json['finalPrice'] as num?)?.toDouble() ?? 0,
+      distance: (json['distance'] as num?)?.toDouble() ?? 0,
+      dayPrice: (json['dayPrice'] as num?)?.toDouble() ?? 0,
+      nightPrice: (json['nightPrice'] as num?)?.toDouble() ?? 0,
+      isNight: json['isNight'] as bool? ?? false,
+    );
+  }
+}
+
 class CartItem {
   final String id;
   final MenuItem item;
@@ -85,6 +114,10 @@ class RestaurantCartResponse {
   final CartRestaurant restaurant;
   final List<CartItem> items;
   final double totalPrice;
+  final CartDeliveryFeeEstimate? deliveryFeeEstimate;
+  final double deliveryFee;
+  final double tax;
+  final double totalPriceWithShipping;
 
   RestaurantCartResponse({
     required this.id,
@@ -92,6 +125,10 @@ class RestaurantCartResponse {
     required this.restaurant,
     required this.items,
     required this.totalPrice,
+    this.deliveryFeeEstimate,
+    this.deliveryFee = 0,
+    this.tax = 0,
+    this.totalPriceWithShipping = 0,
   });
 
   factory RestaurantCartResponse.fromJson(Map<String, dynamic> json) {
@@ -113,6 +150,15 @@ class RestaurantCartResponse {
               .toList() ??
           [],
       totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0.0,
+      deliveryFeeEstimate: json['deliveryFeeEstimate'] is Map<String, dynamic>
+          ? CartDeliveryFeeEstimate.fromJson(
+              json['deliveryFeeEstimate'] as Map<String, dynamic>,
+            )
+          : null,
+      deliveryFee: (json['deliveryFee'] as num?)?.toDouble() ?? 0.0,
+      tax: (json['tax'] as num?)?.toDouble() ?? 0.0,
+      totalPriceWithShipping:
+          (json['totalPriceWithShipping'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

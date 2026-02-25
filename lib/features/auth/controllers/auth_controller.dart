@@ -331,20 +331,47 @@ class AuthController extends GetxController {
   // Logout and clear all cached data
   Future<void> logout() async {
     try {
-      // Clear all authentication data from cache
-      await _storage.remove(AppConstants.tokenKey);
-      await _storage.remove(AppConstants.userKey);
-
-      // Navigate to login page and clear navigation stack first
-      // This ensures we're on a safe page before deleting controllers
-      Get.offAllNamed(AppRoutes.login);
-
-      // Clear all GetX controllers after navigation
-      // Use a small delay to ensure navigation completes
-      await Future.delayed(const Duration(milliseconds: 100));
-      Get.deleteAll(force: true);
+      await _authService.logoutApi();
+      await _clearAuthDataAndNavigateToLogin();
     } catch (e) {
-      showSnackBar(title: 'خطأ', message: 'حدث خطأ أثناء تسجيل الخروج', isError: true);
+      await _clearAuthDataAndNavigateToLogin();
     }
+  }
+
+  Future<void> deleteAccount() async {
+    _isLoading.value = true;
+    try {
+      final result = await _authService.deleteAccount();
+      if (result.isSuccess) {
+        await _clearAuthDataAndNavigateToLogin();
+        showSnackBar(
+          title: 'نجح',
+          message: result.message ?? 'تم حذف الحساب بنجاح',
+          isSuccess: true,
+        );
+      } else {
+        showSnackBar(
+          title: 'خطأ',
+          message: result.errorMessage ?? 'فشل حذف الحساب',
+          isError: true,
+        );
+      }
+    } on DioException catch (e) {
+      final failure = ApiException.handleException(e);
+      ErrorHandler.handleError(failure);
+    } catch (e) {
+      showSnackBar(title: 'خطأ', message: 'حدث خطأ أثناء حذف الحساب', isError: true);
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  Future<void> _clearAuthDataAndNavigateToLogin() async {
+    await _storage.remove(AppConstants.tokenKey);
+    await _storage.remove(AppConstants.userKey);
+
+    Get.offAllNamed(AppRoutes.login);
+    await Future.delayed(const Duration(milliseconds: 100));
+    Get.deleteAll(force: true);
   }
 }

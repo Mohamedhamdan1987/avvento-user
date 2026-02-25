@@ -113,9 +113,8 @@ class DriverEarningsSummaryCard extends StatelessWidget {
                       ),
                     ),
 
-                    // Label (on the right in RTL)
                     Text(
-                      'إجمالي أرباح هذا الأسبوع',
+                      _getPeriodLabel(),
                       style: const TextStyle().textColorMedium(
                         fontSize: 14.sp,
                         color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -161,6 +160,17 @@ class DriverEarningsSummaryCard extends StatelessWidget {
     );
   }
 
+  String _getPeriodLabel() {
+    switch (selectedPeriod) {
+      case 'يومي':
+        return 'إجمالي أرباح اليوم';
+      case 'شهري':
+        return 'إجمالي أرباح هذا العام';
+      default:
+        return 'إجمالي أرباح هذا الأسبوع';
+    }
+  }
+
   Widget _buildBarChart(BuildContext context, List<EarningsChartData> chartData) {
     if (chartData.isEmpty) {
       return Center(
@@ -174,35 +184,46 @@ class DriverEarningsSummaryCard extends StatelessWidget {
       );
     }
 
-    final maxVal = chartData.map((e) => e.amount).reduce((a, b) => a > b ? a : b);
+    final maxVal = chartData.map((e) => e.earnings).reduce((a, b) => a > b ? a : b);
     final displayData = chartData.length > 7 ? chartData.sublist(chartData.length - 7) : chartData;
 
     return Column(
       children: [
-        // Chart bars
         Expanded(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: displayData.map((data) {
-              final valFactor = maxVal > 0 ? data.amount / maxVal : 0.0;
-              final isHighest = data.amount == maxVal && maxVal > 0;
+              final valFactor = maxVal > 0 ? data.earnings / maxVal : 0.0;
+              final isHighest = data.earnings == maxVal && maxVal > 0;
 
               return Expanded(
                 child: Padding(
-                  padding: EdgeInsetsDirectional.symmetric(horizontal: 2.w),
+                  padding: EdgeInsetsDirectional.symmetric(horizontal: 4.w),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      if (isHighest && data.earnings > 0)
+                        Padding(
+                          padding: EdgeInsetsDirectional.only(bottom: 4.h),
+                          child: Text(
+                            data.earnings.toStringAsFixed(0),
+                            style: const TextStyle().textColorBold(
+                              fontSize: 10.sp,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
                       Container(
-                        height: (160.h * valFactor).clamp(4.h, 160.h),
+                        width: 28.w,
+                        height: (140.h * valFactor).clamp(4.h, 140.h),
                         decoration: BoxDecoration(
                           color: isHighest
                               ? AppColors.primary
                               : Theme.of(context).dividerColor.withOpacity(0.3),
-                          borderRadius: BorderRadiusDirectional.only(
-                            topStart: Radius.circular(4.r),
-                            topEnd: Radius.circular(4.r),
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(6.r),
                           ),
                         ),
                       ),
@@ -215,13 +236,12 @@ class DriverEarningsSummaryCard extends StatelessWidget {
         ),
         SizedBox(height: 8.h),
 
-        // Day labels
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: displayData.map((data) {
             return Expanded(
               child: Text(
-                data.day,
+                data.period,
                 style: const TextStyle().textColorNormal(
                   fontSize: 10.sp,
                   color: Theme.of(context).textTheme.bodySmall?.color ?? const Color(0xFF9CA3AF),

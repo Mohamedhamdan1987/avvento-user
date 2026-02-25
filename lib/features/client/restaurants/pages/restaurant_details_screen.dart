@@ -1227,36 +1227,40 @@ class RestaurantDetailsScreen extends StatelessWidget {
   Widget _buildStatsRow(BuildContext context) {
     String distanceText = '--';
     String priceText = '--';
-    final addressController = Get.find<AddressController>();
-    final activeAddress = addressController.activeAddress.value;
 
-    if (activeAddress != null) {
-      final distance = LocationUtils.calculateDistance(
-        userLat: activeAddress.lat,
-        userLong: activeAddress.long,
-        restaurantLat: controller.restaurant!.lat,
-        restaurantLong: controller.restaurant!.long,
-      );
+    final estimate = controller.restaurant!.deliveryFeeEstimate;
+    if (estimate != null) {
+      priceText = estimate.displayFee;
+      distanceText = estimate.displayDistance;
+    } else {
+      final addressController = Get.find<AddressController>();
+      final activeAddress = addressController.activeAddress.value;
 
-      distanceText = LocationUtils.formatDistance(distance);
-      final price = LocationUtils.calculateDeliveryPrice(
-        distanceInKm: distance,
-      );
-      priceText = LocationUtils.formatPrice(price);
-    } else if (LocationUtils.isInitialized &&
-        LocationUtils.currentLatitude != null &&
-        LocationUtils.currentLongitude != null) {
-      // Fallback to device location if no active address
-      final distance = LocationUtils.calculateDistance(
-        restaurantLat: controller.restaurant!.lat,
-        restaurantLong: controller.restaurant!.long,
-      );
-
-      distanceText = LocationUtils.formatDistance(distance);
-      final price = LocationUtils.calculateDeliveryPrice(
-        distanceInKm: distance,
-      );
-      priceText = LocationUtils.formatPrice(price);
+      if (activeAddress != null) {
+        final distance = LocationUtils.calculateDistance(
+          userLat: activeAddress.lat,
+          userLong: activeAddress.long,
+          restaurantLat: controller.restaurant!.lat,
+          restaurantLong: controller.restaurant!.long,
+        );
+        distanceText = LocationUtils.formatDistance(distance);
+        final price = LocationUtils.calculateDeliveryPrice(
+          distanceInKm: distance,
+        );
+        priceText = LocationUtils.formatPrice(price);
+      } else if (LocationUtils.isInitialized &&
+          LocationUtils.currentLatitude != null &&
+          LocationUtils.currentLongitude != null) {
+        final distance = LocationUtils.calculateDistance(
+          restaurantLat: controller.restaurant!.lat,
+          restaurantLong: controller.restaurant!.long,
+        );
+        distanceText = LocationUtils.formatDistance(distance);
+        final price = LocationUtils.calculateDeliveryPrice(
+          distanceInKm: distance,
+        );
+        priceText = LocationUtils.formatPrice(price);
+      }
     }
 
     return Container(
@@ -1796,8 +1800,12 @@ class RestaurantDetailsScreen extends StatelessWidget {
                                           milliseconds: 200,
                                         ),
                                         child: Icon(
-                                          Icons.remove,
-                                          color: Colors.white,
+                                          quantity == 1
+                                              ? Icons.delete_outline
+                                              : Icons.remove,
+                                          color: quantity == 1
+                                              ? const Color(0xFFFF4D4D)
+                                              : Colors.white,
                                           size: 16.w,
                                         ),
                                       ),
@@ -1860,39 +1868,62 @@ class RestaurantDetailsScreen extends StatelessWidget {
                                   ],
                                 ),
                               )
-                            : CustomIconButtonApp(
-                                width: 32.w,
-                                height: 32.h,
-                                radius: 100.r,
-                                color: const Color(0xFF101828),
-                                onTap: () {
-                                  if (item.variations.isEmpty &&
-                                      item.addOns.isEmpty) {
-                                    controller.addToCart(
-                                      itemId: item.id,
-                                      quantity: 1,
-                                      selectedVariations: [],
-                                      selectedAddOns: [],
-                                    );
-                                  } else {
-                                    _showMealDetails(context, item);
-                                  }
-                                },
-                                childWidget: SvgIcon(
-                                  iconName: 'assets/svg/plus-solid.svg',
-                                  width: 16.w,
-                                  height: 16.h,
-                                  color: Colors.white,
-                                ),
-                              ),
+                            : cartController.isItemUpdating(item.id)
+                                ? Container(
+                                    width: 32.w,
+                                    height: 32.h,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF101828),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: SizedBox(
+                                        width: 16.w,
+                                        height: 16.h,
+                                        child: const CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : CustomIconButtonApp(
+                                    width: 32.w,
+                                    height: 32.h,
+                                    radius: 100.r,
+                                    color: const Color(0xFF101828),
+                                    onTap: () async {
+                                      if (item.variations.isEmpty &&
+                                          item.addOns.isEmpty ) {
+                                        cartController.setItemUpdating(item.id);
+                                        try {
+                                          await controller.addToCart(
+                                            itemId: item.id,
+                                            quantity: 1,
+                                            selectedVariations: [],
+                                            selectedAddOns: [],
+                                          );
+                                        } finally {
+                                          cartController.clearItemUpdating(item.id);
+                                        }
+                                      } else {
+                                        _showMealDetails(context, item);
+                                      }
+                                    },
+                                    childWidget: SvgIcon(
+                                      iconName: 'assets/svg/plus-solid.svg',
+                                      width: 16.w,
+                                      height: 16.h,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                       ],
                     ),
                     Text(
                       item.description,
                       style: TextStyle().textColorNormal(
                         fontSize: 12.sp,
-                        color: Theme.of(context).textTheme.bodySmall?.color,
-                      ),
+                        color: Theme.of(context).textTheme.bodySmall?.color,),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -2108,15 +2139,16 @@ class RestaurantDetailsScreen extends StatelessWidget {
         restaurantId,
         item.id,
       );
+      final cartRestaurantId = cartController.detailedCart?.restaurant.id ?? restaurantId;
 
       if (newQuantity == 0) {
         if (itemIndex != -1) {
-          await cartController.removeItem(restaurantId, itemIndex);
+          await cartController.removeItem(cartRestaurantId, itemIndex);
         }
       } else {
         if (itemIndex != -1) {
           await cartController.updateCartItemQuantity(
-            cartController.detailedCart!.restaurant.id,
+            cartRestaurantId,
             itemIndex,
             newQuantity,
           );

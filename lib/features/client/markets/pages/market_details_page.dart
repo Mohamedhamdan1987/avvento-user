@@ -689,6 +689,11 @@ class MarketDetailsPage extends StatelessWidget {
                         width: 96.w,
                         height: 96.h,
                         fit: BoxFit.cover,
+                        errorWidget: (context, url, error) => Icon(
+                          Icons.shopping_bag_outlined,
+                          size: 40.w,
+                          color: Colors.grey,
+                        ),
                       )
                     : Icon(Icons.shopping_bag_outlined,
                         size: 40.w, color: Colors.grey),
@@ -1239,7 +1244,8 @@ class _CategoryChip extends StatelessWidget {
                   width: 20.w,
                   height: 20.w,
                   fit: BoxFit.cover,
-                  errorWidget: (context, url, error) => const SizedBox(),
+                  errorWidget: (context, url, error) =>
+                      _buildCategoryImagePlaceholder(context),
                 ),
               ),
               SizedBox(width: 6.w),
@@ -1257,6 +1263,22 @@ class _CategoryChip extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryImagePlaceholder(BuildContext context) {
+    return Container(
+      width: 20.w,
+      height: 20.w,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        Icons.category_outlined,
+        size: 12.sp,
+        color: Theme.of(context).disabledColor,
       ),
     );
   }

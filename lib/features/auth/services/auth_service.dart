@@ -204,6 +204,68 @@ class AuthService {
       rethrow;
     }
   }
+
+  Future<ApiResult> logoutApi() async {
+    try {
+      final response = await _dioClient.post(
+        '/auth/logout',
+        options: Options(
+          validateStatus: (status) {
+            return status != null &&
+                (status >= 200 && status < 300 || status == 400 || status == 401);
+          },
+        ),
+      );
+
+      final responseData = response.data as Map<String, dynamic>?;
+      final isSuccess = response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300;
+
+      if (isSuccess) {
+        return ApiResult.success(
+          responseData?['message'] as String? ?? 'تم تسجيل الخروج بنجاح',
+        );
+      }
+
+      return ApiResult.failure(
+        responseData?['message'] as String? ?? 'فشل تسجيل الخروج',
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  Future<ApiResult> deleteAccount() async {
+    try {
+      final response = await _dioClient.delete(
+        '/auth/delete-account',
+        options: Options(
+          validateStatus: (status) {
+            return status != null &&
+                (status >= 200 && status < 300 || status == 400 || status == 401 || status == 403);
+          },
+        ),
+      );
+
+      final responseData = response.data as Map<String, dynamic>?;
+      final isSuccess = response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300;
+
+      if (isSuccess) {
+        return ApiResult.success(
+          responseData?['message'] as String? ?? 'تم حذف الحساب بنجاح',
+        );
+      }
+
+      return ApiResult.failure(
+        responseData?['message'] as String? ?? 'فشل حذف الحساب',
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
 }
 
 class ApiResult {

@@ -1,3 +1,4 @@
+import 'package:avvento/core/utils/logger.dart';
 import 'package:get/get.dart';
 import '../../../../core/utils/show_snackbar.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -68,6 +69,7 @@ class CartController extends GetxController {
   }
 
   Future<void> fetchRestaurantCart(String restaurantId, {bool showLoading = true}) async {
+    cprint("Fetching cart for restaurantId: $restaurantId");
     if (showLoading) {
       _isLoading.value = true;
       // Only clear data on initial load (when no data exists yet)
@@ -121,8 +123,8 @@ class CartController extends GetxController {
       );
       // Update detailed cart immediately
       _detailedCart.value = updatedCart;
-      // Refresh overall carts in background
-      fetchAllCarts(); 
+      // Keep loading until carts are refreshed and UI gets new quantity
+      await fetchAllCarts();
     } catch (e) {
       print('Error updating quantity: $e');
       showSnackBar(message: 'فشل تحديث الكمية', isError: true);
@@ -136,8 +138,8 @@ class CartController extends GetxController {
       final updatedCart = await _restaurantsService.removeCartItem(restaurantId, itemIndex);
       // Update detailed cart immediately
       _detailedCart.value = updatedCart;
-      // Refresh overall carts in background
-      fetchAllCarts();
+      // Keep loading until carts are refreshed and UI reflects deletion
+      await fetchAllCarts();
     } catch (e) {
       print('Error removing item: $e');
       showSnackBar(message: 'فشل حذف المنتج', isError: true);

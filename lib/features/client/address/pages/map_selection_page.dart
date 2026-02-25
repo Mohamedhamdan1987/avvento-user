@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:avvento/core/constants/app_colors.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
+import 'package:avvento/core/utils/location_utils.dart';
 import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import 'package:avvento/core/widgets/reusable/custom_text_field.dart';
@@ -20,7 +22,11 @@ class MapSelectionPage extends StatefulWidget {
 
 class _MapSelectionPageState extends State<MapSelectionPage> {
   GoogleMapController? _mapController;
-  LatLng _selectedLocation = const LatLng(32.8872, 13.1913); // Default Tripoli
+  static const LatLng _fallbackLocation = LatLng(32.8872, 13.1913);
+  LatLng _selectedLocation = LatLng(
+    LocationUtils.currentLatitude ?? _fallbackLocation.latitude,
+    LocationUtils.currentLongitude ?? _fallbackLocation.longitude,
+  );
   final TextEditingController _labelController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   bool _isMoving = false;
@@ -29,7 +35,62 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
   @override
   void initState() {
     super.initState();
-    _reverseGeocode(_selectedLocation);
+    _initLocation();
+  }
+
+  Future<void> _initLocation() async {
+    try {
+      final hasPermission = await LocationUtils.ensureLocationPermission();
+      if (!hasPermission) {
+        _reverseGeocode(_selectedLocation);
+        return;
+      }
+      final lat = LocationUtils.currentLatitude;
+      final lng = LocationUtils.currentLongitude;
+      if (lat != null && lng != null) {
+        final current = LatLng(lat, lng);
+        if (!mounted) return;
+        setState(() => _selectedLocation = current);
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(current, 15),
+        );
+      }
+      _reverseGeocode(_selectedLocation);
+    } catch (_) {
+      _reverseGeocode(_selectedLocation);
+    }
+  }
+
+  Future<void> _goToMyLocation() async {
+    try {
+      final hasPermission = await LocationUtils.ensureLocationPermission();
+      if (!hasPermission) return;
+      final lat = LocationUtils.currentLatitude;
+      final lng = LocationUtils.currentLongitude;
+      if (lat == null || lng == null) return;
+      final current = LatLng(lat, lng);
+      if (!mounted) return;
+      setState(() => _selectedLocation = current);
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(current, 15),
+      );
+      _reverseGeocode(current);
+    } catch (_) {}
+  }
+
+  Future<void> _openNavigationToSelectedLocation() async {
+    try {
+      final hasPermission = await LocationUtils.ensureLocationPermission();
+      if (!hasPermission) return;
+      final position =
+          await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      await LocationUtils.openGoogleMapsWithDirections(
+        userLat: position.latitude,
+        userLong: position.longitude,
+        restaurantLat: _selectedLocation.latitude,
+        restaurantLong: _selectedLocation.longitude,
+      );
+    } catch (_) {}
   }
 
   Future<void> _reverseGeocode(LatLng location) async {
@@ -44,9 +105,11 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
       if (placemarks.isNotEmpty && mounted) {
         final p = placemarks.first;
         final parts = <String>[
-          if (p.subLocality != null && p.subLocality!.isNotEmpty) p.subLocality!,
+          if (p.subLocality != null && p.subLocality!.isNotEmpty)
+            p.subLocality!,
           if (p.locality != null && p.locality!.isNotEmpty) p.locality!,
-          if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) p.administrativeArea!,
+          if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty)
+            p.administrativeArea!,
         ];
         _addressController.text = parts.join('، ');
       }
@@ -66,7 +129,9 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'اختر موقع التوصيل',
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor:
+            Theme.of(context).appBarTheme.backgroundColor ??
+            Theme.of(context).scaffoldBackgroundColor,
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
@@ -90,9 +155,26 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                 _reverseGeocode(_selectedLocation);
               },
               myLocationEnabled: true,
-              myLocationButtonEnabled: true,
+              myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
               mapToolbarEnabled: false,
+            ),
+            Positioned(
+              left: 16.w,
+              top: 16.h,
+              child: Column(
+                children: [
+                  _buildMapActionButton(
+                    icon: Icons.my_location_rounded,
+                    onTap: _goToMyLocation,
+                  ),
+                  SizedBox(height: 10.h),
+                  _buildMapActionButton(
+                    icon: Icons.navigation_rounded,
+                    onTap: _openNavigationToSelectedLocation,
+                  ),
+                ],
+              ),
             ),
             // Center Marker
             Center(
@@ -131,7 +213,9 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                 padding: EdgeInsets.all(24.w),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(32.r),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
@@ -181,36 +265,45 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                                   ),
                                 )
                               : (_addressController.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: Icon(Icons.clear, size: 20.r, color: Theme.of(context).hintColor),
-                                      onPressed: () {
-                                        setState(() {
-                                          _addressController.clear();
-                                        });
-                                      },
-                                    )
-                                  : null),
+                                    ? IconButton(
+                                        icon: Icon(
+                                          Icons.clear,
+                                          size: 20.r,
+                                          color: Theme.of(context).hintColor,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _addressController.clear();
+                                          });
+                                        },
+                                      )
+                                    : null),
                         ),
                       ],
                     ),
                     SizedBox(height: 24.h),
-                    Obx(() => CustomButtonApp(
-                      text: 'حفظ العنوان',
-                      onTap: () {
-                        if (_labelController.text.isEmpty) {
-                          showSnackBar(message: 'يرجى إدخال اسم العنوان', title: 'تنبیه');
-                          return;
-                        }
-                        controller.addAddress(
-                          label: _labelController.text,
-                          address: _addressController.text.trim(),
-                          lat: _selectedLocation.latitude,
-                          long: _selectedLocation.longitude,
-                        );
-                      },
-                      isLoading: controller.isLoading.value,
-                      color: AppColors.purple,
-                    )),
+                    Obx(
+                      () => CustomButtonApp(
+                        text: 'حفظ العنوان',
+                        onTap: () {
+                          if (_labelController.text.isEmpty) {
+                            showSnackBar(
+                              message: 'يرجى إدخال اسم العنوان',
+                              title: 'تنبیه',
+                            );
+                            return;
+                          }
+                          controller.addAddress(
+                            label: _labelController.text,
+                            address: _addressController.text.trim(),
+                            lat: _selectedLocation.latitude,
+                            long: _selectedLocation.longitude,
+                          );
+                        },
+                        isLoading: controller.isLoading.value,
+                        color: AppColors.purple,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -227,5 +320,32 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
     _addressController.dispose();
     _mapController?.dispose();
     super.dispose();
+  }
+
+  Widget _buildMapActionButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Theme.of(context).cardColor,
+      borderRadius: BorderRadius.circular(14.r),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14.r),
+        onTap: onTap,
+        child: Container(
+          width: 48.w,
+          height: 48.w,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14.r),
+            border: Border.all(color: Theme.of(context).dividerColor),
+          ),
+          child: Icon(
+            icon,
+            color: AppColors.purple,
+            size: 22.r,
+          ),
+        ),
+      ),
+    );
   }
 }

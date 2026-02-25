@@ -295,6 +295,16 @@ class _AccountPageState extends State<AccountPage> {
           _buildSettingsItem(
             context: context,
             iconPath: 'assets/svg/client/orders/cancel_icon.svg',
+            title: 'حذف الحساب',
+            titleColor: AppColors.notificationRed,
+            showChevron: false,
+            onTap: () {
+              _showDeleteAccountDialog(context);
+            },
+          ),
+          _buildSettingsItem(
+            context: context,
+            iconPath: 'assets/svg/client/orders/cancel_icon.svg',
             title: 'تسجيل الخروج',
             titleColor: AppColors.notificationRed,
             showChevron: false,
@@ -419,6 +429,57 @@ class _AccountPageState extends State<AccountPage> {
             },
             child: Text(
               'تسجيل الخروج',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: AppColors.notificationRed,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: Text(
+          'حذف الحساب',
+          style: const TextStyle().textColorBold(
+            fontSize: 18,
+            color: Theme.of(context).textTheme.titleLarge?.color,
+          ),
+        ),
+        content: Text(
+          'هل أنت متأكد من رغبتك في حذف الحساب نهائيا؟',
+          style: TextStyle(
+            fontSize: 16.sp,
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text(
+              'إلغاء',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              authController.deleteAccount();
+            },
+            child: Text(
+              'حذف',
               style: TextStyle(
                 fontSize: 16.sp,
                 color: AppColors.notificationRed,

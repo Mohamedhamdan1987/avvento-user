@@ -23,6 +23,7 @@ import 'story_view_page.dart';
 import 'all_stories_page.dart';
 import 'restaurant_details_screen.dart';
 import '../../../../core/widgets/shimmer/shimmer_loading.dart';
+import '../../../../core/widgets/reusable/app_error_widget.dart';
 
 class RestaurantsPage extends GetView<RestaurantsController> {
   const RestaurantsPage({super.key});
@@ -504,51 +505,43 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                           // Error state
                           if (controller.hasError &&
                               controller.restaurants.isEmpty) {
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.error_outline,
-                                    size: 64,
-                                    color: Colors.red,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    controller.errorMessage,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ElevatedButton(
-                                    onPressed: controller.fetchRestaurants,
-                                    child: const Text('إعادة المحاولة'),
-                                  ),
-                                ],
-                              ),
+                            return AppErrorWidget(
+                              errorType: controller.errorType,
+                              onRetry: controller.refreshRestaurants,
                             );
                           }
 
                           // Empty state
                           if (controller.restaurants.isEmpty) {
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.restaurant,
-                                    size: 64,
-                                    color: Colors.grey[400],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'لا توجد مطاعم',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.grey[600],
+                            return SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.4,
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.storefront_outlined,
+                                      size: 64,
+                                      color: Colors.grey[400],
                                     ),
-                                  ),
-                                ],
+                                    SizedBox(height: 16.h),
+                                    Text(
+                                      'لا توجد مطاعم في موقعك الحالي',
+                                      style: const TextStyle().textColorBold(
+                                        fontSize: 16.sp,
+                                        color: isLight ? AppColors.textDark : Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8.h),
+                                    Text(
+                                      'جرّب تغيير العنوان أو البحث في منطقة أخرى',
+                                      style: const TextStyle().textColorMedium(
+                                        fontSize: 13.sp,
+                                        color: AppColors.textLight,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           }
@@ -903,40 +896,9 @@ class _CategoryChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (imageUrl != null && imageUrl!.isNotEmpty) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: CachedNetworkImage(
-                  imageUrl: imageUrl!,
-                  width: 24.w,
-                  height: 24.w,
-                  fit: BoxFit.cover,
-                  errorWidget: (context, url, error) {
-                   if (icon != null && icon!.isNotEmpty) {
-                    cprint("$label");
-                     return SvgPicture.network(icon!, errorBuilder: (context, error, stackTrace) {
-                        return const Icon(
-                          Icons.category,
-                          size: 16,
-                          color: Colors.grey,
-                        );
-                     },);
-                   }
-                   else {
-                     return const Icon(
-                       Icons.category,
-                       size: 16,
-                       color: Colors.grey,
-                     );
-                   }
-                  }
-                ),
-              ),
-              SizedBox(width: 8.w),
-            ]
-            else if (icon != null && icon!.isNotEmpty) ...[
+           if (imageUrl != null && imageUrl!.isNotEmpty) ...[
               SvgPicture.network(
-                icon!,
+                imageUrl!,
                 width: 24.w,
                 height: 24.w,
                 color: textColor,
@@ -1183,38 +1145,46 @@ class RestaurantCard extends StatelessWidget {
                         String distanceText = '--';
                         String priceText = '--';
 
-                        // Use selected address as the user's location when available.
-                        final addressController = Get.find<AddressController>();
-                        final activeAddress =
-                            addressController.activeAddress.value;
+                        DeliveryFeeEstimate? estimate;
+                        if (restaurant is Restaurant) {
+                          estimate = restaurant.deliveryFeeEstimate;
+                        } else if (restaurant is FavoriteRestaurant) {
+                          estimate = restaurant.deliveryFeeEstimate;
+                        }
 
-                        if (activeAddress != null) {
-                          final distance = LocationUtils.calculateDistance(
-                            userLat: activeAddress.lat,
-                            userLong: activeAddress.long,
-                            restaurantLat: lat,
-                            restaurantLong: long,
-                          );
-                          distanceText = LocationUtils.formatDistance(distance);
+                        if (estimate != null) {
+                          priceText = estimate.displayFee;
+                          distanceText = estimate.displayDistance;
+                        } else {
+                          final addressController = Get.find<AddressController>();
+                          final activeAddress =
+                              addressController.activeAddress.value;
 
-                          final price = LocationUtils.calculateDeliveryPrice(
-                            distanceInKm: distance,
-                          );
-                          priceText = LocationUtils.formatPrice(price);
-                        } else if (LocationUtils.isInitialized &&
-                            LocationUtils.currentLatitude != null &&
-                            LocationUtils.currentLongitude != null) {
-                          // Fallback to device location if no active address
-                          final distance = LocationUtils.calculateDistance(
-                            restaurantLat: lat,
-                            restaurantLong: long,
-                          );
-                          distanceText = LocationUtils.formatDistance(distance);
-
-                          final price = LocationUtils.calculateDeliveryPrice(
-                            distanceInKm: distance,
-                          );
-                          priceText = LocationUtils.formatPrice(price);
+                          if (activeAddress != null) {
+                            final distance = LocationUtils.calculateDistance(
+                              userLat: activeAddress.lat,
+                              userLong: activeAddress.long,
+                              restaurantLat: lat,
+                              restaurantLong: long,
+                            );
+                            distanceText = LocationUtils.formatDistance(distance);
+                            final price = LocationUtils.calculateDeliveryPrice(
+                              distanceInKm: distance,
+                            );
+                            priceText = LocationUtils.formatPrice(price);
+                          } else if (LocationUtils.isInitialized &&
+                              LocationUtils.currentLatitude != null &&
+                              LocationUtils.currentLongitude != null) {
+                            final distance = LocationUtils.calculateDistance(
+                              restaurantLat: lat,
+                              restaurantLong: long,
+                            );
+                            distanceText = LocationUtils.formatDistance(distance);
+                            final price = LocationUtils.calculateDeliveryPrice(
+                              distanceInKm: distance,
+                            );
+                            priceText = LocationUtils.formatPrice(price);
+                          }
                         }
 
                         return Row(

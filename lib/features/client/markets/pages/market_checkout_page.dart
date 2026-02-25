@@ -1,20 +1,26 @@
 import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
+import 'package:avvento/core/widgets/webview/SmartWebView.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
 import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/utils/location_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import '../controllers/market_cart_controller.dart';
 import '../models/market_cart_model.dart';
 import '../../address/controllers/address_controller.dart';
 import '../../address/models/address_model.dart';
 import '../../wallet/controllers/client_wallet_controller.dart';
+import '../../orders/services/orders_service.dart';
+import 'package:get_storage/get_storage.dart';
 
 enum MarketPaymentMethod { cash, card, wallet }
 
@@ -29,6 +35,7 @@ class MarketCheckoutPage extends StatefulWidget {
 class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
   final MarketCartController cartController =
       Get.find<MarketCartController>();
+  final OrdersService _ordersService = OrdersService();
   final AddressController addressController = Get.put(AddressController());
   final ClientWalletController walletController =
       Get.put(ClientWalletController());
@@ -96,6 +103,24 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
     }
   }
 
+  Future<void> _openNavigationToActiveAddress() async {
+    final activeAddress = addressController.activeAddress.value;
+    if (activeAddress == null) return;
+    try {
+      final hasPermission = await LocationUtils.ensureLocationPermission();
+      if (!hasPermission) return;
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      await LocationUtils.openGoogleMapsWithDirections(
+        userLat: position.latitude,
+        userLong: position.longitude,
+        restaurantLat: activeAddress.lat,
+        restaurantLong: activeAddress.long,
+      );
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -151,7 +176,10 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
     final activeAddress = addressController.activeAddress.value;
     final initialPos = activeAddress != null
         ? LatLng(activeAddress.lat, activeAddress.long)
-        : const LatLng(32.8872, 13.1913);
+        : LatLng(
+            LocationUtils.currentLatitude ?? 32.8872,
+            LocationUtils.currentLongitude ?? 13.1913,
+          );
 
     return Container(
       height: 250.h,
@@ -214,6 +242,31 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
             right: 0,
             child: Center(
               child: SvgPicture.asset("assets/svg/cart/map_group_icon.svg"),
+            ),
+          ),
+          Positioned(
+            top: 16.h,
+            left: 16.w,
+            child: Material(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(14.r),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14.r),
+                onTap: _openNavigationToActiveAddress,
+                child: Container(
+                  width: 44.w,
+                  height: 44.w,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14.r),
+                    border: Border.all(color: Theme.of(context).dividerColor),
+                  ),
+                  child: Icon(
+                    Icons.navigation_rounded,
+                    color: const Color(0xFF7F22FE),
+                    size: 20.r,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -1026,6 +1079,14 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
                       final address =
                           addressController.activeAddress.value;
                       if (address != null) {
+                        if (selectedPaymentMethod == MarketPaymentMethod.card) {
+                          _startGatewayPaymentAndPlaceMarketOrder(
+                            address: address,
+                            total: total,
+                          );
+                          return;
+                        }
+
                         cartController.placeMarketOrder(
                           marketId: widget.cart.market.id,
                           deliveryAddress: address.address,
@@ -1117,6 +1178,90 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
         ),
       ],
     );
+  }
+
+  Future<void> _startGatewayPaymentAndPlaceMarketOrder({
+    required AddressModel address,
+    required double total,
+  }) async {
+    try {
+      final createdOrderResponse = await _ordersService.createMarketOrder(
+        marketId: widget.cart.market.id,
+        deliveryAddress: address.address,
+        deliveryLat: address.lat,
+        deliveryLong: address.long,
+        paymentMethod: 'gateway',
+        notes: _notesController.text.trim(),
+      );
+
+      final dynamic nestedOrder = createdOrderResponse['order'];
+      final String orderRef =
+          (createdOrderResponse['customRef'] ??
+                  createdOrderResponse['orderId'] ??
+                  createdOrderResponse['_id'] ??
+                  (nestedOrder is Map<String, dynamic> ? nestedOrder['_id'] : null) ??
+                  '')
+              .toString();
+
+      if (orderRef.isEmpty) {
+        showSnackBar(message: 'تم إنشاء الطلب لكن تعذر استخراج مرجع الدفع', isError: true);
+        Get.offAllNamed(AppRoutes.clientNavBar, arguments: {'tabIndex': 1});
+        return;
+      }
+
+      String phone = '0910000000';
+      String email = 'customer@example.com';
+      final storage = GetStorage();
+      final userData = storage.read<Map<String, dynamic>>(AppConstants.userKey);
+      if (userData != null) {
+        final userPhone = userData['phone'] as String?;
+        final userEmail = userData['email'] as String?;
+        if (userPhone != null && userPhone.isNotEmpty) phone = userPhone;
+        if (userEmail != null && userEmail.isNotEmpty) email = userEmail;
+      }
+
+      final paymentInit = await _ordersService.initiatePayment(
+        amount: total,
+        phone: phone,
+        email: email,
+        customRef: orderRef,
+      );
+
+      if (!paymentInit.success || paymentInit.paymentUrl.isEmpty) {
+        showSnackBar(
+          message: 'تم إنشاء الطلب لكن تعذر بدء عملية الدفع. أكمل الدفع من طلباتك.',
+          isError: true,
+        );
+        Get.offAllNamed(AppRoutes.clientNavBar, arguments: {'tabIndex': 1});
+        return;
+      }
+
+      await Get.to(
+        () => SmartWebView(
+          url: paymentInit.paymentUrl,
+          appBar: AppBar(
+            title: const Text('الدفع الإلكتروني'),
+            backgroundColor: const Color(0xFFF7F7F7),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.arrow_forward_ios, color: Colors.black),
+                onPressed: () => Get.back(),
+              ),
+            ],
+            leading: Container(),
+          ),
+          closeWhenUrlContains: 'payment/success',
+          onClose: () {
+            cartController.fetchAllCarts();
+            showSnackBar(message: 'تم إتمام الدفع بنجاح', isSuccess: true);
+            Get.offAllNamed(AppRoutes.clientNavBar, arguments: {'tabIndex': 1});
+          },
+        ),
+      );
+    } catch (e) {
+      showSnackBar(message: 'حدث خطأ أثناء بدء عملية الدفع', isError: true);
+    }
   }
 
   String _getDeliveryTimeText(AddressModel deliveryAddress) {

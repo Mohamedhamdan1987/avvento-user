@@ -1,5 +1,34 @@
 import 'market_product_item.dart';
 
+class MarketDeliveryFeeEstimate {
+  final double deliveryFee;
+  final double finalPrice;
+  final double distance;
+  final double dayPrice;
+  final double nightPrice;
+  final bool isNight;
+
+  MarketDeliveryFeeEstimate({
+    required this.deliveryFee,
+    required this.finalPrice,
+    required this.distance,
+    required this.dayPrice,
+    required this.nightPrice,
+    required this.isNight,
+  });
+
+  factory MarketDeliveryFeeEstimate.fromJson(Map<String, dynamic> json) {
+    return MarketDeliveryFeeEstimate(
+      deliveryFee: (json['deliveryFee'] as num?)?.toDouble() ?? 0,
+      finalPrice: (json['finalPrice'] as num?)?.toDouble() ?? 0,
+      distance: (json['distance'] as num?)?.toDouble() ?? 0,
+      dayPrice: (json['dayPrice'] as num?)?.toDouble() ?? 0,
+      nightPrice: (json['nightPrice'] as num?)?.toDouble() ?? 0,
+      isNight: json['isNight'] as bool? ?? false,
+    );
+  }
+}
+
 /// Cart product item from the market cart API
 class MarketCartProduct {
   final String id;
@@ -66,6 +95,7 @@ class MarketCartResponse {
   final CartMarket market;
   final List<MarketCartProduct> products;
   final double totalPrice;
+  final MarketDeliveryFeeEstimate? deliveryFeeEstimate;
 
   MarketCartResponse({
     required this.id,
@@ -73,6 +103,7 @@ class MarketCartResponse {
     required this.market,
     required this.products,
     required this.totalPrice,
+    this.deliveryFeeEstimate,
   });
 
   factory MarketCartResponse.fromJson(Map<String, dynamic> json) {
@@ -91,6 +122,11 @@ class MarketCartResponse {
               .toList() ??
           [],
       totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0,
+      deliveryFeeEstimate: json['deliveryFeeEstimate'] is Map<String, dynamic>
+          ? MarketDeliveryFeeEstimate.fromJson(
+              json['deliveryFeeEstimate'] as Map<String, dynamic>,
+            )
+          : null,
     );
   }
 }

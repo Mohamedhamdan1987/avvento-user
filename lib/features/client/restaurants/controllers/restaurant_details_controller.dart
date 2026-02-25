@@ -1,5 +1,4 @@
 import 'package:avvento/core/utils/logger.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/utils/show_snackbar.dart';
 import '../models/restaurant_model.dart';
@@ -283,14 +282,9 @@ class RestaurantDetailsController extends GetxController {
 
       // Refresh cart controller if it exists
       if (Get.isRegistered<CartController>()) {
-        Get.find<CartController>().refreshCarts();
+        await Get.find<CartController>().fetchAllCarts();
       }
 
-      showSnackBar(
-        title: 'نجاح',
-        message: 'تم إضافة المنتج للسلة بنجاح',
-        isSuccess: true,
-      );
     } catch (e) {
       showSnackBar(
         title: 'خطأ',

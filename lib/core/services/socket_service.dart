@@ -17,6 +17,11 @@ class SocketService extends GetxService {
   String? userRole;
   String? userId;
 
+  Function(List<dynamic> orders)? onAvailableOrdersReceived;
+  Function(Map<String, dynamic> data)? onOrderTakenForController;
+  Function(Map<String, dynamic> data)? onOrderStatusUpdateForController;
+  Function(Map<String, dynamic> data)? onNewOrderAvailableForController;
+
   @override
   void onInit() {
     super.onInit();
@@ -131,17 +136,31 @@ class SocketService extends GetxService {
 
     // ============ DELIVERY DRIVER ONLY ============
     if (userRole == 'delivery') {
+      _notificationSocket!.on('available-orders', (data) {
+        AppLogger.debug('📦 Available orders received via socket', 'SocketService');
+        AppLogger.debug('📦 Orders data: $data', 'SocketService');
+        final ordersList = data is List
+            ? data
+            : (data is Map && data.containsKey('orders'))
+                ? data['orders'] as List
+                : [];
+        AppLogger.debug('📦 Parsed orders list (${ordersList.length} items): $ordersList', 'SocketService');
+        onAvailableOrdersReceived?.call(ordersList);
+
+
+      });
+
       // 🟢 NEW ORDER AVAILABLE - Order created and waiting for driver
       _notificationSocket!.on('new-order-available', (data) {
         final orderData = Map<String, dynamic>.from(data);
         AppLogger.debug('📦 New order available: $orderData', 'SocketService');
         
-        // Check if order already exists (prevent duplicates)
         final exists = availableOrders.any((o) => o['orderId'] == orderData['orderId']);
         if (!exists) {
           availableOrders.add(orderData);
           AppLogger.debug('✅ Order added to available list', 'SocketService');
         }
+        onNewOrderAvailableForController?.call(orderData);
       });
 
       // 🔴 ORDER TAKEN - Another driver took this order
@@ -149,7 +168,6 @@ class SocketService extends GetxService {
         final orderData = Map<String, dynamic>.from(data);
         AppLogger.debug('🚚 Order taken: $orderData', 'SocketService');
 
-        // Remove order from available orders (another driver took it)
         availableOrders.removeWhere(
           (order) => order['orderId'] == orderData['orderId'],
         );
@@ -157,6 +175,7 @@ class SocketService extends GetxService {
           '✅ Order ${orderData['orderId']} removed (taken by driver)',
           'SocketService',
         );
+        onOrderTakenForController?.call(orderData);
       });
 
       // 🟡 ORDER STATUS UPDATE - Order cancelled or status changed
@@ -165,7 +184,6 @@ class SocketService extends GetxService {
         AppLogger.debug('🔄 Order status update: $updateData', 'SocketService');
 
         if (updateData['status'] == 'cancelled') {
-          // Remove order if cancelled
           availableOrders.removeWhere(
             (order) => order['orderId'] == updateData['orderId'],
           );
@@ -174,13 +192,11 @@ class SocketService extends GetxService {
             'SocketService',
           );
           
-          // Show notification for cancelled order
           _showOrderStatusNotification(
             orderId: updateData['orderId'],
             status: OrderStatus.cancelled,
           );
         } else {
-          // Update order status in list if exists
           final index = availableOrders.indexWhere(
             (order) => order['orderId'] == updateData['orderId'],
           );
@@ -193,13 +209,13 @@ class SocketService extends GetxService {
             );
           }
           
-          // Show notification with progress for status update
           final status = OrderStatus.fromString(updateData['status']);
           _showOrderStatusNotification(
             orderId: updateData['orderId'],
             status: status,
           );
         }
+        onOrderStatusUpdateForController?.call(updateData);
       });
     }
 
@@ -246,6 +262,26 @@ class SocketService extends GetxService {
       body: notificationBody,
       status: status,
     );
+  }
+
+  void emitGetAvailableOrders() {
+    if (_notificationSocket != null && _notificationSocket!.connected) {
+      _notificationSocket!.emit('get-available-orders');
+      AppLogger.debug('📤 Emitted get-available-orders', 'SocketService');
+    } else {
+      AppLogger.debug('⚠️ Socket not connected, waiting to emit get-available-orders', 'SocketService');
+      _notificationSocket?.once('connect', (_) {
+        _notificationSocket!.emit('get-available-orders');
+        AppLogger.debug('📤 Emitted get-available-orders (after connect)', 'SocketService');
+      });
+    }
+  }
+
+  void clearControllerCallbacks() {
+    onAvailableOrdersReceived = null;
+    onOrderTakenForController = null;
+    onOrderStatusUpdateForController = null;
+    onNewOrderAvailableForController = null;
   }
 
   /// Disconnect all sockets

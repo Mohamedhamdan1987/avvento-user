@@ -176,8 +176,12 @@ class _MarketCartDetailsPageState extends State<MarketCartDetailsPage> {
                     ? CachedNetworkImage(
                         imageUrl: currentCart.market.logo!,
                         fit: BoxFit.cover,
+                        placeholder: (context, url) =>
+                            _buildMarketLogoPlaceholder(),
+                        errorWidget: (context, url, error) =>
+                            _buildMarketLogoPlaceholder(),
                       )
-                    : const Icon(Icons.store, color: Colors.grey),
+                    : _buildMarketLogoPlaceholder(),
               ),
             ),
             SizedBox(width: 12.w),
@@ -268,8 +272,12 @@ class _MarketCartDetailsPageState extends State<MarketCartDetailsPage> {
                         ? CachedNetworkImage(
                             imageUrl: productImage,
                             fit: BoxFit.cover,
+                            placeholder: (context, url) =>
+                                _buildProductImagePlaceholder(),
+                            errorWidget: (context, url, error) =>
+                                _buildProductImagePlaceholder(),
                           )
-                        : Container(color: Colors.grey[200]),
+                        : _buildProductImagePlaceholder(),
                   ),
                 ),
               ),
@@ -521,6 +529,9 @@ class _MarketCartDetailsPageState extends State<MarketCartDetailsPage> {
   }
 
   Widget _buildBottomSummary(MarketCartResponse currentCart) {
+    final double deliveryFee = currentCart.deliveryFeeEstimate?.finalPrice ?? 0;
+    final double total = currentCart.totalPrice + deliveryFee;
+
     return Container(
       padding: EdgeInsets.only(
         top: 16.h,
@@ -631,7 +642,7 @@ class _MarketCartDetailsPageState extends State<MarketCartDetailsPage> {
                       ),
                     if (!controller.isLoading)
                       Text(
-                        '${currentCart.totalPrice.toStringAsFixed(0)} د.ل',
+                        '${total.toStringAsFixed(0)} د.ل',
                         style: TextStyle().textColorBold(
                           fontSize: 16.sp,
                           color: Colors.white,
@@ -656,14 +667,14 @@ class _MarketCartDetailsPageState extends State<MarketCartDetailsPage> {
                 SizedBox(height: 12.h),
                 _buildInvoiceRow(
                   'رسوم التوصيل',
-                  'يحسب عند الدفع',
+                  '${deliveryFee.toStringAsFixed(0)} د.ل',
                 ),
                 SizedBox(height: 12.h),
                 const Divider(height: 1),
                 SizedBox(height: 12.h),
                 _buildInvoiceRow(
                   'المجموع الكلي',
-                  '${currentCart.totalPrice.toStringAsFixed(0)} د.ل',
+                  '${total.toStringAsFixed(0)} د.ل',
                   isTotal: true,
                 ),
                 SizedBox(height: 8.h),
@@ -712,6 +723,28 @@ class _MarketCartDetailsPageState extends State<MarketCartDetailsPage> {
                 ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMarketLogoPlaceholder() {
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: Icon(
+        Icons.store_rounded,
+        color: Colors.grey,
+        size: 20.r,
+      ),
+    );
+  }
+
+  Widget _buildProductImagePlaceholder() {
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        color: Colors.grey,
+        size: 24.r,
+      ),
     );
   }
 }

@@ -1186,6 +1186,19 @@ class ActiveOrderView extends StatelessWidget {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () {
+                        final scaffoldState = Scaffold.maybeOf(context);
+
+                        // Use a non-modal bottom sheet so the map behind it stays interactive.
+                        if (scaffoldState != null) {
+                          scaffoldState.showBottomSheet(
+                            (context) => DeliveryFailedModal(order: order),
+                            backgroundColor: Colors.transparent,
+                            enableDrag: true,
+                          );
+                          return;
+                        }
+
+                        // Fallback in case no Scaffold is found in this context.
                         showModalBottomSheet(
                           context: context,
                           isScrollControlled: true,

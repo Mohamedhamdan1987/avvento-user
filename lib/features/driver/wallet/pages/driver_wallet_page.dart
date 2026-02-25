@@ -1,5 +1,4 @@
 import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
-import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -10,6 +9,7 @@ import '../../../../core/widgets/reusable/custom_button_app/custom_icon_button_a
 import '../../../../core/widgets/reusable/safe_svg_icon.dart';
 import '../widgets/wallet_transaction_item.dart';
 import '../widgets/wallet_summary_card.dart';
+import '../widgets/settlement_order_card.dart';
 import '../controllers/driver_wallet_controller.dart';
 import '../../../../core/widgets/shimmer/shimmer_loading.dart';
 
@@ -24,11 +24,17 @@ class _DriverWalletPageState extends State<DriverWalletPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final DriverWalletController controller = Get.put(DriverWalletController());
+  int _selectedTabIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() => _selectedTabIndex = _tabController.index);
+      }
+    });
   }
 
   @override
@@ -47,66 +53,59 @@ class _DriverWalletPageState extends State<DriverWalletPage>
           if (controller.isLoading.value && controller.wallet.value == null) {
             return const WalletPageShimmer();
           }
-          return Column(
-            children: [
-              // Header Section
-              _buildHeaderSection(),
+          return AppRefreshIndicator(
+            onRefresh: () => controller.refreshWallet(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Section
+                  _buildHeaderSection(),
+                  SizedBox(height: 24.h),
 
-              // Content Section
-              Expanded(
-                child: AppRefreshIndicator(
-                  onRefresh: () => controller.refreshWallet(),
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
+                  // Main Balance Card
+                  Padding(
+                    padding: EdgeInsetsDirectional.symmetric(
+                      horizontal: 16.w,
+                    ),
+                    child: _buildMainBalanceCard(),
+                  ),
+                  SizedBox(height: 24.h),
+
+                  // Summary Cards
+                  Padding(
+                    padding: EdgeInsetsDirectional.symmetric(
+                      horizontal: 16.w,
+                    ),
+                    child: _buildSummaryCards(),
+                  ),
+                  SizedBox(height: 24.h),
+
+                  // Tabs and Content
+                  Padding(
+                    padding: EdgeInsetsDirectional.symmetric(
+                      horizontal: 16.w,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 24.h),
-                        // Main Balance Card
-                        Padding(
-                          padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                          child: _buildMainBalanceCard(),
-                        ),
-                        SizedBox(height: 24.h),
+                        // Tab Bar
+                        _buildTabBar(),
+                        SizedBox(height: 16.h),
 
-                        // Summary Cards
-                        Padding(
-                          padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                          child: _buildSummaryCards(),
-                        ),
-                        SizedBox(height: 24.h),
-
-                        // Tabs and Content
-                        Padding(
-                          padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Tab Bar
-                              _buildTabBar(),
-                              SizedBox(height: 16.h),
-
-                              // Tab Content
-                              SizedBox(
-                                height: 400.h,
-                                child: TabBarView(
-                                  controller: _tabController,
-                                  children: [
-                                    _buildTransactionsTab(),
-                                    _buildSettlementsTab(),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 24.h),
+                        // Tab Content
+                        if (_selectedTabIndex == 0)
+                          _buildTransactionsTab()
+                        else
+                          _buildSettlementsTab(),
                       ],
                     ),
                   ),
-                ),
+                  SizedBox(height: 24.h),
+                ],
               ),
-            ],
+            ),
           );
         }),
       ),
@@ -132,25 +131,47 @@ class _DriverWalletPageState extends State<DriverWalletPage>
             ),
           ),
 
-          CustomIconButtonApp(
-            width: 36.w,
-            height: 36.h,
-            radius: 100.r,
-            color: Theme.of(context).cardColor,
-            onTap: () => controller.refreshWallet(),
-            childWidget: controller.isLoading.value
-                ? SizedBox(
-                    width: 20.w,
-                    height: 20.h,
-                    child: const CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : SafeSvgIcon(
-                    iconName: 'assets/svg/driver/wallet/redresh_icon.svg',
-                    width: 20.w,
-                    height: 20.h,
-                    color: Theme.of(context).iconTheme.color,
-                    fallbackIcon: Icons.refresh,
-                  ),
+          Row(
+            children: [
+              CustomIconButtonApp(
+                width: 36.w,
+                height: 36.h,
+                radius: 100.r,
+                color: AppColors.primary.withOpacity(0.1),
+                onTap: () => controller.syncEarnings(),
+                childWidget: controller.isSyncing.value
+                    ? SizedBox(
+                        width: 20.w,
+                        height: 20.h,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : Icon(Icons.sync, size: 20.r, color: AppColors.primary),
+              ),
+              SizedBox(width: 8.w),
+              CustomIconButtonApp(
+                width: 36.w,
+                height: 36.h,
+                radius: 100.r,
+                color: Theme.of(context).cardColor,
+                onTap: () => controller.refreshWallet(),
+                childWidget: controller.isLoading.value
+                    ? SizedBox(
+                        width: 20.w,
+                        height: 20.h,
+                        child: const CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : SafeSvgIcon(
+                        iconName: 'assets/svg/driver/wallet/redresh_icon.svg',
+                        width: 20.w,
+                        height: 20.h,
+                        color: Theme.of(context).iconTheme.color,
+                        fallbackIcon: Icons.refresh,
+                      ),
+              ),
+            ],
           ),
         ],
       ),
@@ -165,10 +186,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1A1A2E),
-            Color(0xFF2D2D44),
-          ],
+          colors: [Color(0xFF1A1A2E), Color(0xFF2D2D44)],
         ),
         borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
@@ -196,7 +214,10 @@ class _DriverWalletPageState extends State<DriverWalletPage>
           ),
 
           Padding(
-            padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w, vertical: 16.h),
+            padding: EdgeInsetsDirectional.symmetric(
+              horizontal: 16.w,
+              vertical: 16.h,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -238,7 +259,8 @@ class _DriverWalletPageState extends State<DriverWalletPage>
                     Expanded(
                       child: _buildActionButton(
                         text: 'إيداع رصيد',
-                        iconName: 'assets/svg/driver/wallet/settlement_icon.svg',
+                        iconName:
+                            'assets/svg/driver/wallet/settlement_icon.svg',
                         fallbackIcon: Icons.add,
                         isPrimary: false,
                         onTap: () {
@@ -275,7 +297,9 @@ class _DriverWalletPageState extends State<DriverWalletPage>
         backgroundColor: Theme.of(context).cardColor,
         title: Text(
           'إيداع رصيد',
-          style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color),
+          style: TextStyle(
+            color: Theme.of(context).textTheme.titleLarge?.color,
+          ),
         ),
         content: TextField(
           controller: amountController,
@@ -287,10 +311,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('إلغاء'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('إلغاء')),
           TextButton(
             onPressed: () async {
               final amount = double.tryParse(amountController.text);
@@ -299,8 +320,12 @@ class _DriverWalletPageState extends State<DriverWalletPage>
                 // We'll reuse the WalletService to deposit
                 // Ideally this would be in the controller
                 try {
-                  await controller.refreshWallet(); // Refresh after (mock) deposit
-                  showSnackBar(message: 'تم إيداع الرصيد بنجاح', isSuccess: true);
+                  await controller
+                      .refreshWallet(); // Refresh after (mock) deposit
+                  showSnackBar(
+                    message: 'تم إيداع الرصيد بنجاح',
+                    isSuccess: true,
+                  );
                 } catch (e) {
                   showSnackBar(message: 'فشل في عملية الإيداع', isError: true);
                 }
@@ -353,8 +378,9 @@ class _DriverWalletPageState extends State<DriverWalletPage>
   }
 
   Widget _buildSummaryCards() {
-    final totalSpent = controller.wallet.value?.totalSpent ?? 0.0;
     final totalEarned = controller.wallet.value?.totalEarned ?? 0.0;
+    final pendingCash =
+        controller.settlementResponse.value?.pendingCashCollected ?? 0.0;
 
     return Row(
       children: [
@@ -371,7 +397,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
         Expanded(
           child: WalletSummaryCard(
             title: 'عليك (عهد نقدية)',
-            amount: -totalSpent,
+            amount: -pendingCash,
             iconColor: const Color(0xFFFFFBEB),
             iconName: 'assets/svg/driver/wallet/debt_icon.svg',
             fallbackIcon: Icons.remove_circle_outline,
@@ -435,28 +461,192 @@ class _DriverWalletPageState extends State<DriverWalletPage>
       );
     }
 
-    return ListView.builder(
-      itemCount: transactions.length,
-      itemBuilder: (context, index) {
-        final transaction = transactions[index];
+    return Column(
+      children: transactions.map((transaction) {
         return Padding(
           padding: EdgeInsets.only(bottom: 12.h),
           child: WalletTransactionItem(
             type: transaction.type,
             amount: transaction.amount,
             title: transaction.description.split('\n').first,
-            description: '${transaction.createdAt.hour}:${transaction.createdAt.minute} • ${transaction.status}',
-            iconName: transaction.type == 'credit' 
+            description:
+                '${transaction.createdAt.hour}:${transaction.createdAt.minute} • ${transaction.status}',
+            iconName: transaction.type == 'credit'
                 ? 'assets/svg/driver/wallet/income_icon.svg'
                 : 'assets/svg/driver/wallet/debt_icon.svg',
-            fallbackIcon: transaction.type == 'credit' ? Icons.arrow_upward : Icons.arrow_downward,
+            fallbackIcon: transaction.type == 'credit'
+                ? Icons.arrow_upward
+                : Icons.arrow_downward,
           ),
         );
-      },
+      }).toList(),
     );
   }
 
   Widget _buildSettlementsTab() {
+    return Obx(() {
+      if (controller.isSettlementsLoading.value &&
+          controller.settlements.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      final response = controller.settlementResponse.value;
+      final orders = controller.settlements;
+
+      if (orders.isEmpty) {
+        return _buildEmptySettlements();
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (response != null) _buildSettlementSummary(response),
+          SizedBox(height: 12.h),
+
+          _buildSettlementFilters(),
+          SizedBox(height: 12.h),
+
+          ...orders.map((order) {
+            final isLast = order == orders.last;
+            return Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 10.h),
+              child: SettlementOrderCard(order: order),
+            );
+          }),
+        ],
+      );
+    });
+  }
+
+  Widget _buildSettlementSummary(settlementResponse) {
+    return Container(
+      padding: EdgeInsetsDirectional.all(14.w),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withOpacity(0.5),
+          width: 0.76.w,
+        ),
+        borderRadius: BorderRadius.circular(14.r),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildSummaryItem(
+              'معلقة',
+              '${settlementResponse.pendingAmount.toStringAsFixed(2)} د.ل',
+              '${settlementResponse.pendingCount} طلب',
+              const Color(0xFFEA580C),
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 40.h,
+            color: Theme.of(context).dividerColor.withOpacity(0.3),
+          ),
+          Expanded(
+            child: _buildSummaryItem(
+              'نقدي محصل',
+              '${settlementResponse.pendingCashCollected.toStringAsFixed(2)} د.ل',
+              null,
+              const Color(0xFF2563EB),
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 40.h,
+            color: Theme.of(context).dividerColor.withOpacity(0.3),
+          ),
+          Expanded(
+            child: _buildSummaryItem(
+              'تمت تسويتها',
+              '${settlementResponse.settledAmount.toStringAsFixed(2)} د.ل',
+              '${settlementResponse.settledCount} طلب',
+              const Color(0xFF16A34A),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryItem(
+    String label,
+    String amount,
+    String? subtitle,
+    Color color,
+  ) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle().textColorMedium(
+            fontSize: 11.sp,
+            color: Theme.of(context).hintColor,
+          ),
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          amount,
+          style: const TextStyle().textColorBold(fontSize: 13.sp, color: color),
+        ),
+        if (subtitle != null) ...[
+          SizedBox(height: 2.h),
+          Text(
+            subtitle,
+            style: const TextStyle().textColorNormal(
+              fontSize: 10.sp,
+              color: Theme.of(context).hintColor,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSettlementFilters() {
+    return Obx(() {
+      final current = controller.settlementFilter.value;
+      return Row(
+        children: [
+          _buildFilterChip('الكل', '', current),
+          SizedBox(width: 8.w),
+          _buildFilterChip('معلقة', 'pending', current),
+          SizedBox(width: 8.w),
+          _buildFilterChip('تمت', 'settled', current),
+        ],
+      );
+    });
+  }
+
+  Widget _buildFilterChip(String label, String value, String current) {
+    final isSelected = current == value;
+    return GestureDetector(
+      onTap: () => controller.changeSettlementFilter(value),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Theme.of(context).cardColor,
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : Theme.of(context).dividerColor.withOpacity(0.5),
+            width: 0.76.w,
+          ),
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle().textColorMedium(
+            fontSize: 12.sp,
+            color: isSelected ? Colors.white : Theme.of(context).hintColor,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptySettlements() {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
@@ -487,7 +677,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
             ),
             SizedBox(height: 24.h),
             Text(
-              'لا توجد تسويات معلقة',
+              'لا توجد تسويات',
               style: const TextStyle().textColorBold(
                 fontSize: 18.sp,
                 color: Theme.of(context).textTheme.titleLarge?.color,

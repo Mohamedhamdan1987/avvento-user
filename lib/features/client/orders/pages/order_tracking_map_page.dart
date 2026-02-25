@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:avvento/core/utils/polyline_utils.dart';
+import 'package:avvento/core/utils/location_utils.dart';
 import 'package:avvento/core/enums/order_status.dart';
 import 'package:avvento/core/routes/app_routes.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -173,6 +175,22 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
     Get.offAllNamed(AppRoutes.clientNavBar, arguments: {'tabIndex': 1});
   }
 
+  Future<void> _openNavigationToDeliveryLocation() async {
+    try {
+      final hasPermission = await LocationUtils.ensureLocationPermission();
+      if (!hasPermission) return;
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      await LocationUtils.openGoogleMapsWithDirections(
+        userLat: position.latitude,
+        userLong: position.longitude,
+        restaurantLat: widget.userLat,
+        restaurantLong: widget.userLong,
+      );
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -220,6 +238,31 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
             compassEnabled: true,
             zoomControlsEnabled: true,
             padding: EdgeInsets.only(bottom: 120.h),
+          ),
+          Positioned(
+            top: 16.h,
+            left: 16.w,
+            child: Material(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(14.r),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14.r),
+                onTap: _openNavigationToDeliveryLocation,
+                child: Container(
+                  width: 46.w,
+                  height: 46.w,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14.r),
+                    border: Border.all(color: Theme.of(context).dividerColor),
+                  ),
+                  child: Icon(
+                    Icons.navigation_rounded,
+                    color: AppColors.primary,
+                    size: 22.r,
+                  ),
+                ),
+              ),
+            ),
           ),
           // Non-modal order tracking sheet - allows map interaction
           DraggableScrollableSheet(

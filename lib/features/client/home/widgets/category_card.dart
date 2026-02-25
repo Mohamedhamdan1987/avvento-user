@@ -5,16 +5,18 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 class CategoryCard extends StatelessWidget {
-  final String imagePath;
+  final String? imagePath;
+  final String? svgContent;
   final String title;
   final VoidCallback onTap;
 
   const CategoryCard({
     super.key,
-    required this.imagePath,
+    this.imagePath,
+    this.svgContent,
     required this.title,
     required this.onTap,
-  });
+  }) : assert(imagePath != null || svgContent != null, 'Either imagePath or svgContent is required');
 
   @override
   Widget build(BuildContext context) {
@@ -47,11 +49,23 @@ class CategoryCard extends StatelessWidget {
               ),
             ),
             SizedBox(height: 8.h),
-            Image.asset(
-              imagePath,
-              // width: 32.w,
-              // height: 32.h,
-            ),
+            if (svgContent != null && svgContent!.isNotEmpty)
+              SvgPicture.string(
+                svgContent!,
+                width: 34.w,
+                height: 34.h,
+                placeholderBuilder: (_) => Icon(
+                  Icons.image_outlined,
+                  size: 28.w,
+                  color: AppColors.purple.withOpacity(0.7),
+                ),
+              )
+            else
+              Image.asset(
+                imagePath!,
+                // width: 32.w,
+                // height: 32.h,
+              ),
           ],
         ),
       ),

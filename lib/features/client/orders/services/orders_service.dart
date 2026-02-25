@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/order_model.dart';
 import '../../cart/models/calculate_price_model.dart';
@@ -132,6 +133,39 @@ class OrdersService {
     }
   }
 
+  Future<PaymentInitiationResponse> initiatePayment({
+    required double amount,
+    required String phone,
+    required String email,
+    required String customRef,
+  }) async {
+    try {
+      final response = await _dioClient.post('/payment/initiate', data: {
+        'amount': amount,
+        'phone': phone,
+        'email': email,
+        'backendUrl': '${AppConstants.baseUrl}payment/webhook',
+        'frontendUrl': '${AppConstants.baseUrl}payment/success',
+        'customRef': customRef,
+      });
+      return PaymentInitiationResponse.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Reorder a previous order
+  Future<OrderModel> reorder(String orderId) async {
+    try {
+      final response = await _dioClient.post('/orders/$orderId/reorder');
+      return OrderModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException {
+      rethrow;
+    }
+  }
+
   /// Rate a driver
   Future<void> rateDriver({
     required String orderId,
@@ -146,5 +180,25 @@ class OrdersService {
     } on DioException {
       rethrow;
     }
+  }
+}
+
+class PaymentInitiationResponse {
+  final bool success;
+  final String paymentUrl;
+  final String customRef;
+
+  PaymentInitiationResponse({
+    required this.success,
+    required this.paymentUrl,
+    required this.customRef,
+  });
+
+  factory PaymentInitiationResponse.fromJson(Map<String, dynamic> json) {
+    return PaymentInitiationResponse(
+      success: json['success'] as bool? ?? false,
+      paymentUrl: json['paymentUrl'] as String? ?? '',
+      customRef: json['customRef'] as String? ?? '',
+    );
   }
 }

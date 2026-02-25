@@ -1,7 +1,11 @@
 class AppRoutes {
   AppRoutes._();
 
+  // Onboarding
+  static const String onboarding = '/onboarding';
+
   // Auth Routes
+  static const String addressSelection = '/address-selection';
   static const String login = '/login';
   static const String register = '/register';
   static const String forgetPassword = '/forget-password';

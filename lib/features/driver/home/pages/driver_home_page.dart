@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/core/utils/show_snackbar.dart';
@@ -6,11 +8,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:avvento/core/utils/location_utils.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/enums/order_status.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/socket_service.dart';
 import '../controllers/driver_orders_controller.dart';
+import '../widgets/active_order_view.dart';
+import '../widgets/new_order_request_modal.dart';
 import '../widgets/orders_list_bottom_sheet.dart';
 
 class DriverHomePage extends StatefulWidget {
@@ -20,14 +25,19 @@ class DriverHomePage extends StatefulWidget {
   State<DriverHomePage> createState() => _DriverHomePageState();
 }
 
-class _DriverHomePageState extends State<DriverHomePage> {
+class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObserver {
   GoogleMapController? _mapController;
-  LatLng _currentLocation = const LatLng(32.8872, 13.1913); // Default Tripoli
+  LatLng _currentLocation = LatLng(
+    LocationUtils.currentLatitude ?? 32.8872,
+    LocationUtils.currentLongitude ?? 13.1913,
+  );
   bool _isLoadingLocation = true;
+  Timer? _locationTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _getCurrentLocation();
@@ -35,6 +45,78 @@ class _DriverHomePageState extends State<DriverHomePage> {
     
     // Update FCM token on server
     NotificationService.instance.updateTokenOnServer();
+  }
+
+  Future<void> _openNavigationForSelectedOrder() async {
+    final controller = Get.find<DriverOrdersController>();
+    final selectedOrder = controller.selectedOrder;
+    if (selectedOrder == null) return;
+
+    final isPickupPhase = [
+      OrderStatus.confirmed,
+      OrderStatus.preparing,
+      OrderStatus.awaitingDelivery,
+    ].contains(selectedOrder.status);
+
+    final destinationLat = isPickupPhase
+        ? selectedOrder.pickupLocation.latitude
+        : selectedOrder.deliveryLocation.latitude;
+    final destinationLong = isPickupPhase
+        ? selectedOrder.pickupLocation.longitude
+        : selectedOrder.deliveryLocation.longitude;
+
+    try {
+      final hasPermission = await LocationUtils.ensureLocationPermission();
+      if (!hasPermission) return;
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      await LocationUtils.openGoogleMapsWithDirections(
+        userLat: position.latitude,
+        userLong: position.longitude,
+        restaurantLat: destinationLat,
+        restaurantLong: destinationLong,
+      );
+    } catch (_) {}
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _startLocationUpdates();
+    } else if (state == AppLifecycleState.paused) {
+      _stopLocationUpdates();
+    }
+  }
+
+  void _startLocationUpdates() {
+    _stopLocationUpdates();
+    _locationTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      _updateDriverLocation();
+    });
+  }
+
+  void _stopLocationUpdates() {
+    _locationTimer?.cancel();
+    _locationTimer = null;
+  }
+
+  Future<void> _updateDriverLocation() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      if (!mounted) return;
+
+      setState(() {
+        _currentLocation = LatLng(position.latitude, position.longitude);
+      });
+
+      final controller = Get.find<DriverOrdersController>();
+      await controller.updateLocation(position.latitude, position.longitude);
+    } catch (e) {
+      cprint("error updating driver location: $e");
+    }
   }
 
   void _initializeController() {
@@ -82,23 +164,18 @@ class _DriverHomePageState extends State<DriverHomePage> {
         CameraUpdate.newLatLngZoom(_currentLocation, 14),
       );
 
-      // Fetch nearby orders
       final controller = Get.find<DriverOrdersController>();
       
       // Update location on server
       await controller.updateLocation(position.latitude, position.longitude);
       
-      // Load real orders from API
-      await controller.fetchNearbyOrders(
-        latitude: position.latitude,
-        longitude: position.longitude,
-      );
+      // Fetch available orders via socket
+      controller.emitGetAvailableOrders();
 
       // Fetch driver's active orders to show on map
       await controller.fetchMyOrders();
 
-      // Initialize today's earnings (TODO: Fetch from API)
-      // controller.setTodayEarnings(0.0);
+      _startLocationUpdates();
     } catch (e) {
       if (mounted) setState(() => _isLoadingLocation = false);
       cprint("error in get location: $e");
@@ -114,6 +191,14 @@ class _DriverHomePageState extends State<DriverHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // return Lottie.asset(
+    //   "assets/loti_files/img.json",
+    //   fit: BoxFit.contain,
+    //   repeat: true,
+    //   options: LottieOptions(enableMergePaths: true),
+    //   addRepaintBoundary: true,
+    //   height: 140.h,
+    // );
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
@@ -366,6 +451,9 @@ class _DriverHomePageState extends State<DriverHomePage> {
             end: 16.w,
             child: Obx(() {
               final controller = Get.find<DriverOrdersController>();
+              if (controller.selectedOrder != null) {
+                return const SizedBox.shrink();
+              }
 
 
               return Column(
@@ -412,7 +500,73 @@ class _DriverHomePageState extends State<DriverHomePage> {
             }),
           ),
 
-          // Modal is now triggered directly from DriverOrdersController.selectOrder using Get.bottomSheet
+          PositionedDirectional(
+            bottom: 32.h,
+            start: 16.w,
+            child: Obx(() {
+              final controller = Get.find<DriverOrdersController>();
+              if (controller.selectedOrder == null) {
+                return const SizedBox.shrink();
+              }
+              return Material(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(100.r),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(100.r),
+                  onTap: _openNavigationForSelectedOrder,
+                  child: Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(100.r),
+                      border: Border.all(color: Theme.of(context).dividerColor),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.navigation_rounded,
+                          color: AppColors.primary,
+                          size: 20.r,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'توجيه',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+
+          // Inline order panel (non-modal) to keep map interaction available
+          Obx(() {
+            final controller = Get.find<DriverOrdersController>();
+            final selectedOrder = controller.selectedOrder;
+            if (selectedOrder == null) {
+              return const SizedBox.shrink();
+            }
+
+            final isMyOrder = controller.myOrders.any((o) => o.id == selectedOrder.id);
+            return Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SafeArea(
+                top: false,
+                child: isMyOrder
+                    ? ActiveOrderView(order: selectedOrder)
+                    : NewOrderRequestModal(order: selectedOrder),
+              ),
+            );
+          }),
 
           // Show empty state if no orders (only when no order is selected and no active order)
           Obx(() {
@@ -578,6 +732,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
 
   @override
   void dispose() {
+    _stopLocationUpdates();
+    WidgetsBinding.instance.removeObserver(this);
     _mapController?.dispose();
     super.dispose();
   }

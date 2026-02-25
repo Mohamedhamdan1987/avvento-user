@@ -1,11 +1,11 @@
 import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
-import 'package:avvento/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../home/controllers/driver_orders_controller.dart';
+import '../../home/widgets/order_details_bottom_sheet.dart';
 import '../widgets/driver_performance_card.dart';
 import '../widgets/driver_earnings_summary_card.dart';
 import '../widgets/driver_recent_activity_item.dart';
@@ -18,7 +18,15 @@ class DriverMyOrdersPage extends StatefulWidget {
 }
 
 class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
-  String _selectedPeriod = 'أسبوعي'; // يومي, أسبوعي, شهري
+  String _selectedPeriod = 'أسبوعي';
+
+  static const Map<String, String> _periodApiMap = {
+    'يومي': 'day',
+    'أسبوعي': 'week',
+    'شهري': 'year',
+  };
+
+  String get _apiPeriod => _periodApiMap[_selectedPeriod] ?? 'week';
 
   @override
   void initState() {
@@ -39,8 +47,16 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
     final controller = Get.find<DriverOrdersController>();
     await Future.wait([
       controller.fetchMyOrders(),
-      controller.fetchDashboardData(),
+      controller.fetchDashboardData(period: _apiPeriod),
     ]);
+  }
+
+  void _onPeriodChanged(String period) {
+    setState(() {
+      _selectedPeriod = period;
+    });
+    final controller = Get.find<DriverOrdersController>();
+    controller.fetchDashboardData(period: _apiPeriod);
   }
 
   @override
@@ -76,11 +92,7 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
                         padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
                         child: DriverEarningsSummaryCard(
                           selectedPeriod: _selectedPeriod,
-                          onPeriodChanged: (period) {
-                            setState(() {
-                              _selectedPeriod = period;
-                            });
-                          },
+                          onPeriodChanged: _onPeriodChanged,
                         ),
                       ),
                       SizedBox(height: 24.h),
@@ -197,6 +209,20 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
     );
   }
 
+  void _showOrderDetails(order) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        builder: (_, scrollController) => OrderDetailsBottomSheet(order: order),
+      ),
+    );
+  }
+
   Widget _buildLatestActivitiesSection() {
     return GetX<DriverOrdersController>(
       builder: (controller) {
@@ -244,7 +270,10 @@ class _DriverMyOrdersPageState extends State<DriverMyOrdersPage> {
               ...activities.take(10).map((order) {
                 return Padding(
                   padding: EdgeInsets.only(bottom: 12.h),
-                  child: DriverRecentActivityItem(order: order),
+                  child: GestureDetector(
+                    onTap: () => _showOrderDetails(order),
+                    child: DriverRecentActivityItem(order: order),
+                  ),
                 );
               }).toList(),
           ],

@@ -307,6 +307,52 @@ class DriverAccountPage extends StatelessWidget {
                 ),
               ),
             ),
+            SizedBox(height: 12.h),
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 16.w),
+              child: Material(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(16.r),
+                child: InkWell(
+                  onTap: () {
+                    _showDeleteAccountDialog(context, authController);
+                  },
+                  borderRadius: BorderRadius.circular(16.r),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 16.h,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.red.withOpacity(0.3),
+                        width: 1,
+                      ),
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                          size: 24.r,
+                        ),
+                        SizedBox(width: 12.w),
+                        Text(
+                          'حذف الحساب',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
             SizedBox(height: 32.h),
           ],
         ),
@@ -423,6 +469,58 @@ class DriverAccountPage extends StatelessWidget {
             },
             child: Text(
               'تسجيل الخروج',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, AuthController authController) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: Text(
+          'حذف الحساب',
+          style: const TextStyle().textColorBold(
+            fontSize: 18,
+            color: Theme.of(context).textTheme.titleLarge?.color,
+          ),
+        ),
+        content: Text(
+          'هل أنت متأكد من رغبتك في حذف الحساب نهائيا؟',
+          style: TextStyle(
+            fontSize: 16.sp,
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'إلغاء',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              authController.deleteAccount();
+            },
+            child: Text(
+              'حذف',
               style: TextStyle(
                 fontSize: 16.sp,
                 color: Colors.red,

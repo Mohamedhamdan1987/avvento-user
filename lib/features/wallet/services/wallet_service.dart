@@ -1,6 +1,7 @@
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../models/wallet_model.dart';
+import '../../driver/wallet/models/settlement_model.dart';
 
 class WalletService {
   final DioClient _dioClient = DioClient.instance;
@@ -56,10 +57,40 @@ class WalletService {
     }
   }
 
+  Future<Map<String, dynamic>> syncEarnings() async {
+    try {
+      final response = await _dioClient.post('wallet/sync-earnings');
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> getLogs() async {
     try {
       final response = await _dioClient.get('wallet/logs');
       return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<SettlementResponse> getSettlements({
+    String? status,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        if (status != null) 'status': status,
+        'page': page,
+        'limit': limit,
+      };
+      final response = await _dioClient.get(
+        'delivery/settlements',
+        queryParameters: queryParams,
+      );
+      return SettlementResponse.fromJson(response.data);
     } catch (e) {
       rethrow;
     }

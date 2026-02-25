@@ -21,8 +21,8 @@ class LocationUtils {
   static Future<bool> hasPermission() async {
     try {
       LocationPermission permission = await Geolocator.checkPermission();
-      return permission == LocationPermission.whileInUse || 
-             permission == LocationPermission.always;
+      return permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always;
     } catch (e) {
       return false;
     }
@@ -51,12 +51,12 @@ class LocationUtils {
 
       // Check current permission status
       LocationPermission permission = await Geolocator.checkPermission();
-      
+
       // If permission is denied, request it explicitly
       if (permission == LocationPermission.denied) {
         print('LocationUtils: Requesting location permission...');
         permission = await Geolocator.requestPermission();
-        
+
         if (permission == LocationPermission.denied) {
           print('LocationUtils: Location permission denied by user.');
           return false;
@@ -70,14 +70,16 @@ class LocationUtils {
       }
 
       // Check if we have permission (whileInUse or always)
-      if (permission != LocationPermission.whileInUse && 
+      if (permission != LocationPermission.whileInUse &&
           permission != LocationPermission.always) {
         print('LocationUtils: Location permission not granted.');
         return false;
       }
 
       // If we already have location, return true
-      if (_initialized && _currentLatitude != null && _currentLongitude != null) {
+      if (_initialized &&
+          _currentLatitude != null &&
+          _currentLongitude != null) {
         return true;
       }
 
@@ -91,7 +93,9 @@ class LocationUtils {
       _currentLatitude = position.latitude;
       _currentLongitude = position.longitude;
       _initialized = true;
-      print('LocationUtils: Location initialized successfully ($_currentLatitude, $_currentLongitude)');
+      print(
+        'LocationUtils: Location initialized successfully ($_currentLatitude, $_currentLongitude)',
+      );
       return true;
     } catch (e) {
       print('LocationUtils: Error getting location: $e');
@@ -102,7 +106,9 @@ class LocationUtils {
           _currentLatitude = lastPosition.latitude;
           _currentLongitude = lastPosition.longitude;
           _initialized = true;
-          print('LocationUtils: Using last known position ($_currentLatitude, $_currentLongitude)');
+          print(
+            'LocationUtils: Using last known position ($_currentLatitude, $_currentLongitude)',
+          );
           return true;
         }
       } catch (e2) {
@@ -124,18 +130,18 @@ class LocationUtils {
   static Future<bool> requestPermission() async {
     try {
       LocationPermission permission = await Geolocator.checkPermission();
-      
+
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
         await Geolocator.openAppSettings();
         return false;
       }
-      
-      return permission == LocationPermission.whileInUse || 
-             permission == LocationPermission.always;
+
+      return permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always;
     } catch (e) {
       print('LocationUtils: Error requesting permission: $e');
       return false;
@@ -157,12 +163,12 @@ class LocationUtils {
 
   /// Calculate distance between two coordinates using Haversine formula
   /// Returns distance in kilometers
-  /// 
+  ///
   /// [userLat] - User's latitude (optional, defaults to current device location)
   /// [userLong] - User's longitude (optional, defaults to current device location)
   /// [restaurantLat] - Restaurant's latitude
   /// [restaurantLong] - Restaurant's longitude
-  /// 
+  ///
   /// Throws [StateError] if location is not initialized and userLat/userLong are not provided
   static double calculateDistance({
     double? userLat,
@@ -171,10 +177,18 @@ class LocationUtils {
     required double restaurantLong,
   }) {
     // Use current device location if not provided
-    final double actualUserLat = userLat ?? _currentLatitude ?? 
-        (throw StateError('Location not initialized. Call LocationUtils.init() first or provide userLat/userLong.'));
-    final double actualUserLong = userLong ?? _currentLongitude ?? 
-        (throw StateError('Location not initialized. Call LocationUtils.init() first or provide userLat/userLong.'));
+    final double actualUserLat =
+        userLat ??
+        _currentLatitude ??
+        (throw StateError(
+          'Location not initialized. Call LocationUtils.init() first or provide userLat/userLong.',
+        ));
+    final double actualUserLong =
+        userLong ??
+        _currentLongitude ??
+        (throw StateError(
+          'Location not initialized. Call LocationUtils.init() first or provide userLat/userLong.',
+        ));
 
     // Earth's radius in kilometers
     const double earthRadiusKm = 6371.0;
@@ -186,12 +200,15 @@ class LocationUtils {
     double deltaLongRad = _degreesToRadians(restaurantLong - actualUserLong);
 
     // Haversine formula
-    double a = sin(deltaLatRad / 2) * sin(deltaLatRad / 2) +
-        cos(lat1Rad) * cos(lat2Rad) * 
-        sin(deltaLongRad / 2) * sin(deltaLongRad / 2);
-    
+    double a =
+        sin(deltaLatRad / 2) * sin(deltaLatRad / 2) +
+        cos(lat1Rad) *
+            cos(lat2Rad) *
+            sin(deltaLongRad / 2) *
+            sin(deltaLongRad / 2);
+
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    
+
     // Distance in kilometers
     double distance = earthRadiusKm * c;
 
@@ -200,7 +217,7 @@ class LocationUtils {
 
   /// Calculate delivery price based on distance
   /// Returns price in Dirhams
-  /// 
+  ///
   /// [distanceInKm] - Distance in kilometers
   /// [pricePerKilometer] - Optional custom price per kilometer (defaults to 5.0)
   static double calculateDeliveryPrice({
@@ -213,7 +230,7 @@ class LocationUtils {
 
   /// Format distance for display
   /// Returns formatted string like "2.5 km" or "500 m"
-  /// 
+  ///
   /// [distanceInKm] - Distance in kilometers
   static String formatDistance(double distanceInKm) {
     if (distanceInKm < 1.0) {
@@ -228,7 +245,7 @@ class LocationUtils {
 
   /// Format price for display
   /// Returns formatted string like "25.0 دينار"
-  /// 
+  ///
   /// [price] - Price in Dirhams
   static String formatPrice(double price) {
     return '${price.toStringAsFixed(1)} دينار';
@@ -236,14 +253,14 @@ class LocationUtils {
 
   /// Calculate estimated delivery time in minutes
   /// Based on distance and average delivery speed
-  /// 
+  ///
   /// [restaurantLat] - Restaurant's latitude
   /// [restaurantLong] - Restaurant's longitude
   /// [deliveryLat] - Delivery address latitude
   /// [deliveryLong] - Delivery address longitude
   /// [averageSpeedKmh] - Average delivery speed in km/h (default: 30 km/h)
   /// [preparationTimeMinutes] - Restaurant preparation time in minutes (default: 15 minutes)
-  /// 
+  ///
   /// Returns estimated delivery time in minutes (rounded to nearest integer)
   static int calculateDeliveryTime({
     required double restaurantLat,
@@ -274,7 +291,7 @@ class LocationUtils {
 
   /// Format delivery time for display
   /// Returns formatted string like "25 دقيقة" or "1 ساعة"
-  /// 
+  ///
   /// [timeInMinutes] - Time in minutes
   static String formatDeliveryTime(int timeInMinutes) {
     if (timeInMinutes < 60) {
@@ -296,7 +313,7 @@ class LocationUtils {
   }
 
   /// Open Google Maps with directions and polyline between two locations
-  /// 
+  ///
   /// [userLat] - User's current latitude
   /// [userLong] - User's current longitude
   /// [restaurantLat] - Restaurant's latitude
@@ -309,17 +326,14 @@ class LocationUtils {
   }) async {
     // Create Google Maps URL with directions
     // Using the directions API format: origin and destination
-    final String googleMapsUrl = 
+    final String googleMapsUrl =
         'https://www.google.com/maps/dir/?api=1&origin=$userLat,$userLong&destination=$restaurantLat,$restaurantLong&travelmode=driving';
-    
+
     final Uri uri = Uri.parse(googleMapsUrl);
-    
+
     try {
       if (await canLaunchUrl(uri)) {
-        return await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
+        return await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
         return false;
       }

@@ -1085,7 +1085,8 @@ class _MarketCategoryChip extends StatelessWidget {
                   width: 20.w,
                   height: 20.w,
                   fit: BoxFit.cover,
-                  errorWidget: (context, url, error) => const SizedBox(),
+                  errorWidget: (context, url, error) =>
+                      _buildCategoryImagePlaceholder(context),
                 ),
               ),
               SizedBox(width: 6.w),
@@ -1109,6 +1110,23 @@ class _MarketCategoryChip extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryImagePlaceholder(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: 20.w,
+      height: 20.w,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        Icons.category_outlined,
+        size: 12.sp,
+        color: theme.disabledColor,
       ),
     );
   }

@@ -196,14 +196,38 @@ class DriverOrdersService {
   }
 
   // Get driver dashboard data
-  Future<ApiResponse<DriverDashboardModel>> getDashboardData() async {
+  Future<ApiResponse<DriverDashboardModel>> getDashboardData({String period = 'week'}) async {
     try {
-      final response = await _dioClient.get('/delivery/dashboard');
+      final response = await _dioClient.get(
+        '/delivery/dashboard',
+        queryParameters: {'period': period},
+      );
       final data = response.data;
       final dashboard = DriverDashboardModel.fromJson(data as Map<String, dynamic>);
       return ApiResponse(
         success: true,
         data: dashboard,
+      );
+    } on DioException catch (e) {
+      return ApiResponse(
+        success: false,
+        message: e.response?.data?['message']?.toString() ?? 'حدث خطأ في الاتصال',
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'حدث خطأ غير متوقع: ${e.toString()}',
+      );
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> getDriverProfile() async {
+    try {
+      final response = await _dioClient.get('/delivery/profile');
+      final data = response.data as Map<String, dynamic>;
+      return ApiResponse(
+        success: true,
+        data: data,
       );
     } on DioException catch (e) {
       return ApiResponse(

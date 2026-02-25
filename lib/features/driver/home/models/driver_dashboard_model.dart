@@ -39,18 +39,18 @@ class DriverDashboardModel {
 }
 
 class EarningsChartData {
-  final String day;
-  final double amount;
+  final String period;
+  final double earnings;
 
   EarningsChartData({
-    required this.day,
-    required this.amount,
+    required this.period,
+    required this.earnings,
   });
 
   factory EarningsChartData.fromJson(Map<String, dynamic> json) {
     return EarningsChartData(
-      day: json['day']?.toString() ?? '',
-      amount: (json['amount'] ?? 0).toDouble(),
+      period: json['period']?.toString() ?? json['day']?.toString() ?? '',
+      earnings: (json['earnings'] ?? json['amount'] ?? 0).toDouble(),
     );
   }
 }

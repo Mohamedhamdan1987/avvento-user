@@ -1,18 +1,19 @@
 import 'package:avvento/core/enums/order_status.dart';
+import 'package:avvento/core/services/socket_service.dart';
 import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/utils/show_snackbar.dart';
+import '../../../wallet/services/wallet_service.dart';
 import '../models/driver_order_model.dart';
 import '../models/driver_dashboard_model.dart';
 import '../services/driver_orders_service.dart';
-import '../widgets/active_order_view.dart';
-import '../widgets/new_order_request_modal.dart';
 
 class DriverOrdersController extends GetxController {
   final DriverOrdersService _ordersService = DriverOrdersService();
+  final WalletService _walletService = WalletService();
 
   final RxList<DriverOrderModel> _nearbyOrders = <DriverOrderModel>[].obs;
   final RxList<DriverOrderModel> _myOrders = <DriverOrderModel>[].obs;
@@ -376,12 +377,12 @@ class DriverOrdersController extends GetxController {
   }
 
   // Fetch dashboard data
-  Future<void> fetchDashboardData() async {
+  Future<void> fetchDashboardData({String period = 'week'}) async {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _isLoading.value = true;
     });
     try {
-      final result = await _ordersService.getDashboardData();
+      final result = await _ordersService.getDashboardData(period: period);
 
       if (result.success && result.data != null) {
         _dashboardData.value = result.data!;
@@ -484,7 +485,6 @@ class DriverOrdersController extends GetxController {
       );
 
       if (result.success && result.data != null) {
-        // Update in my orders list
         final index = _myOrders.indexWhere((order) => order.id == orderId);
         if (index != -1) {
           _myOrders[index] = result.data!;
@@ -495,6 +495,12 @@ class DriverOrdersController extends GetxController {
           isSuccess: true,
         );
         fetchMyOrders();
+
+        if (status == 'delivered') {
+          try {
+            await _walletService.syncEarnings();
+          } catch (_) {}
+        }
       } else {
         showSnackBar(
           title: 'خطأ',
@@ -512,37 +518,11 @@ class DriverOrdersController extends GetxController {
   // Select an order to view details
   void selectOrder(DriverOrderModel order) {
     _selectedOrder.value = order;
-    
-    // Check if it's one of my active orders
-    final isMyOrder = _myOrders.any((o) => o.id == order.id);
-
-    // Open bottom sheet when order is selected
-    // Using GetX navigation to avoid build context issues
-    if (Get.isBottomSheetOpen == false) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.bottomSheet(
-          isMyOrder ? ActiveOrderView(order: order) : NewOrderRequestModal(order: order),
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          enableDrag: true,
-          isDismissible: true,
-        ).then((_) {
-          // Clear selection when modal is dismissed
-          _selectedOrder.value = null;
-        });
-      });
-    }
   }
 
   // Clear selected order
   void clearSelectedOrder() {
     _selectedOrder.value = null;
-    // Close any open bottom sheets
-    if (Get.isBottomSheetOpen == true) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.back();
-      });
-    }
   }
 
   // Update driver location
@@ -630,15 +610,115 @@ class DriverOrdersController extends GetxController {
     });
   }
 
+  Future<void> fetchWorkingStatus() async {
+    try {
+      final result = await _ordersService.getDriverProfile();
+      if (result.success && result.data != null) {
+        final user = result.data!['user'] as Map<String, dynamic>?;
+        if (user != null) {
+          final workingStatus = user['workingStatus'] as String?;
+          _isAvailable.value = workingStatus == 'working';
+        }
+      }
+    } catch (e) {
+      cprint('Error fetching working status: $e');
+    }
+  }
+
+  void _setupSocketListeners() {
+    if (!Get.isRegistered<SocketService>()) return;
+    final socketService = Get.find<SocketService>();
+
+    socketService.onAvailableOrdersReceived = (ordersData) {
+      try {
+        final orders = ordersData
+            .map((json) =>
+                DriverOrderModel.fromJson(Map<String, dynamic>.from(json)))
+            .toList();
+        _nearbyOrders.value = orders;
+        _isLoading.value = false;
+        _updateMarkers();
+        cprint('Socket: loaded ${orders.length} available orders');
+      } catch (e) {
+        _isLoading.value = false;
+        cprint('Error parsing available orders from socket: $e');
+      }
+    };
+
+    socketService.onNewOrderAvailableForController = (data) {
+      try {
+        final order = DriverOrderModel.fromJson(Map<String, dynamic>.from(data));
+        final exists = _nearbyOrders.any((o) => o.id == order.id);
+        if (!exists) {
+          _nearbyOrders.add(order);
+          _updateMarkers();
+          cprint('Socket: new order added ${order.id}');
+        }
+      } catch (e) {
+        cprint('Error parsing new order from socket: $e');
+      }
+    };
+
+    socketService.onOrderTakenForController = (data) {
+      final orderId = data['orderId']?.toString() ?? data['_id']?.toString();
+      if (orderId != null) {
+        _nearbyOrders.removeWhere((order) => order.id == orderId);
+        _updateMarkers();
+        cprint('Socket: order $orderId taken, removed from nearby');
+      }
+    };
+
+    socketService.onOrderStatusUpdateForController = (data) {
+      final orderId = data['orderId']?.toString() ?? data['_id']?.toString();
+      final newStatus = data['status']?.toString();
+      if (orderId == null) return;
+
+      if (newStatus == 'cancelled') {
+        _nearbyOrders.removeWhere((order) => order.id == orderId);
+        _myOrders.removeWhere((order) => order.id == orderId);
+      } else if (newStatus != null) {
+        final nearbyIdx = _nearbyOrders.indexWhere((o) => o.id == orderId);
+        if (nearbyIdx != -1) {
+          final old = _nearbyOrders[nearbyIdx];
+          final json = old.toJson();
+          json['status'] = newStatus;
+          json['_id'] = old.id;
+          _nearbyOrders[nearbyIdx] = DriverOrderModel.fromJson(json);
+        }
+
+        final myIdx = _myOrders.indexWhere((o) => o.id == orderId);
+        if (myIdx != -1) {
+          final old = _myOrders[myIdx];
+          final json = old.toJson();
+          json['status'] = newStatus;
+          json['_id'] = old.id;
+          _myOrders[myIdx] = DriverOrderModel.fromJson(json);
+        }
+      }
+      _updateMarkers();
+      cprint('Socket: order $orderId status -> $newStatus');
+    };
+  }
+
+  void emitGetAvailableOrders() {
+    _isLoading.value = true;
+    if (!Get.isRegistered<SocketService>()) return;
+    final socketService = Get.find<SocketService>();
+    socketService.emitGetAvailableOrders();
+  }
+
   @override
   void onInit() {
     super.onInit();
-    // Initialize controller
+    fetchWorkingStatus();
+    _setupSocketListeners();
   }
 
   @override
   void onClose() {
-    // Clean up
+    if (Get.isRegistered<SocketService>()) {
+      Get.find<SocketService>().clearControllerCallbacks();
+    }
     super.onClose();
   }
 }

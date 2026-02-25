@@ -240,7 +240,8 @@ class PreviousOrderCard extends StatelessWidget {
                       // Reorder Button
                       GestureDetector(
                         onTap: () {
-                          // Handle reorder
+                          final controller = Get.find<OrdersController>();
+                          controller.reorder(order.id);
                         },
                         child: Row(
                           mainAxisSize: MainAxisSize.min,

@@ -1,3 +1,5 @@
+import 'restaurant_model.dart';
+
 class FavoriteRestaurant {
   final String id;
   final String userId;
@@ -14,6 +16,7 @@ class FavoriteRestaurant {
   final DateTime updatedAt;
   final bool isOpen;
   final bool isFavorite;
+  final DeliveryFeeEstimate? deliveryFeeEstimate;
 
   FavoriteRestaurant({
     required this.id,
@@ -31,12 +34,15 @@ class FavoriteRestaurant {
     required this.updatedAt,
     required this.isOpen,
     this.isFavorite = true,
+    this.deliveryFeeEstimate,
   });
 
   factory FavoriteRestaurant.fromJson(Map<String, dynamic> json) {
+    final deliveryFeeJson = json['deliveryFeeEstimate'] as Map<String, dynamic>?;
+
     return FavoriteRestaurant(
       id: json['_id'] as String,
-      userId: json['user'] as String,
+      userId: json['user'] is String ? json['user'] as String : (json['user']?['_id'] ?? ''),
       name: json['name'] as String,
       address: json['address'] as String,
       lat: (json['lat'] as num).toDouble(),
@@ -49,7 +55,10 @@ class FavoriteRestaurant {
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       isOpen: json['isOpen'] as bool? ?? false,
-      isFavorite: true,
+      isFavorite: json['isFavorite'] as bool? ?? true,
+      deliveryFeeEstimate: deliveryFeeJson != null
+          ? DeliveryFeeEstimate.fromJson(deliveryFeeJson)
+          : null,
     );
   }
 
@@ -70,6 +79,7 @@ class FavoriteRestaurant {
       'updatedAt': updatedAt.toIso8601String(),
       'isOpen': isOpen,
       'isFavorite': isFavorite,
+      if (deliveryFeeEstimate != null) 'deliveryFeeEstimate': deliveryFeeEstimate!.toJson(),
     };
   }
 }

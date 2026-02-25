@@ -1,20 +1,26 @@
 import 'package:avvento/core/widgets/reusable/custom_app_bar.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
+import 'package:avvento/core/widgets/webview/SmartWebView.dart';
+import 'package:avvento/core/enums/order_status.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
 import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/utils/location_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import '../controllers/cart_controller.dart';
 import '../models/cart_model.dart';
 import '../../address/controllers/address_controller.dart';
 import '../../address/models/address_model.dart';
 import '../../wallet/controllers/client_wallet_controller.dart';
+import '../../orders/services/orders_service.dart';
+import 'package:get_storage/get_storage.dart';
 
 enum PaymentMethod { cash, card, wallet }
 
@@ -29,10 +35,12 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   final CartController cartController = Get.find<CartController>();
   final AddressController addressController = Get.put(AddressController());
-  final ClientWalletController walletController = Get.put(ClientWalletController());
+  final ClientWalletController walletController = Get.put(
+    ClientWalletController(),
+  );
+  final OrdersService _ordersService = OrdersService();
   PaymentMethod selectedPaymentMethod = PaymentMethod.cash;
   Worker? _addressWorker;
-  Worker? _paymentWorker; // Also listen to payment method changes logic if needed, but keeping it simple for now.
 
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
@@ -51,23 +59,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       addressController.fetchAddresses();
     });
-    
+
     _addressWorker = ever(addressController.activeAddress, (address) {
-       if (address != null) {
-         _calculatePrice(address);
-         _updateMapLocation(address);
-       }
+      if (address != null) {
+        _calculatePrice(address);
+        _updateMapLocation(address);
+      }
     });
   }
 
   void _updateMapLocation(AddressModel address) {
     if (_mapController == null) return;
-    
+
     final latLng = LatLng(address.lat, address.long);
     _mapController!.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(target: latLng, zoom: 15),
-      ),
+      CameraUpdate.newCameraPosition(CameraPosition(target: latLng, zoom: 15)),
     );
 
     setState(() {
@@ -75,7 +81,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
         Marker(
           markerId: const MarkerId('delivery_location'),
           position: latLng,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueViolet,
+          ),
         ),
       };
     });
@@ -90,7 +98,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
 
     cartController.calculateOrderPrice(
-      restaurantId: widget.cart.restaurant.id!,
+      restaurantId: widget.cart.restaurant.id,
       addressId: address.id,
       deliveryAddress: address.address,
       deliveryLat: address.lat,
@@ -99,13 +107,33 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
+  Future<void> _openNavigationToActiveAddress() async {
+    final activeAddress = addressController.activeAddress.value;
+    if (activeAddress == null) return;
+    try {
+      final hasPermission = await LocationUtils.ensureLocationPermission();
+      if (!hasPermission) return;
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      await LocationUtils.openGoogleMapsWithDirections(
+        userLat: position.latitude,
+        userLong: position.longitude,
+        restaurantLat: activeAddress.lat,
+        restaurantLong: activeAddress.long,
+      );
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         title: 'إتمام الطلب',
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor:
+            Theme.of(context).appBarTheme.backgroundColor ??
+            Theme.of(context).scaffoldBackgroundColor,
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
@@ -134,10 +162,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             // Order Summary Section
                             _buildOrderSummarySection(),
                             SizedBox(height: 24.h),
-                            
+
                             // Bill Details (Moved to bottom summary)
                             // _buildBillDetailsSection(),
-                            // SizedBox(height: 24.h), 
+                            // SizedBox(height: 24.h),
                           ],
                         ),
                       ),
@@ -156,9 +184,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   Widget _buildHeaderSection() {
     final activeAddress = addressController.activeAddress.value;
-    final initialPos = activeAddress != null 
+    final initialPos = activeAddress != null
         ? LatLng(activeAddress.lat, activeAddress.long)
-        : const LatLng(32.8872, 13.1913); // Default Tripoli
+        : LatLng(
+            LocationUtils.currentLatitude ?? 32.8872,
+            LocationUtils.currentLongitude ?? 13.1913,
+          );
 
     return Container(
       height: 250.h,
@@ -188,34 +219,35 @@ class _CheckoutPageState extends State<CheckoutPage> {
               zoomControlsEnabled: false,
               mapToolbarEnabled: false,
               compassEnabled: false,
-              scrollGesturesEnabled: false,
-              zoomGesturesEnabled: false,
-              tiltGesturesEnabled: false,
-              rotateGesturesEnabled: false,
+              scrollGesturesEnabled: true,
+              zoomGesturesEnabled: true,
+              tiltGesturesEnabled: true,
+              rotateGesturesEnabled: true,
             ),
           ),
-          // Overlay content
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withOpacity(0.0),
-                  Colors.white.withOpacity(0.2),
-                  Colors.white.withOpacity(0.8),
-                  Colors.white,
-                ],
-                stops: const [0.0, 0.3, 0.7, 1.0],
+          // Gradient overlay should not block map gestures
+          IgnorePointer(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withOpacity(0.0),
+                    Colors.white.withOpacity(0.2),
+                    Colors.white.withOpacity(0.8),
+                    Colors.white,
+                  ],
+                  stops: const [0.0, 0.3, 0.7, 1.0],
+                ),
               ),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                _buildDeliveryAddressSection(),
-              ],
-            ),
+          ),
+          Positioned(
+            left: 16.w,
+            right: 16.w,
+            bottom: 24.h,
+            child: _buildDeliveryAddressSection(),
           ),
           // Floating Icon to match original design intent (optional)
           Positioned(
@@ -224,6 +256,31 @@ class _CheckoutPageState extends State<CheckoutPage> {
             right: 0,
             child: Center(
               child: SvgPicture.asset("assets/svg/cart/map_group_icon.svg"),
+            ),
+          ),
+          Positioned(
+            top: 16.h,
+            left: 16.w,
+            child: Material(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(14.r),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14.r),
+                onTap: _openNavigationToActiveAddress,
+                child: Container(
+                  width: 44.w,
+                  height: 44.w,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14.r),
+                    border: Border.all(color: Theme.of(context).dividerColor),
+                  ),
+                  child: Icon(
+                    Icons.navigation_rounded,
+                    color: const Color(0xFF7F22FE),
+                    size: 20.r,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -250,67 +307,77 @@ class _CheckoutPageState extends State<CheckoutPage> {
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: Theme.of(context).dividerColor, width: 0.761),
+            border: Border.all(
+              color: Theme.of(context).dividerColor,
+              width: 0.761,
+            ),
           ),
           child: Column(
             // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Items List
               ListView.separated(
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: EdgeInsets.zero,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                final item = widget.cart.items[index];
-                return Row(
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-
-                        color: const Color(0x197F22FE),
-                        borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(
-                          color: Theme.of(context).dividerColor,
-                          width: 0.761,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  final item = widget.cart.items[index];
+                  return Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0x197F22FE),
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(
+                            color: Theme.of(context).dividerColor,
+                            width: 0.761,
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12.r),
+                          child: Text(
+                            "${item.quantity}x",
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
                         ),
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12.r),
-                        child: Text("${item.quantity}x", style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          '${item.item.name}',
+                          style: TextStyle().textColorMedium(
+                            fontSize: 14.sp,
+                            color: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.color,
+                          ),
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child:  Text(
-                        '${item.item.name}',
-                        style: TextStyle().textColorMedium(
+                      Text(
+                        '${item.totalPrice.toStringAsFixed(0)} د.ل',
+                        style: TextStyle().textColorBold(
                           fontSize: 14.sp,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
-                    ),
-                    Text(
-                      '${item.totalPrice.toStringAsFixed(0)} د.ل',
-                      style: TextStyle().textColorBold(
-                        fontSize: 14.sp,
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
-                      ),
-                    ),
-                  ],
-                );
-              },
-                  separatorBuilder: (context, index) => Container( height: 10, ),
-                  itemCount: widget.cart.items.length),
-              
+                    ],
+                  );
+                },
+                separatorBuilder: (context, index) => Container(height: 10),
+                itemCount: widget.cart.items.length,
+              ),
+
               // Drinks List
               if (cartController.selectedDrinks.isNotEmpty) ...[
-                 Container( height: 10, ),
-                 Divider(color: Theme.of(context).dividerColor),
-                 Container( height: 10, ),
-                 Text(
+                Container(height: 10),
+                Divider(color: Theme.of(context).dividerColor),
+                Container(height: 10),
+                Text(
                   'المشروبات',
                   style: TextStyle().textColorBold(
                     fontSize: 12.sp,
@@ -319,71 +386,77 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
                 SizedBox(height: 8.h),
                 ListView.separated(
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    itemBuilder: (context, index) {
-                      final drink = cartController.selectedDrinks[index];
-                      return Row(
-                        children: [
-                          Container(
-                            width: 28,
-                            height: 28,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: const Color(0x197F22FE),
-                              borderRadius: BorderRadius.circular(8.r),
-                              border: Border.all(
-                                color: Theme.of(context).dividerColor,
-                                width: 0.761,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    final drink = cartController.selectedDrinks[index];
+                    return Row(
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: const Color(0x197F22FE),
+                            borderRadius: BorderRadius.circular(8.r),
+                            border: Border.all(
+                              color: Theme.of(context).dividerColor,
+                              width: 0.761,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12.r),
+                            child: Text(
+                              "${drink['quantity']}x",
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12.r),
-                              child: Text("${drink['quantity']}x", style: TextStyle(color: Theme.of(context).colorScheme.primary)),
-                            ),
                           ),
-                          SizedBox(width: 8.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${drink['name']}',
-                                  style: TextStyle().textColorMedium(
-                                    fontSize: 14.sp,
-                                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                                  ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${drink['name']}',
+                                style: TextStyle().textColorMedium(
+                                  fontSize: 14.sp,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodyMedium?.color,
                                 ),
-                                if (drink['notes'] != null && drink['notes'].toString().isNotEmpty)
-                                  Text(
-                                    '${drink['notes']}',
-                                    style: TextStyle().textColorNormal(
-                                      fontSize: 12.sp,
-                                      color: Theme.of(context).hintColor,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                              ),
+                              if (drink['notes'] != null &&
+                                  drink['notes'].toString().isNotEmpty)
+                                Text(
+                                  '${drink['notes']}',
+                                  style: TextStyle().textColorNormal(
+                                    fontSize: 12.sp,
+                                    color: Theme.of(context).hintColor,
                                   ),
-                              ],
-                            ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
                           ),
-                          Text(
-                            '${((drink['price'] as num) * (drink['quantity'] as int)).toStringAsFixed(0)} د.ل',
-                            style: TextStyle().textColorBold(
-                              fontSize: 14.sp,
-                              color: Theme.of(context).textTheme.bodyLarge?.color,
-                            ),
+                        ),
+                        Text(
+                          '${((drink['price'] as num) * (drink['quantity'] as int)).toStringAsFixed(0)} د.ل',
+                          style: TextStyle().textColorBold(
+                            fontSize: 14.sp,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
-                        ],
-                      );
-                    },
-                    separatorBuilder: (context, index) => Container(height: 10),
-                    itemCount: cartController.selectedDrinks.length),
+                        ),
+                      ],
+                    );
+                  },
+                  separatorBuilder: (context, index) => Container(height: 10),
+                  itemCount: cartController.selectedDrinks.length,
+                ),
               ],
-
-
-
             ],
           ),
         ),
@@ -404,7 +477,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: Theme.of(context).dividerColor, width: 1),
+              border: Border.all(
+                color: Theme.of(context).dividerColor,
+                width: 1,
+              ),
             ),
             child: Row(
               children: [
@@ -434,7 +510,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
         decoration: ShapeDecoration(
           color: Theme.of(context).cardColor.withValues(alpha: 0.95),
           shape: RoundedRectangleBorder(
-            side: BorderSide(width: 0.76, color: Theme.of(context).dividerColor),
+            side: BorderSide(
+              width: 0.76,
+              color: Theme.of(context).dividerColor,
+            ),
             borderRadius: BorderRadius.circular(16),
           ),
           shadows: [
@@ -602,14 +681,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Widget _getPaymentIcon(PaymentMethod method) {
     switch (method) {
       case PaymentMethod.cash:
-        return Icon(Icons.money, color: Theme.of(context).iconTheme.color, size: 20.r);
-        // return SvgPicture.asset("assets/svg/client/delivery-bike.svg", color: const Color(0xFF101828)); 
-      case PaymentMethod.card: // Making 'card' represent 'banking' for now or generic card
-        return SvgPicture.asset("assets/svg/wallet/bank_card_outline.svg", color: Theme.of(context).iconTheme.color);
+        return Icon(
+          Icons.money,
+          color: Theme.of(context).iconTheme.color,
+          size: 20.r,
+        );
+      // return SvgPicture.asset("assets/svg/client/delivery-bike.svg", color: const Color(0xFF101828));
+      case PaymentMethod
+          .card: // Making 'card' represent 'banking' for now or generic card
+        return SvgPicture.asset(
+          "assets/svg/wallet/bank_card_outline.svg",
+          color: Theme.of(context).iconTheme.color,
+        );
       case PaymentMethod.wallet:
-        return SvgPicture.asset("assets/svg/nav/wallet.svg", color: Theme.of(context).iconTheme.color);
-      default:
-        return Icon(Icons.payment, color: Theme.of(context).iconTheme.color, size: 20.r);
+        return SvgPicture.asset(
+          "assets/svg/nav/wallet.svg",
+          color: Theme.of(context).iconTheme.color,
+        );
     }
   }
 
@@ -621,8 +709,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
         return 'الخدمات المصرفية';
       case PaymentMethod.wallet:
         return 'المحفظة';
-      default:
-        return 'غير محدد';
     }
   }
 
@@ -635,217 +721,271 @@ class _CheckoutPageState extends State<CheckoutPage> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
         child: Obx(() {
-            double walletBalance = walletController.wallet.value?.balance ?? 0.0;
-            final calculated = cartController.calculatedPrice.value;
-            double orderTotal = calculated != null ? calculated.totalPrice : widget.cart.totalPrice;
-            bool isWalletBalanceEnough = walletBalance >= orderTotal;
+          double walletBalance = walletController.wallet.value?.balance ?? 0.0;
+          final calculated = cartController.calculatedPrice.value;
+          double orderTotal = calculated != null
+              ? calculated.totalPrice
+              : widget.cart.totalPrice;
+          bool isWalletBalanceEnough = walletBalance >= orderTotal;
 
-            return StatefulBuilder(
-              builder: (context, setStateBottomSheet) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 48.w,
-                        height: 5.h,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).dividerColor,
-                          borderRadius: BorderRadius.circular(2.5.r),
-                        ),
+          return StatefulBuilder(
+            builder: (context, setStateBottomSheet) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 48.w,
+                      height: 5.h,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).dividerColor,
+                        borderRadius: BorderRadius.circular(2.5.r),
                       ),
                     ),
-                    SizedBox(height: 24.h),
-                    Text(
-                      'اختر طريقة الدفع',
-                      style: TextStyle().textColorBold(
-                        fontSize: 18.sp,
-                        color: Theme.of(context).textTheme.titleLarge?.color,
-                      ),
-                      textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 24.h),
+                  Text(
+                    'اختر طريقة الدفع',
+                    style: TextStyle().textColorBold(
+                      fontSize: 18.sp,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                     ),
-                    SizedBox(height: 24.h),
-                    
-                    GridView.count(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12.w,
-                        mainAxisSpacing: 12.h,
-                        childAspectRatio: 1.0,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          // 1. Wallet
-                          _buildPaymentSelectionCard(
-                            isSelected: selectedPaymentMethod == PaymentMethod.wallet,
-                            onTap: () {
-                              setStateBottomSheet(() {
-                                 selectedPaymentMethod = PaymentMethod.wallet; 
-                              });
-                              setState(() {});
-                              if (addressController.activeAddress.value != null) {
-                                _calculatePrice(addressController.activeAddress.value!);
-                              } 
-                            },
-                            child: Stack(
-                              children: [
-                                PositionedDirectional(
-                                  top: 8.h,
-                                  end: 8.w,
-                                  child: SvgPicture.asset(
-                                    "assets/svg/nav/wallet.svg",
-                                    width: 20.w,
-                                    height: 20.h,
-                                    color: selectedPaymentMethod == PaymentMethod.wallet ? const Color(0xFF7F22FE) : Theme.of(context).iconTheme.color,
-                                  ),
-                                ),
-                                Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      SizedBox(height: 16.h),
-                                      Text(
-                                        '${walletBalance.toStringAsFixed(1)} د.ل',
-                                        style: TextStyle().textColorBold(
-                                          fontSize: 16.sp,
-                                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4.h),
-                                      Text(
-                                        'الرصيد المتاح',
-                                        style: TextStyle().textColorNormal(
-                                          fontSize: 12.sp,
-                                          color: Theme.of(context).hintColor,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 12.h,
-                                  left: 0,
-                                  right: 0,
-                                  child: Text(
-                                    'المحفظة',
-                                    textAlign: TextAlign.center,
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 24.h),
+
+                  GridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12.w,
+                    mainAxisSpacing: 12.h,
+                    childAspectRatio: 1.0,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      // 1. Wallet
+                      _buildPaymentSelectionCard(
+                        isSelected:
+                            selectedPaymentMethod == PaymentMethod.wallet,
+                        onTap: () {
+                          setStateBottomSheet(() {
+                            selectedPaymentMethod = PaymentMethod.wallet;
+                          });
+                          setState(() {});
+                          if (addressController.activeAddress.value != null) {
+                            _calculatePrice(
+                              addressController.activeAddress.value!,
+                            );
+                          }
+                        },
+                        child: Stack(
+                          children: [
+                            PositionedDirectional(
+                              top: 8.h,
+                              end: 8.w,
+                              child: SvgPicture.asset(
+                                "assets/svg/nav/wallet.svg",
+                                width: 20.w,
+                                height: 20.h,
+                                color:
+                                    selectedPaymentMethod ==
+                                        PaymentMethod.wallet
+                                    ? const Color(0xFF7F22FE)
+                                    : Theme.of(context).iconTheme.color,
+                              ),
+                            ),
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(height: 16.h),
+                                  Text(
+                                    '${walletBalance.toStringAsFixed(1)} د.ل',
                                     style: TextStyle().textColorBold(
-                                      fontSize: 14.sp,
-                                      color: selectedPaymentMethod == PaymentMethod.wallet ? const Color(0xFF7F22FE) : Theme.of(context).textTheme.bodyMedium?.color,
+                                      fontSize: 16.sp,
+                                      color: Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.color,
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          
-                          // 2. Cash
-                          _buildPaymentSelectionCard(
-                            isSelected: selectedPaymentMethod == PaymentMethod.cash,
-                            onTap: () {
-                               setStateBottomSheet(() {
-                                 selectedPaymentMethod = PaymentMethod.cash;
-                               });
-                               setState(() {});
-                               if (addressController.activeAddress.value != null) {
-                                 _calculatePrice(addressController.activeAddress.value!);
-                               }
-                            },
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.money, size: 40.r, color: selectedPaymentMethod == PaymentMethod.cash ? const Color(0xFF7F22FE) : Theme.of(context).iconTheme.color),
-                                SizedBox(height: 12.h),
-                                Text(
-                                  'الدفع عند الاستلام',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle().textColorBold(
-                                    fontSize: 14.sp,
-                                    color: selectedPaymentMethod == PaymentMethod.cash ? const Color(0xFF7F22FE) : Theme.of(context).textTheme.bodyMedium?.color,
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    'الرصيد المتاح',
+                                    style: TextStyle().textColorNormal(
+                                      fontSize: 12.sp,
+                                      color: Theme.of(context).hintColor,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          
-                          // 3. Banking
-                          _buildPaymentSelectionCard(
-                            isSelected: selectedPaymentMethod == PaymentMethod.card, // mapped to banking
-                            onTap: () {
-                               setStateBottomSheet(() {
-                                 selectedPaymentMethod = PaymentMethod.card;
-                               });
-                               setState(() {});
-                               if (addressController.activeAddress.value != null) {
-                                 _calculatePrice(addressController.activeAddress.value!);
-                               }
-                            },
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SvgPicture.asset(
-                                  "assets/svg/wallet/bank_card_outline.svg",
-                                   width: 40.w,
-                                   height: 40.h,
-                                   color: selectedPaymentMethod == PaymentMethod.card ? const Color(0xFF7F22FE) : Theme.of(context).iconTheme.color
+                            Positioned(
+                              bottom: 12.h,
+                              left: 0,
+                              right: 0,
+                              child: Text(
+                                'المحفظة',
+                                textAlign: TextAlign.center,
+                                style: TextStyle().textColorBold(
+                                  fontSize: 14.sp,
+                                  color:
+                                      selectedPaymentMethod ==
+                                          PaymentMethod.wallet
+                                      ? const Color(0xFF7F22FE)
+                                      : Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium?.color,
                                 ),
-                                SizedBox(height: 12.h),
-                                Text(
-                                  'الخدمات المصرفية',
-                                  textAlign: TextAlign.center,
-                                   style: TextStyle().textColorBold(
-                                    fontSize: 14.sp,
-                                    color: selectedPaymentMethod == PaymentMethod.card ? const Color(0xFF7F22FE) : Theme.of(context).textTheme.bodyMedium?.color,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
 
+                      // 2. Cash
+                      _buildPaymentSelectionCard(
+                        isSelected: selectedPaymentMethod == PaymentMethod.cash,
+                        onTap: () {
+                          setStateBottomSheet(() {
+                            selectedPaymentMethod = PaymentMethod.cash;
+                          });
+                          setState(() {});
+                          if (addressController.activeAddress.value != null) {
+                            _calculatePrice(
+                              addressController.activeAddress.value!,
+                            );
+                          }
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.money,
+                              size: 40.r,
+                              color: selectedPaymentMethod == PaymentMethod.cash
+                                  ? const Color(0xFF7F22FE)
+                                  : Theme.of(context).iconTheme.color,
+                            ),
+                            SizedBox(height: 12.h),
+                            Text(
+                              'الدفع عند الاستلام',
+                              textAlign: TextAlign.center,
+                              style: TextStyle().textColorBold(
+                                fontSize: 14.sp,
+                                color:
+                                    selectedPaymentMethod == PaymentMethod.cash
+                                    ? const Color(0xFF7F22FE)
+                                    : Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium?.color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
-                    SizedBox(height: 32.h),
-                    
-                    // Bottom Button
-                    CustomButtonApp(
-                      text: (selectedPaymentMethod == PaymentMethod.wallet && !isWalletBalanceEnough)
-                          ? 'تعبئة المحفظة'
-                          : 'تأكيد الاختيار',
-                      color: (selectedPaymentMethod == PaymentMethod.wallet && !isWalletBalanceEnough)
-                          ? AppColors.notificationRed // Distinct color for top-up
-                          : const Color(0xFF7F22FE),
-                      onTap: () {
-                        if (selectedPaymentMethod == PaymentMethod.wallet && !isWalletBalanceEnough) {
-                          // Navigate to top-up (ClientWalletPage)
-                          Get.back(); // Close sheet
-                          Get.toNamed(AppRoutes.wallet);
-                        } else {
-                          Get.back();
-                        }
-                      },
-                    ),
-                    SizedBox(height: 16.h),
-                  ],
-                );
-              },
-            );
-          }),
+                      // 3. Banking
+                      _buildPaymentSelectionCard(
+                        isSelected:
+                            selectedPaymentMethod ==
+                            PaymentMethod.card, // mapped to banking
+                        onTap: () {
+                          setStateBottomSheet(() {
+                            selectedPaymentMethod = PaymentMethod.card;
+                          });
+                          setState(() {});
+                          if (addressController.activeAddress.value != null) {
+                            _calculatePrice(
+                              addressController.activeAddress.value!,
+                            );
+                          }
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SvgPicture.asset(
+                              "assets/svg/wallet/bank_card_outline.svg",
+                              width: 40.w,
+                              height: 40.h,
+                              color: selectedPaymentMethod == PaymentMethod.card
+                                  ? const Color(0xFF7F22FE)
+                                  : Theme.of(context).iconTheme.color,
+                            ),
+                            SizedBox(height: 12.h),
+                            Text(
+                              'الخدمات المصرفية',
+                              textAlign: TextAlign.center,
+                              style: TextStyle().textColorBold(
+                                fontSize: 14.sp,
+                                color:
+                                    selectedPaymentMethod == PaymentMethod.card
+                                    ? const Color(0xFF7F22FE)
+                                    : Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium?.color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 32.h),
+
+                  // Bottom Button
+                  CustomButtonApp(
+                    text:
+                        (selectedPaymentMethod == PaymentMethod.wallet &&
+                            !isWalletBalanceEnough)
+                        ? 'تعبئة المحفظة'
+                        : 'تأكيد الاختيار',
+                    color:
+                        (selectedPaymentMethod == PaymentMethod.wallet &&
+                            !isWalletBalanceEnough)
+                        ? AppColors
+                              .notificationRed // Distinct color for top-up
+                        : const Color(0xFF7F22FE),
+                    onTap: () {
+                      if (selectedPaymentMethod == PaymentMethod.wallet &&
+                          !isWalletBalanceEnough) {
+                        // Navigate to top-up (ClientWalletPage)
+                        Get.back(); // Close sheet
+                        Get.toNamed(AppRoutes.wallet);
+                      } else {
+                        Get.back();
+                      }
+                    },
+                  ),
+                  SizedBox(height: 16.h),
+                ],
+              );
+            },
+          );
+        }),
       ),
       isScrollControlled: true,
     );
   }
 
-  Widget _buildPaymentSelectionCard({required bool isSelected, required VoidCallback onTap, required Widget child}) {
+  Widget _buildPaymentSelectionCard({
+    required bool isSelected,
+    required VoidCallback onTap,
+    required Widget child,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         // width: 140.w, // Remove fixed width for GridView
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF7F22FE).withOpacity(0.05) : Theme.of(context).cardColor,
+          color: isSelected
+              ? const Color(0xFF7F22FE).withOpacity(0.05)
+              : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: isSelected ? const Color(0xFF7F22FE) : Theme.of(context).dividerColor,
+            color: isSelected
+                ? const Color(0xFF7F22FE)
+                : Theme.of(context).dividerColor,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -856,7 +996,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   Widget _buildBottomSection() {
     return Container(
-      padding: EdgeInsets.only(top: 16.h, left: 24.w, right: 24.w, bottom: 24.h),
+      padding: EdgeInsets.only(
+        top: 16.h,
+        left: 24.w,
+        right: 24.w,
+        bottom: 24.h,
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.only(
@@ -864,10 +1009,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           topRight: Radius.circular(24.r),
         ),
         border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 0.761,
-          ),
+          top: BorderSide(color: Theme.of(context).dividerColor, width: 0.761),
         ),
         boxShadow: [
           BoxShadow(
@@ -883,7 +1025,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         final total = calculated?.totalPrice ?? subtotal;
         final activeAddress = addressController.activeAddress.value;
         final hasAddress = activeAddress != null;
-        
+
         final walletBalance = walletController.wallet.value?.balance ?? 0.0;
         final isWalletBalanceEnough = walletBalance >= total;
         final isWalletSelected = selectedPaymentMethod == PaymentMethod.wallet;
@@ -930,33 +1072,39 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
             // Order Button
             CustomButtonApp(
-              text: (isWalletSelected && !isWalletBalanceEnough) ? 'تعبئة المحفظة' : 'إتمام الطلب',
+              text: (isWalletSelected && !isWalletBalanceEnough)
+                  ? 'تعبئة المحفظة'
+                  : 'إتمام الطلب',
               isLoading: cartController.isLoading,
               isEnable: hasAddress,
               childWidget: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   if (cartController.isLoading)
-                    const Center(child: CircularProgressIndicator(color: Colors.white))
+                    const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    )
                   else
                     Text(
-                      (isWalletSelected && !isWalletBalanceEnough) ? 'تعبئة المحفظة' : 'إتمام الطلب',
+                      (isWalletSelected && !isWalletBalanceEnough)
+                          ? 'تعبئة المحفظة'
+                          : 'إتمام الطلب',
                       style: TextStyle().textColorBold(
                         fontSize: 16.sp,
                         color: Colors.white,
                       ),
                     ),
 
-                  if (!cartController.isLoading)
-                    ...[
-                      SizedBox(width: 8.w),
-                      Text(
+                  if (!cartController.isLoading) ...[
+                    SizedBox(width: 8.w),
+                    Text(
                       '${total.toStringAsFixed(1)} د.ل',
                       style: TextStyle().textColorBold(
                         fontSize: 16.sp,
                         color: Colors.white,
                       ),
-                    )],
+                    ),
+                  ],
                 ],
               ),
               onTap: hasAddress
@@ -967,15 +1115,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       }
                       final address = addressController.activeAddress.value;
                       if (address != null) {
-                        String paymentStr = 'cash';
                         if (selectedPaymentMethod == PaymentMethod.card) {
-                          paymentStr = 'gateway';
-                        } else if (selectedPaymentMethod == PaymentMethod.wallet) {
+                          _startGatewayPaymentAndPlaceOrder(
+                            address: address,
+                            total: total,
+                          );
+                          return;
+                        }
+
+                        String paymentStr = 'cash';
+                        if (selectedPaymentMethod == PaymentMethod.wallet) {
                           paymentStr = 'wallet';
                         }
 
                         cartController.placeOrder(
-                          restaurantId: widget.cart.restaurant.id!,
+                          restaurantId: widget.cart.restaurant.id,
                           addressId: address.id,
                           deliveryAddress: address.address,
                           deliveryLat: address.lat,
@@ -990,7 +1144,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   : null,
               color: const Color(0xFF4D179A),
             ),
-            
+
             // Expandable Bill Details
             AnimatedCrossFade(
               firstChild: const SizedBox.shrink(),
@@ -1008,22 +1162,39 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     children: [
                       Text(
                         "رسوم الخدمة",
-                        style: TextStyle().textColorNormal(fontSize: 14.sp, color: Theme.of(context).textTheme.bodyMedium?.color),
+                        style: TextStyle().textColorNormal(
+                          fontSize: 14.sp,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
                       ),
                       Text(
                         "مجانًا",
-                        style: TextStyle().textColorBold(fontSize: 14.sp, color: Colors.green),
+                        style: TextStyle().textColorBold(
+                          fontSize: 14.sp,
+                          color: Colors.green,
+                        ),
                       ),
                     ],
                   ),
-                  if(calculated?.deliveryFeeDetails != null && calculated!.deliveryFeeDetails!.isNight)
+                  if (calculated?.deliveryFeeDetails != null &&
+                      calculated!.deliveryFeeDetails!.isNight)
                     Padding(
                       padding: EdgeInsets.only(top: 12.h),
                       child: Row(
                         children: [
-                          Icon(Icons.nightlight_round, size: 14.sp, color: Colors.orange),
+                          Icon(
+                            Icons.nightlight_round,
+                            size: 14.sp,
+                            color: Colors.orange,
+                          ),
                           SizedBox(width: 4.w),
-                          Text("توصيل ليلي", style: TextStyle(fontSize: 12.sp, color: Colors.orange)),
+                          Text(
+                            "توصيل ليلي",
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.orange,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1039,7 +1210,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   SizedBox(height: 8.h),
                 ],
               ),
-              crossFadeState: _isBillExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              crossFadeState: _isBillExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 300),
             ),
           ],
@@ -1051,24 +1224,146 @@ class _CheckoutPageState extends State<CheckoutPage> {
   // Remove old _buildBottomButton and _buildBillDetailsSection if they are no longer used
   // I will keep _buildBillRow as it is useful for the expandable section.
 
-  Widget _buildBillRow(String label, double amount, {bool isBold = false, double fontSize = 14, String? valueText}) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: isBold 
-             ? TextStyle().textColorBold(fontSize: fontSize.sp, color: Theme.of(context).textTheme.bodyLarge?.color)
-             : TextStyle().textColorNormal(fontSize: fontSize.sp, color: Theme.of(context).textTheme.bodyMedium?.color),
-          ),
-          Text(
-            valueText ?? '${amount.toStringAsFixed(1)} د.ل', 
-             style: isBold 
-             ? TextStyle().textColorBold(fontSize: fontSize.sp, color: Theme.of(context).textTheme.bodyLarge?.color)
-             : TextStyle().textColorBold(fontSize: fontSize.sp, color: Theme.of(context).textTheme.bodyLarge?.color),
+  Widget _buildBillRow(
+    String label,
+    double amount, {
+    bool isBold = false,
+    double fontSize = 14,
+    String? valueText,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: isBold
+              ? TextStyle().textColorBold(
+                  fontSize: fontSize.sp,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                )
+              : TextStyle().textColorNormal(
+                  fontSize: fontSize.sp,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+        ),
+        Text(
+          valueText ?? '${amount.toStringAsFixed(1)} د.ل',
+          style: isBold
+              ? TextStyle().textColorBold(
+                  fontSize: fontSize.sp,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                )
+              : TextStyle().textColorBold(
+                  fontSize: fontSize.sp,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _startGatewayPaymentAndPlaceOrder({
+    required AddressModel address,
+    required double total,
+  }) async {
+    try {
+      final drinksPayload = cartController.selectedDrinks
+          .map(
+            (d) => {
+              "drinkId": d["drinkId"],
+              "quantity": d["quantity"],
+              "notes": d["notes"],
+            },
           )
-        ],
+          .toList();
+
+      final createdOrder = await _ordersService.createOrder(
+        restaurantId: widget.cart.restaurant.id,
+        addressId: address.id,
+        deliveryAddress: address.address,
+        deliveryLat: address.lat,
+        deliveryLong: address.long,
+        payment: 'gateway',
+        notes: '',
+        drinks: drinksPayload.isNotEmpty ? drinksPayload : null,
       );
+
+      String phone = '0910000000';
+      String email = 'customer@example.com';
+      final storage = GetStorage();
+      final userData = storage.read<Map<String, dynamic>>(AppConstants.userKey);
+      if (userData != null) {
+        final userPhone = userData['phone'] as String?;
+        final userEmail = userData['email'] as String?;
+        if (userPhone != null && userPhone.isNotEmpty) phone = userPhone;
+        if (userEmail != null && userEmail.isNotEmpty) email = userEmail;
+      }
+
+      final paymentInit = await _ordersService.initiatePayment(
+        amount: total,
+        phone: phone,
+        email: email,
+        customRef: createdOrder.id,
+      );
+
+      if (!paymentInit.success || paymentInit.paymentUrl.isEmpty) {
+        showSnackBar(
+          message:
+              'تم إنشاء الطلب لكن تعذر بدء عملية الدفع. أكمل الدفع من طلباتك.',
+          isError: true,
+        );
+        Get.offAllNamed(AppRoutes.clientNavBar, arguments: {'tabIndex': 1});
+        return;
+      }
+
+      await Get.to(
+        () => SmartWebView(
+          url: paymentInit.paymentUrl,
+          appBar: AppBar(
+            title: const Text('الدفع الإلكتروني'),
+            backgroundColor: const Color(0xFFF7F7F7),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.arrow_forward_ios, color: Colors.black),
+                onPressed: () => Get.back(),
+              ),
+            ],
+            leading: Container(),
+          ),
+          closeWhenUrlContains: 'payment/success',
+          onClose: () {
+            cartController.clearDrinks();
+            cartController.fetchAllCarts();
+            showSnackBar(message: 'تم إتمام الدفع بنجاح', isSuccess: true);
+            if (widget.cart.restaurant.lat != null &&
+                widget.cart.restaurant.long != null) {
+              Get.offAllNamed(
+                AppRoutes.orderTrackingMap,
+                arguments: {
+                  'userLat': address.lat,
+                  'userLong': address.long,
+                  'restaurantLat': widget.cart.restaurant.lat,
+                  'restaurantLong': widget.cart.restaurant.long,
+                  'orderId': createdOrder.id,
+                  'status': OrderStatus.fromString(createdOrder.status),
+                  'driverName': createdOrder.driver?.name,
+                  'driverPhone': createdOrder.driver?.phone,
+                  'driverImageUrl': createdOrder.driver?.image,
+                },
+              );
+            } else {
+              Get.offAllNamed(
+                AppRoutes.clientNavBar,
+                arguments: {'tabIndex': 1},
+              );
+            }
+          },
+        ),
+      );
+    } catch (e) {
+      showSnackBar(message: 'حدث خطأ أثناء بدء عملية الدفع', isError: true);
+    }
   }
 
   String _getDeliveryTimeText(AddressModel deliveryAddress) {

@@ -138,6 +138,34 @@ class _HomePageContentState extends State<_HomePageContent> {
     });
   }
 
+  void _showComingSoonSnackbar(String title) {
+    Get.snackbar(
+      title,
+      'ستكون متاحة قريباً',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: AppColors.purple.withOpacity(0.9),
+      colorText: Colors.white,
+      margin: EdgeInsets.all(16.w),
+      borderRadius: 12.r,
+      duration: const Duration(seconds: 2),
+      icon: Icon(Icons.access_time_rounded, color: Colors.white, size: 24.w),
+    );
+  }
+
+  void _onServiceTap({required String key, required String title}) {
+    switch (key) {
+      case 'restaurant':
+        Get.toNamed(AppRoutes.restaurants);
+        break;
+      case 'market':
+        Get.toNamed(AppRoutes.markets);
+        break;
+      default:
+        _showComingSoonSnackbar(title);
+        break;
+    }
+  }
+
   /// Show test notification dialog (DEBUG ONLY)
   void _showTestNotificationDialog(BuildContext context) {
     showModalBottomSheet(
@@ -340,62 +368,74 @@ class _HomePageContentState extends State<_HomePageContent> {
                       top: 220.h,
                       left: 0,
                       right: 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CategoryCard(
-                            imagePath: 'assets/images/services/restaurant.png',
-                            title: 'المطاعم',
-                            onTap: () {
-                              Get.toNamed(AppRoutes.restaurants);
-                            },
-                          ),
-                          SizedBox(width: 14.w),
-                          CategoryCard(
-                            imagePath: 'assets/images/services/market.png',
-                            title: 'الماركت',
-                            onTap: () {
-                              Get.toNamed(AppRoutes.markets);
-                            },
-                          ),
-                          SizedBox(width: 14.w),
-                          CategoryCard(
-                            imagePath: 'assets/images/services/pharmacy.png',
-                            title: 'صيدليات',
-                            onTap: () {
-                              Get.snackbar(
-                                'صيدليات',
-                                'ستكون متاحة قريباً',
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: AppColors.purple.withOpacity(0.9),
-                                colorText: Colors.white,
-                                margin: EdgeInsets.all(16.w),
-                                borderRadius: 12.r,
-                                duration: const Duration(seconds: 2),
-                                icon: Icon(Icons.access_time_rounded, color: Colors.white, size: 24.w),
-                              );
-                            },
-                          ),
-                          SizedBox(width: 14.w),
-                          CategoryCard(
-                            imagePath: 'assets/images/services/store.png',
-                            title: 'المتاجر',
-                            onTap: () {
-                              Get.snackbar(
-                                'المتاجر',
-                                'ستكون متاحة قريباً',
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: AppColors.purple.withOpacity(0.9),
-                                colorText: Colors.white,
-                                margin: EdgeInsets.all(16.w),
-                                borderRadius: 12.r,
-                                duration: const Duration(seconds: 2),
-                                icon: Icon(Icons.access_time_rounded, color: Colors.white, size: 24.w),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
+                      child: Obx(() {
+                        final apiServices = widget.controller.homeServices;
+                        final fallbackServices = <Map<String, String>>[
+                          {
+                            'key': 'restaurant',
+                            'title': 'المطاعم',
+                            'imagePath': 'assets/images/services/restaurant.png',
+                          },
+                          {
+                            'key': 'market',
+                            'title': 'الماركت',
+                            'imagePath': 'assets/images/services/market.png',
+                          },
+                          {
+                            'key': 'pharmacy',
+                            'title': 'صيدليات',
+                            'imagePath': 'assets/images/services/pharmacy.png',
+                          },
+                          {
+                            'key': 'store',
+                            'title': 'المتاجر',
+                            'imagePath': 'assets/images/services/store.png',
+                          },
+                        ];
+
+                        final children = <Widget>[];
+
+                        if (apiServices.isNotEmpty) {
+                          for (var i = 0; i < apiServices.length; i++) {
+                            final service = apiServices[i];
+                            children.add(
+                              CategoryCard(
+                                svgContent: service.svg,
+                                title: service.name,
+                                onTap: () => _onServiceTap(
+                                  key: service.key,
+                                  title: service.name,
+                                ),
+                              ),
+                            );
+                            if (i != apiServices.length - 1) {
+                              children.add(SizedBox(width: 14.w));
+                            }
+                          }
+                        } else {
+                          for (var i = 0; i < fallbackServices.length; i++) {
+                            final service = fallbackServices[i];
+                            children.add(
+                              CategoryCard(
+                                imagePath: service['imagePath'],
+                                title: service['title'] ?? '',
+                                onTap: () => _onServiceTap(
+                                  key: service['key'] ?? '',
+                                  title: service['title'] ?? '',
+                                ),
+                              ),
+                            );
+                            if (i != fallbackServices.length - 1) {
+                              children.add(SizedBox(width: 14.w));
+                            }
+                          }
+                        }
+
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: children,
+                        );
+                      }),
                     ),
                   ],
                 ),
@@ -641,47 +681,55 @@ class _HomePageContentState extends State<_HomePageContent> {
                         widget.controller.setCurrentPromoPage(index);
                       },
                       itemBuilder: (context, index) {
-                        final addressController = Get.find<AddressController>();
                         final restaurant = widget.controller.featuredRestaurants[index];
-                        double? distance;
-                        // Prefer selected address as the user's location
-                        final activeAddress =
-                            addressController.activeAddress.value;
-                        if (activeAddress != null) {
-                          distance = LocationUtils.calculateDistance(
-                            userLat: activeAddress.lat,
-                            userLong: activeAddress.long,
-                            restaurantLat: restaurant!.lat,
-                            restaurantLong: restaurant!.long,
-                          );
-                        } else if (LocationUtils.isInitialized &&
-                            LocationUtils.currentLatitude != null &&
-                            LocationUtils.currentLongitude != null) {
-                          // Fallback to device location if no active address
-                          distance = LocationUtils.calculateDistance(
-                            restaurantLat: restaurant!.lat,
-                            restaurantLong: restaurant!.long,
-                          );
-                        }
 
+                        String distanceText = '--';
+                        String deliveryFeeText = '--';
+
+                        final estimate = restaurant.deliveryFeeEstimate;
+                        if (estimate != null) {
+                          deliveryFeeText = estimate.displayFee;
+                          distanceText = estimate.displayDistance;
+                        } else {
+                          final addressController = Get.find<AddressController>();
+                          final activeAddress =
+                              addressController.activeAddress.value;
+                          double? distance;
+                          if (activeAddress != null) {
+                            distance = LocationUtils.calculateDistance(
+                              userLat: activeAddress.lat,
+                              userLong: activeAddress.long,
+                              restaurantLat: restaurant.lat,
+                              restaurantLong: restaurant.long,
+                            );
+                          } else if (LocationUtils.isInitialized &&
+                              LocationUtils.currentLatitude != null &&
+                              LocationUtils.currentLongitude != null) {
+                            distance = LocationUtils.calculateDistance(
+                              restaurantLat: restaurant.lat,
+                              restaurantLong: restaurant.long,
+                            );
+                          }
+                          if (distance != null) {
+                            distanceText = LocationUtils.formatDistance(distance);
+                            final price = LocationUtils.calculateDeliveryPrice(distanceInKm: distance);
+                            deliveryFeeText = LocationUtils.formatPrice(price);
+                          }
+                        }
 
                         return PromoCard(
                             imageUrl: restaurant.backgroundImage ?? 'assets/home_cover.jpg',
                             restaurantName: restaurant.name,
                             rating: restaurant.averagePreparationTimeMinutes.toDouble(),
-                            distance: distance != null
-                                ? LocationUtils.formatDistance(distance)
-                                : '--',
-                            deliveryFee: '0',
-                            hasFreeDelivery: true,
+                            distance: distanceText,
+                            deliveryFee: deliveryFeeText,
+                            hasFreeDelivery: false,
                             isFavorite: restaurant.isFavorite,
                             onTap: () {
                               Get.to(() => RestaurantDetailsScreen(restaurantId: restaurant.id));
-
                             },
                             onFavoriteTap: () => widget.controller.toggleFavorite(restaurant),
                             color: Theme.of(context).scaffoldBackgroundColor
-
                         );
                       },
                       itemCount: widget.controller.featuredRestaurants.length,
@@ -759,44 +807,47 @@ class _HomePageContentState extends State<_HomePageContent> {
           ],
 
           // Weekly Discounts Section
-          if(true)
-            ...[
-              _buildSectionHeader(
-                title: 'خصومات الاسبوع �',
-                onViewAllTap: () {},
-              ),
-              SizedBox(height: 16.h),
-              SizedBox(
-                height: 176.h,
-                child: ListView(
-                  padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    DiscountCard(
-                      type: DiscountCardType.purple,
-                      title: 'عرض',
-                      subtitle: 'اليوم',
-                      onTap: () {},
-                    ),
-                    SizedBox(width: 16.w),
-                    DiscountCard(
-                      type: DiscountCardType.black,
-                      imageUrl: 'assets/home_cover.jpg',
-                      title: 'خصومات',
-                      onTap: () {},
-                    ),
-                    SizedBox(width: 16.w),
-                    DiscountCard(
-                      type: DiscountCardType.white,
-                      imageUrl: 'assets/home_cover.jpg',
-                      title: 'اللمة',
-                      subtitle: 'أوفر',
-                      onTap: () {},
-                    ),
-                  ],
+          Obx(() {
+            if (widget.controller.weeklyOffers.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return Column(
+              children: [
+                _buildSectionHeader(
+                  title: 'خصومات الأسبوع',
+                  onViewAllTap: () {},
                 ),
-              ),
-            ],
+                SizedBox(height: 16.h),
+                SizedBox(
+                  height: 176.h,
+                  child: ListView.separated(
+                    padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: widget.controller.weeklyOffers.length,
+                    separatorBuilder: (_, __) => SizedBox(width: 16.w),
+                    itemBuilder: (context, index) {
+                      final offer = widget.controller.weeklyOffers[index];
+                      final cardType = switch (index % 3) {
+                        0 => DiscountCardType.purple,
+                        1 => DiscountCardType.black,
+                        _ => DiscountCardType.white,
+                      };
+
+                      return DiscountCard(
+                        type: cardType,
+                        imageUrl: offer.restaurant.backgroundImage,
+                        title: offer.title.isNotEmpty ? offer.title : offer.restaurant.name,
+                        subtitle: offer.description.isNotEmpty ? offer.description : offer.restaurant.name,
+                        onTap: () {
+                          Get.to(() => RestaurantDetailsScreen(restaurantId: offer.restaurant.id));
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          }),
 
 
         ],

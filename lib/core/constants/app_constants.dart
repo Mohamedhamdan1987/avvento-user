@@ -17,6 +17,7 @@ class AppConstants {
   static const String userKey = 'user_data';
   static const String languageKey = 'language';
   static const String themeKey = 'theme_mode';
+  static const String onboardingSeenKey = 'onboarding_seen';
 
   // Pagination
   static const int defaultPageSize = 20;

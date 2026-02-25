@@ -770,6 +770,12 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
   }
 
   Widget _buildBottomSummary(RestaurantCartResponse currentCart) {
+    final double deliveryFee =
+        currentCart.deliveryFeeEstimate?.finalPrice ?? currentCart.deliveryFee;
+    final double drinksTotal = _calculateDrinksTotal();
+    final double total =
+        currentCart.totalPrice + drinksTotal + deliveryFee + currentCart.tax;
+
     return Container(
       padding: EdgeInsets.only(
         top: 16.h,
@@ -881,7 +887,7 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                     // Total Price (Left in RTL)
                     if (!controller.isLoading)
                       Text(
-                        '${(currentCart.totalPrice + _calculateDrinksTotal() + 10).toStringAsFixed(0)} د.ل', // Added dummy delivery fee 10
+                        '${total.toStringAsFixed(0)} د.ل',
                         style: TextStyle().textColorBold(
                           fontSize: 16.sp,
                           color: Colors.white,
@@ -903,25 +909,32 @@ class _RestaurantCartDetailsPageState extends State<RestaurantCartDetailsPage> {
                   'المجموع الفرعي',
                   '${currentCart.totalPrice.toStringAsFixed(0)} د.ل',
                 ),
-                if (_calculateDrinksTotal() > 0)
+                if (drinksTotal > 0)
                   Padding(
                     padding: EdgeInsets.only(top: 12.h),
                     child: _buildInvoiceRow(
                       'المشروبات',
-                      '${_calculateDrinksTotal().toStringAsFixed(0)} د.ل',
+                      '${drinksTotal.toStringAsFixed(0)} د.ل',
                     ),
                   ),
                 SizedBox(height: 12.h),
                 _buildInvoiceRow(
                   'رسوم التوصيل',
-                  '10 د.ل',
-                ), // Fixed delivery fee for now
+                  '${deliveryFee.toStringAsFixed(0)} د.ل',
+                ),
+                if (currentCart.tax > 0) ...[
+                  SizedBox(height: 12.h),
+                  _buildInvoiceRow(
+                    'الضريبة',
+                    '${currentCart.tax.toStringAsFixed(0)} د.ل',
+                  ),
+                ],
                 SizedBox(height: 12.h),
                 const Divider(height: 1),
                 SizedBox(height: 12.h),
                 _buildInvoiceRow(
                   'المجموع الكلي',
-                  '${(currentCart.totalPrice + _calculateDrinksTotal() + 10).toStringAsFixed(0)} د.ل',
+                  '${total.toStringAsFixed(0)} د.ل',
                   isTotal: true,
                 ),
                 SizedBox(height: 8.h),

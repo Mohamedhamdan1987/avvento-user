@@ -1,5 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+import '../../../../core/error/api_exception.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/error/error_handler.dart';
 import '../../../../core/utils/show_snackbar.dart';
+import '../../../../core/widgets/reusable/app_error_widget.dart';
 import '../models/restaurant_model.dart';
 import '../models/best_restaurant_model.dart';
 import '../models/story_model.dart';
@@ -17,6 +22,7 @@ class RestaurantsController extends GetxController {
   final RxInt _currentPage = 1.obs;
   final RxInt _totalPages = 1.obs;
   final RxString _errorMessage = ''.obs;
+  final Rx<ErrorType> _errorType = ErrorType.unknown.obs;
 
   // Best Restaurants state
   final RxList<BestRestaurant> _bestRestaurants = <BestRestaurant>[].obs;
@@ -46,6 +52,7 @@ class RestaurantsController extends GetxController {
   String get errorMessage => _errorMessage.value;
   bool get hasMore => _currentPage.value < _totalPages.value;
   bool get hasError => _errorMessage.value.isNotEmpty;
+  ErrorType get errorType => _errorType.value;
 
   // Best Restaurants getters
   List<BestRestaurant> get bestRestaurants => _bestRestaurants;
@@ -157,8 +164,9 @@ class RestaurantsController extends GetxController {
       _totalPages.value = response.pagination.totalPages;
       _currentPage.value = response.pagination.page;
     } catch (e) {
-      _errorMessage.value = 'فشل تحميل المطاعم: ${e.toString()}';
-      showSnackBar(message: _errorMessage.value, isError: true);
+      final failure = _toFailure(e);
+      _errorType.value = _mapFailureToErrorType(failure);
+      _errorMessage.value = ErrorHandler.getErrorMessage(failure);
     } finally {
       _isLoading.value = false;
     }
@@ -194,7 +202,8 @@ class RestaurantsController extends GetxController {
       _totalPages.value = response.pagination.totalPages;
       _currentPage.value = response.pagination.page;
     } catch (e) {
-      _errorMessage.value = 'فشل تحميل المزيد من المطاعم: ${e.toString()}';
+      final failure = _toFailure(e);
+      _errorMessage.value = ErrorHandler.getErrorMessage(failure);
       showSnackBar(message: _errorMessage.value, isError: true);
     } finally {
       _isLoadingMore.value = false;
@@ -353,5 +362,20 @@ class RestaurantsController extends GetxController {
       showSnackBar(title: 'خطأ', message: 'فشل إرسال الرد', isError: true);
       return false;
     }
+  }
+
+  Failure _toFailure(dynamic e) {
+    if (e is DioException) return ApiException.handleException(e);
+    if (e is Failure) return e;
+    return UnknownFailure(e.toString());
+  }
+
+  static ErrorType _mapFailureToErrorType(Failure failure) {
+    if (failure is NetworkFailure) return ErrorType.network;
+    if (failure is TimeoutFailure) return ErrorType.timeout;
+    if (failure is ServerFailure) return ErrorType.server;
+    if (failure is NotFoundFailure) return ErrorType.notFound;
+    if (failure is UnauthorizedFailure) return ErrorType.unauthorized;
+    return ErrorType.unknown;
   }
 }

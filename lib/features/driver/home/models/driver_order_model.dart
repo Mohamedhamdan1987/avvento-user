@@ -8,10 +8,14 @@ class DriverOrderModel {
   final String customerPhone;
   final String restaurantId;
   final String restaurantName;
+  final String? restaurantLogo;
+  final String orderType;
   final PickupLocation pickupLocation;
   final DeliveryLocation deliveryLocation;
   final List<OrderItem> items;
+  final double subtotal;
   final double totalAmount;
+  final double tax;
   final String paymentMethod;
   final OrderStatus status;
   final DateTime createdAt;
@@ -26,10 +30,14 @@ class DriverOrderModel {
     required this.customerPhone,
     required this.restaurantId,
     required this.restaurantName,
+    this.restaurantLogo,
+    this.orderType = 'restaurant',
     required this.pickupLocation,
     required this.deliveryLocation,
     required this.items,
+    this.subtotal = 0,
     required this.totalAmount,
+    this.tax = 0,
     required this.paymentMethod,
     required this.status,
     required this.createdAt,
@@ -46,32 +54,35 @@ class DriverOrderModel {
 
     return DriverOrderModel(
       id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
-      // Map _id to orderNumber if orderNumber is missing in the new API
       orderNumber: json['orderNumber']?.toString() ?? json['_id']?.toString().substring(json['_id'].toString().length - 6).toUpperCase() ?? '',
       customerId: user?['_id']?.toString() ?? json['customerId']?.toString() ?? '',
       customerName: user?['name']?.toString() ?? user?['username']?.toString() ?? json['customerName']?.toString() ?? '',
       customerPhone: user?['phone']?.toString() ?? json['customerPhone']?.toString() ?? '',
       restaurantId: restaurant?['_id']?.toString() ?? json['restaurantId']?.toString() ?? '',
       restaurantName: restaurant?['name']?.toString() ?? json['restaurantName']?.toString() ?? '',
+      restaurantLogo: restaurant?['logo']?.toString(),
+      orderType: json['orderType']?.toString() ?? 'restaurant',
       pickupLocation: PickupLocation.fromJson(
         json['pickupLocation'] as Map<String, dynamic>? ?? restaurant?['location'] as Map<String, dynamic>? ?? {
           'address': restaurant?['address'] ?? '',
           'lat': restaurant?['lat'] ?? 0,
-          'lng': restaurant?['lng'] ?? 0,
+          'long': restaurant?['long'] ?? restaurant?['lng'] ?? 0,
         },
       ),
       deliveryLocation: DeliveryLocation.fromJson(
         {
           'address': json['deliveryAddress'] ?? '',
           'lat': json['deliveryLat'] ?? 0,
-          'lng': json['deliveryLong'] ?? 0,
+          'long': json['deliveryLong'] ?? json['deliveryLng'] ?? 0,
         },
       ),
       items: (json['items'] as List<dynamic>?)
               ?.map((item) => OrderItem.fromJson(item as Map<String, dynamic>))
               .toList() ??
           [],
+      subtotal: (json['subtotal'] ?? 0).toDouble(),
       totalAmount: (json['totalPrice'] ?? json['totalAmount'] ?? json['total'] ?? 0).toDouble(),
+      tax: (json['tax'] ?? 0).toDouble(),
       paymentMethod: json['paymentMethod']?.toString() ?? 'cash',
       status: OrderStatus.fromString(json['status']?.toString() ?? 'pending'),
       createdAt: json['createdAt'] != null
@@ -91,10 +102,14 @@ class DriverOrderModel {
       'customerPhone': customerPhone,
       'restaurantId': restaurantId,
       'restaurantName': restaurantName,
+      if (restaurantLogo != null) 'restaurantLogo': restaurantLogo,
+      'orderType': orderType,
       'pickupLocation': pickupLocation.toJson(),
       'deliveryLocation': deliveryLocation.toJson(),
       'items': items.map((item) => item.toJson()).toList(),
+      'subtotal': subtotal,
       'totalAmount': totalAmount,
+      'tax': tax,
       'paymentMethod': paymentMethod,
       'status': status.value,
       'createdAt': createdAt.toIso8601String(),

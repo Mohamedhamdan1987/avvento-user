@@ -82,6 +82,30 @@ class OrdersController extends GetxController {
     }
   }
 
+  final RxBool isReordering = false.obs;
+
+  Future<void> reorder(String orderId) async {
+    try {
+      isReordering.value = true;
+      await _ordersService.reorder(orderId);
+      showSnackBar(
+        title: 'نجاح',
+        message: 'تم إعادة الطلب بنجاح',
+        isSuccess: true,
+      );
+      await fetchOrders();
+    } catch (e) {
+      cprint('فشل في إعادة الطلب: $e');
+      showSnackBar(
+        title: 'خطأ',
+        message: 'فشل في إعادة الطلب',
+        isError: true,
+      );
+    } finally {
+      isReordering.value = false;
+    }
+  }
+
   Future<bool> rateDriver({
     required String orderId,
     required int rating,

@@ -1,3 +1,48 @@
+class DeliveryFeeEstimate {
+  final double deliveryFee;
+  final double finalPrice;
+  final double distance;
+  final double dayPrice;
+  final double nightPrice;
+  final bool isNight;
+
+  DeliveryFeeEstimate({
+    required this.deliveryFee,
+    required this.finalPrice,
+    required this.distance,
+    required this.dayPrice,
+    required this.nightPrice,
+    required this.isNight,
+  });
+
+  factory DeliveryFeeEstimate.fromJson(Map<String, dynamic> json) {
+    return DeliveryFeeEstimate(
+      deliveryFee: (json['deliveryFee'] as num?)?.toDouble() ?? 0,
+      finalPrice: (json['finalPrice'] as num?)?.toDouble() ?? 0,
+      distance: (json['distance'] as num?)?.toDouble() ?? 0,
+      dayPrice: (json['dayPrice'] as num?)?.toDouble() ?? 0,
+      nightPrice: (json['nightPrice'] as num?)?.toDouble() ?? 0,
+      isNight: json['isNight'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'deliveryFee': deliveryFee,
+      'finalPrice': finalPrice,
+      'distance': distance,
+      'dayPrice': dayPrice,
+      'nightPrice': nightPrice,
+      'isNight': isNight,
+    };
+  }
+
+  String get displayFee => '${finalPrice.toStringAsFixed(1)} دينار';
+  String get displayDistance => distance < 1
+      ? '${(distance * 1000).toStringAsFixed(0)} م'
+      : '${distance.toStringAsFixed(1)} كم';
+}
+
 class RestaurantUser {
   final String id;
   final String name;
@@ -15,6 +60,7 @@ class RestaurantUser {
   final String ownerName;
   final String description;
   final String deliveryStatus;
+  final String workingStatus;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -35,6 +81,7 @@ class RestaurantUser {
     required this.ownerName,
     required this.description,
     required this.deliveryStatus,
+    this.workingStatus = 'stopped',
     required this.createdAt,
     required this.updatedAt,
   });
@@ -85,6 +132,7 @@ class RestaurantUser {
       ownerName: json['ownerName'] ?? '',
       description: json['description'] ?? '',
       deliveryStatus: json['deliveryStatus'] ?? '',
+      workingStatus: json['workingStatus'] ?? 'stopped',
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : DateTime.now(),
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : DateTime.now(),
     );
@@ -108,6 +156,7 @@ class RestaurantUser {
       'ownerName': ownerName,
       'description': description,
       'deliveryStatus': deliveryStatus,
+      'workingStatus': workingStatus,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -170,12 +219,17 @@ class Restaurant {
   final String ownerName;
   final String description;
   final String phone;
+  final List<String> categories;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isFavorite;
   final bool isOpen;
+  final double earnings;
+  final double withdrawnAmount;
+  final double availableBalance;
+  final double commissionPercentage;
+  final DeliveryFeeEstimate? deliveryFeeEstimate;
   final RestaurantStatistics? statistics;
-  /// Top-level rating from API (used when statistics is null or for backward compat).
   final String? averageRatingString;
   final int? totalRatingsTopLevel;
 
@@ -191,10 +245,16 @@ class Restaurant {
     required this.ownerName,
     required this.description,
     required this.phone,
+    this.categories = const [],
     required this.createdAt,
     required this.updatedAt,
     this.isFavorite = false,
     this.isOpen = false,
+    this.earnings = 0,
+    this.withdrawnAmount = 0,
+    this.availableBalance = 0,
+    this.commissionPercentage = 0,
+    this.deliveryFeeEstimate,
     this.statistics,
     this.averageRatingString,
     this.totalRatingsTopLevel,
@@ -247,6 +307,16 @@ class Restaurant {
     final String? averageRatingString = json['averageRating']?.toString();
     final int? totalRatingsTopLevel = json['totalRatings'] as int?;
 
+    final deliveryFeeJson = json['deliveryFeeEstimate'] as Map<String, dynamic>?;
+    final DeliveryFeeEstimate? deliveryFeeEstimate = deliveryFeeJson != null
+        ? DeliveryFeeEstimate.fromJson(deliveryFeeJson)
+        : null;
+
+    final categoriesRaw = json['categories'] as List<dynamic>?;
+    final List<String> categories = categoriesRaw != null
+        ? categoriesRaw.map((e) => e.toString()).toList()
+        : [];
+
     return Restaurant(
       id: json['_id'] ?? json['id'] ?? '',
       user: RestaurantUser.fromJson(userData),
@@ -259,10 +329,16 @@ class Restaurant {
       ownerName: json['ownerName'] ?? '',
       description: json['description'] ?? '',
       phone: json['phone'] ?? '',
+      categories: categories,
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : DateTime.now(),
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : DateTime.now(),
       isFavorite: json['isFavorite'] as bool? ?? false,
       isOpen: json['isOpen'] as bool? ?? false,
+      earnings: (json['earnings'] as num?)?.toDouble() ?? 0,
+      withdrawnAmount: (json['withdrawnAmount'] as num?)?.toDouble() ?? 0,
+      availableBalance: (json['availableBalance'] as num?)?.toDouble() ?? 0,
+      commissionPercentage: (json['commissionPercentage'] as num?)?.toDouble() ?? 0,
+      deliveryFeeEstimate: deliveryFeeEstimate,
       statistics: statistics,
       averageRatingString: averageRatingString,
       totalRatingsTopLevel: totalRatingsTopLevel,
@@ -282,10 +358,16 @@ class Restaurant {
       'ownerName': ownerName,
       'description': description,
       'phone': phone,
+      'categories': categories,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'isFavorite': isFavorite,
       'isOpen': isOpen,
+      'earnings': earnings,
+      'withdrawnAmount': withdrawnAmount,
+      'availableBalance': availableBalance,
+      'commissionPercentage': commissionPercentage,
+      if (deliveryFeeEstimate != null) 'deliveryFeeEstimate': deliveryFeeEstimate!.toJson(),
       if (statistics != null) 'statistics': {
         'rating': {'average': statistics!.rating.average, 'totalRatings': statistics!.rating.totalRatings},
         'averagePreparationTime': statistics!.averagePreparationTime,
@@ -307,10 +389,16 @@ class Restaurant {
     String? ownerName,
     String? description,
     String? phone,
+    List<String>? categories,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isFavorite,
     bool? isOpen,
+    double? earnings,
+    double? withdrawnAmount,
+    double? availableBalance,
+    double? commissionPercentage,
+    DeliveryFeeEstimate? deliveryFeeEstimate,
     RestaurantStatistics? statistics,
     String? averageRatingString,
     int? totalRatingsTopLevel,
@@ -327,10 +415,16 @@ class Restaurant {
       ownerName: ownerName ?? this.ownerName,
       description: description ?? this.description,
       phone: phone ?? this.phone,
+      categories: categories ?? this.categories,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isFavorite: isFavorite ?? this.isFavorite,
       isOpen: isOpen ?? this.isOpen,
+      earnings: earnings ?? this.earnings,
+      withdrawnAmount: withdrawnAmount ?? this.withdrawnAmount,
+      availableBalance: availableBalance ?? this.availableBalance,
+      commissionPercentage: commissionPercentage ?? this.commissionPercentage,
+      deliveryFeeEstimate: deliveryFeeEstimate ?? this.deliveryFeeEstimate,
       statistics: statistics ?? this.statistics,
       averageRatingString: averageRatingString ?? this.averageRatingString,
       totalRatingsTopLevel: totalRatingsTopLevel ?? this.totalRatingsTopLevel,

@@ -43,22 +43,32 @@ class WalletTransactionItem extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Amount (on the left in RTL, left = end)
-          Text(
-            '${isCredit ? '+' : '-'}${amount.toStringAsFixed(2)} د.ل',
-            style: const TextStyle().textColorBold(
-              fontSize: 16.sp,
-              color: amountColor,
-            ),
-          ),
-
-          SizedBox(width: 12.w),
-
           // Transaction Info (on the right in RTL, right = start)
           Expanded(
             child: Row(
               children: [
+                // Icon Circle
+                Container(
+                  width: 40.w,
+                  height: 40.h,
+                  decoration: BoxDecoration(
+                    color: iconBackgroundColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: SafeSvgIcon(
+                      iconName: iconName,
+                      width: 18.r,
+                      height: 18.r,
+                      color: amountColor,
+                      fallbackIcon: fallbackIcon,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+
                 // Info Column
                 Expanded(
                   child: Column(
@@ -83,27 +93,18 @@ class WalletTransactionItem extends StatelessWidget {
                   ),
                 ),
 
-                SizedBox(width: 12.w),
 
-                // Icon Circle
-                Container(
-                  width: 40.w,
-                  height: 40.h,
-                  decoration: BoxDecoration(
-                    color: iconBackgroundColor,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: SafeSvgIcon(
-                      iconName: iconName,
-                      width: 18.r,
-                      height: 18.r,
-                      color: amountColor,
-                      fallbackIcon: fallbackIcon,
-                    ),
-                  ),
-                ),
+
               ],
+            ),
+          ),
+          SizedBox(width: 12.w),
+          // Amount (on the left in RTL, left = end)
+          Text(
+            '${isCredit ? '+' : '-'}${amount.toStringAsFixed(2)} د.ل',
+            style: const TextStyle().textColorBold(
+              fontSize: 16.sp,
+              color: amountColor,
             ),
           ),
         ],

@@ -2,15 +2,21 @@ import 'package:avvento/features/client/restaurants/models/favorite_restaurant_m
 import 'package:avvento/features/client/restaurants/models/restaurant_model.dart';
 import 'package:avvento/features/client/restaurants/services/restaurants_service.dart';
 import 'package:get/get.dart';
+import '../models/home_service_item.dart';
+import '../models/weekly_offer_model.dart';
+import '../services/home_service.dart';
 
 class HomeController extends GetxController {
   final RestaurantsService _restaurantsService = RestaurantsService();
+  final HomeService _homeService = HomeService();
 
   // Observable state
   final RxBool _isLoading = false.obs;
   final RxInt _currentPromoPage = 0.obs;
   final RxList<Restaurant> featuredRestaurants = <Restaurant>[].obs;
   final RxList<FavoriteRestaurant> favoriteRestaurants = <FavoriteRestaurant>[].obs;
+  final RxList<WeeklyOffer> weeklyOffers = <WeeklyOffer>[].obs;
+  final RxList<HomeServiceItem> homeServices = <HomeServiceItem>[].obs;
 
   // Getters
   bool get isLoading => _isLoading.value;
@@ -26,8 +32,10 @@ class HomeController extends GetxController {
     try {
       _isLoading.value = true;
       await Future.wait([
+        fetchHomeServices(),
         fetchFeaturedRestaurants(),
         fetchFavoriteRestaurants(),
+        fetchWeeklyOffers(),
       ]);
     } catch (e) {
       print('Error fetching home data: $e');
@@ -40,8 +48,10 @@ class HomeController extends GetxController {
   Future<void> refreshData() async {
     try {
       await Future.wait([
+        fetchHomeServices(),
         fetchFeaturedRestaurants(),
         fetchFavoriteRestaurants(),
+        fetchWeeklyOffers(),
       ]);
     } catch (e) {
       print('Error refreshing home data: $e');
@@ -58,6 +68,16 @@ class HomeController extends GetxController {
     }
   }
 
+  Future<void> fetchHomeServices() async {
+    try {
+      final services = await _homeService.getHomeServices();
+      homeServices.assignAll(services);
+    } catch (e) {
+      print('Error fetching home services: $e');
+      homeServices.clear();
+    }
+  }
+
   Future<void> fetchFavoriteRestaurants() async {
     try {
       final favorites = await _restaurantsService.getFavoriteRestaurants();
@@ -65,6 +85,17 @@ class HomeController extends GetxController {
       favoriteRestaurants.assignAll(openOnly);
     } catch (e) {
       print('Error fetching favorite restaurants: $e');
+    }
+  }
+
+  Future<void> fetchWeeklyOffers() async {
+    try {
+      final offers = await _homeService.getActiveWeeklyOffers();
+      offers.sort((a, b) => a.order.compareTo(b.order));
+      weeklyOffers.assignAll(offers);
+    } catch (e) {
+      print('Error fetching weekly offers: $e');
+      weeklyOffers.clear();
     }
   }
 

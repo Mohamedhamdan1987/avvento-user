@@ -3,19 +3,68 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart' as geo;
+import 'dart:async';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/reusable/custom_button_app/custom_button_app.dart';
 import '../models/driver_order_model.dart';
 import '../controllers/driver_orders_controller.dart';
 
-class NewOrderRequestModal extends StatelessWidget {
+class NewOrderRequestModal extends StatefulWidget {
   final DriverOrderModel order;
 
   const NewOrderRequestModal({
     super.key,
     required this.order,
   });
+
+  @override
+  State<NewOrderRequestModal> createState() => _NewOrderRequestModalState();
+}
+
+class _NewOrderRequestModalState extends State<NewOrderRequestModal> {
+  static const int _autoCloseSeconds = 30;
+  Timer? _autoCloseTimer;
+  int _remainingSeconds = _autoCloseSeconds;
+
+  @override
+  void initState() {
+    super.initState();
+    _startOrResetTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant NewOrderRequestModal oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.order.id != widget.order.id) {
+      _startOrResetTimer();
+    }
+  }
+
+  @override
+  void dispose() {
+    _autoCloseTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startOrResetTimer() {
+    _autoCloseTimer?.cancel();
+    _remainingSeconds = _autoCloseSeconds;
+    _autoCloseTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      if (_remainingSeconds <= 1) {
+        timer.cancel();
+        Get.find<DriverOrdersController>().clearSelectedOrder();
+        return;
+      }
+      setState(() {
+        _remainingSeconds--;
+      });
+    });
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   // Calculate distance between two points
   String _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
@@ -31,9 +80,18 @@ class NewOrderRequestModal extends StatelessWidget {
     return '$minutes دقيقة';
   }
 
+  void _selectOrderAtIndex(List<DriverOrderModel> nearbyOrders, int index) {
+    if (nearbyOrders.isEmpty || index < 0 || index >= nearbyOrders.length) return;
+    Get.find<DriverOrdersController>().selectOrder(nearbyOrders[index]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<DriverOrdersController>();
+    final order = widget.order;
+    final nearbyOrders = controller.nearbyOrders;
+    final currentIndex = nearbyOrders.indexWhere((o) => o.id == order.id);
+    final canNavigate = nearbyOrders.length > 1 && currentIndex != -1;
 
     // Calculate distance and time from pickup to delivery location
     final distanceKm = geo.Geolocator.distanceBetween(
@@ -73,23 +131,23 @@ class NewOrderRequestModal extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Top indicator bar
-          Container(
-            width: double.infinity,
-            padding: EdgeInsetsDirectional.only(
-              start: 36.535.w,
-              end: 0,
-            ),
-            child: Container(
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(32.r),
-                ),
-              ),
-            ),
-          ),
+          // // Top indicator bar
+          // Container(
+          //   width: double.infinity,
+          //   padding: EdgeInsetsDirectional.only(
+          //     start: 25.535.w,
+          //     end: 25.535.w,
+          //   ),
+          //   child: Container(
+          //     height: 4.h,
+          //     decoration: BoxDecoration(
+          //       color: AppColors.primary,
+          //       borderRadius: BorderRadius.vertical(
+          //         top: Radius.circular(32.r),
+          //       ),
+          //     ),
+          //   ),
+          // ),
 
           Flexible(
             child: SingleChildScrollView(
@@ -114,7 +172,7 @@ class NewOrderRequestModal extends StatelessWidget {
                           ),
                           SizedBox(height: 4.h),
                           Text(
-                            'لديك 30 ثانية للقبول',
+                            'يختفي خلال $_remainingSeconds ثانية',
                             style: const TextStyle().textColorNormal(
                               fontSize: 14,
                               color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -391,15 +449,59 @@ class NewOrderRequestModal extends StatelessWidget {
 
                   SizedBox(height: 24.h),
 
+                  if (canNavigate) ...[
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        border: Border.all(
+                          color: Theme.of(context).dividerColor,
+                          width: 0.76.w,
+                        ),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              final previousIndex = (currentIndex - 1 + nearbyOrders.length) %
+                                  nearbyOrders.length;
+                              _selectOrderAtIndex(nearbyOrders, previousIndex);
+                            },
+                            icon: const Icon(Icons.chevron_right),
+                          ),
+                          Expanded(
+                            child: Text(
+                              'طلب ${currentIndex + 1} من ${nearbyOrders.length}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle().textColorBold(
+                                fontSize: 13,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              final nextIndex = (currentIndex + 1) % nearbyOrders.length;
+                              _selectOrderAtIndex(nearbyOrders, nextIndex);
+                            },
+                            icon: const Icon(Icons.chevron_left),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                  ],
+
                   // Action buttons
                   Row(
                     children: [
                       Expanded(
                         child: CustomButtonApp(
                           text: 'قبول الطلب',
-                          onTap: () {
-                            controller.acceptOrder(order.id);
-                            Get.back();
+                          onTap: () async {
+                            await controller.acceptOrder(order.id);
+                            controller.clearSelectedOrder();
                           },
                           color: AppColors.primary,
                           height: 56.h,
@@ -411,25 +513,30 @@ class NewOrderRequestModal extends StatelessWidget {
                           isLoading: controller.isAccepting,
                         ),
                       ),
-                      SizedBox(width: 16.w),
-                      Expanded(
-                        child: CustomButtonApp(
-                          text: 'رفض',
-                          onTap: () {
-                            controller.rejectOrder(order.id);
-                            Get.back();
-                          },
-                          isFill: false,
-                          borderColor: Theme.of(context).dividerColor,
-                          borderWidth: 1.5.w,
-                          height: 56.h,
-                          borderRadius: 16.r,
-                          textStyle: const TextStyle().textColorBold(
-                            fontSize: 18,
-                            color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7) ?? AppColors.textMedium,
-                          ),
-                        ),
-                      ),
+                      // SizedBox(width: 16.w),
+                      // Expanded(
+                      //   child: CustomButtonApp(
+                      //     text: 'رفض',
+                      //     onTap: () async {
+                      //       await controller.rejectOrder(order.id);
+                      //       final updatedNearby = controller.nearbyOrders;
+                      //       if (updatedNearby.isNotEmpty) {
+                      //         controller.selectOrder(updatedNearby.first);
+                      //       } else {
+                      //         controller.clearSelectedOrder();
+                      //       }
+                      //     },
+                      //     isFill: false,
+                      //     borderColor: Theme.of(context).dividerColor,
+                      //     borderWidth: 1.5.w,
+                      //     height: 56.h,
+                      //     borderRadius: 16.r,
+                      //     textStyle: const TextStyle().textColorBold(
+                      //       fontSize: 18,
+                      //       color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7) ?? AppColors.textMedium,
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ],

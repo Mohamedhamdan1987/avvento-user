@@ -8,7 +8,6 @@ import 'package:avvento/core/utils/location_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -110,19 +109,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Future<void> _openNavigationToActiveAddress() async {
     final activeAddress = addressController.activeAddress.value;
     if (activeAddress == null) return;
-    try {
-      final hasPermission = await LocationUtils.ensureLocationPermission();
-      if (!hasPermission) return;
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      await LocationUtils.openGoogleMapsWithDirections(
-        userLat: position.latitude,
-        userLong: position.longitude,
-        restaurantLat: activeAddress.lat,
-        restaurantLong: activeAddress.long,
-      );
-    } catch (_) {}
+    _updateMapLocation(activeAddress);
   }
 
   @override
@@ -1021,10 +1008,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
       ),
       child: Obx(() {
         final calculated = cartController.calculatedPrice.value;
-        final subtotal = calculated?.subtotal ?? widget.cart.totalPrice;
-        final total = calculated?.totalPrice ?? subtotal;
         final activeAddress = addressController.activeAddress.value;
         final hasAddress = activeAddress != null;
+        final isPriceCalculating = cartController.isCalculatingPrice;
+        final shouldWaitForApiPrice = hasAddress;
+        final isApiPriceReady = !isPriceCalculating && calculated != null;
+
+        final subtotal = shouldWaitForApiPrice
+            ? (calculated?.subtotal ?? 0.0)
+            : widget.cart.totalPrice;
+        final total = shouldWaitForApiPrice
+            ? (calculated?.totalPrice ?? 0.0)
+            : subtotal;
+        final canShowPrice = !shouldWaitForApiPrice || isApiPriceReady;
 
         final walletBalance = walletController.wallet.value?.balance ?? 0.0;
         final isWalletBalanceEnough = walletBalance >= total;
@@ -1075,36 +1071,47 @@ class _CheckoutPageState extends State<CheckoutPage> {
               text: (isWalletSelected && !isWalletBalanceEnough)
                   ? 'تعبئة المحفظة'
                   : 'إتمام الطلب',
-              isLoading: cartController.isLoading,
-              isEnable: hasAddress,
+              isLoading: false,
+              isEnable:
+                  hasAddress && isApiPriceReady && !cartController.isLoading,
               childWidget: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
                 children: [
-                  if (cartController.isLoading)
-                    const Center(
-                      child: CircularProgressIndicator(color: Colors.white),
-                    )
-                  else
-                    Text(
-                      (isWalletSelected && !isWalletBalanceEnough)
-                          ? 'تعبئة المحفظة'
-                          : 'إتمام الطلب',
-                      style: TextStyle().textColorBold(
-                        fontSize: 16.sp,
-                        color: Colors.white,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (cartController.isLoading) ...[
+                        SizedBox(
+                          width: 16.w,
+                          height: 16.w,
+                          child: const CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                      ],
+                      Text(
+                        !canShowPrice
+                            ? 'جاري حساب السعر...'
+                            : (isWalletSelected && !isWalletBalanceEnough)
+                                ? 'تعبئة المحفظة'
+                                : 'إتمام الطلب',
+                        style: TextStyle().textColorBold(
+                          fontSize: 16.sp,
+                          color: Colors.white,
+                        ),
                       ),
+                    ],
+                  ),
+                  Text(
+                    canShowPrice ? '${total.toStringAsFixed(1)} د.ل' : '--',
+                    style: TextStyle().textColorBold(
+                      fontSize: 16.sp,
+                      color: Colors.white,
                     ),
-
-                  if (!cartController.isLoading) ...[
-                    SizedBox(width: 8.w),
-                    Text(
-                      '${total.toStringAsFixed(1)} د.ل',
-                      style: TextStyle().textColorBold(
-                        fontSize: 16.sp,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+                  ),
                 ],
               ),
               onTap: hasAddress
@@ -1151,8 +1158,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
               secondChild: Column(
                 children: [
                   SizedBox(height: 16.h),
-                  _buildBillRow("المجموع الفرعي", subtotal),
-                  if (calculated?.deliveryFee != null) ...[
+                  if (!canShowPrice)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "ملخص الفاتورة",
+                          style: TextStyle().textColorNormal(
+                            fontSize: 14.sp,
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 18.w,
+                          height: 18.w,
+                          child: const CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ],
+                    )
+                  else
+                    _buildBillRow("المجموع الفرعي", subtotal),
+                  if (canShowPrice && calculated?.deliveryFee != null) ...[
                     SizedBox(height: 12.h),
                     _buildBillRow("التوصيل", calculated!.deliveryFee),
                   ],
@@ -1201,12 +1227,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   SizedBox(height: 12.h),
                   const Divider(height: 1),
                   SizedBox(height: 12.h),
-                  _buildBillRow(
-                    "المجموع الكلي",
-                    total,
-                    isBold: true,
-                    fontSize: 16,
-                  ),
+                  if (canShowPrice)
+                    _buildBillRow(
+                      "المجموع الكلي",
+                      total,
+                      isBold: true,
+                      fontSize: 16,
+                    )
+                  else
+                    _buildBillRow(
+                      "المجموع الكلي",
+                      0,
+                      isBold: true,
+                      fontSize: 16,
+                      valueText: '--',
+                    ),
                   SizedBox(height: 8.h),
                 ],
               ),

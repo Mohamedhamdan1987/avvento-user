@@ -103,9 +103,9 @@ class CurrentOrderCard extends StatelessWidget {
 
   int _getCompletedSteps(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pendingRestaurant:
+      case OrderStatus.deliveryTake:
         return 0;
-      case OrderStatus.confirmed:
+      case OrderStatus.pending:
         return 1;
       case OrderStatus.preparing:
         return 2;
@@ -425,9 +425,9 @@ class CurrentOrderCard extends StatelessWidget {
 
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pendingRestaurant:
+      case OrderStatus.deliveryTake:
         return AppColors.primary;
-      case OrderStatus.confirmed:
+      case OrderStatus.pending:
         return const Color(0xFF00C950);
       case OrderStatus.preparing:
         return AppColors.primary;

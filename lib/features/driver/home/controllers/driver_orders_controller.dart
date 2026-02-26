@@ -18,6 +18,7 @@ class DriverOrdersController extends GetxController {
   final RxList<DriverOrderModel> _nearbyOrders = <DriverOrderModel>[].obs;
   final RxList<DriverOrderModel> _myOrders = <DriverOrderModel>[].obs;
   final RxBool _isLoading = false.obs;
+  final RxBool _isDashboardLoading = false.obs;
   final RxBool _isAccepting = false.obs;
   final Rx<DriverOrderModel?> _selectedOrder = Rx<DriverOrderModel?>(null);
   final RxSet<Marker> _markers = <Marker>{}.obs;
@@ -30,6 +31,7 @@ class DriverOrdersController extends GetxController {
   List<DriverOrderModel> get nearbyOrders => _nearbyOrders;
   List<DriverOrderModel> get myOrders => _myOrders;
   bool get isLoading => _isLoading.value;
+  bool get isDashboardLoading => _isDashboardLoading.value;
   bool get isAccepting => _isAccepting.value;
   DriverOrderModel? get selectedOrder => _selectedOrder.value;
   Set<Marker> get markers => _markers;
@@ -378,9 +380,7 @@ class DriverOrdersController extends GetxController {
 
   // Fetch dashboard data
   Future<void> fetchDashboardData({String period = 'week'}) async {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _isLoading.value = true;
-    });
+    _isDashboardLoading.value = true;
     try {
       final result = await _ordersService.getDashboardData(period: period);
 
@@ -398,7 +398,7 @@ class DriverOrdersController extends GetxController {
         message: 'حدث خطأ غير متوقع: ${e.toString()}',
       );
     } finally {
-      _isLoading.value = false;
+      _isDashboardLoading.value = false;
     }
   }
 
@@ -419,11 +419,6 @@ class DriverOrdersController extends GetxController {
           message: 'تم قبول الطلب بنجاح، بالتوفيق في التوصيل!',
           isSuccess: true,
         );
-        
-        // Close bottom sheet
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Get.back();
-        });
       } else {
         showSnackBar(
           title: 'خطأ',
@@ -454,11 +449,6 @@ class DriverOrdersController extends GetxController {
           title: 'تم',
           message: 'تم رفض الطلب',
         );
-        
-        // Close bottom sheet
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Get.back();
-        });
       } else {
         showSnackBar(
           title: 'خطأ',
@@ -574,7 +564,7 @@ class DriverOrdersController extends GetxController {
       // Determine marker position based on status
       // If we haven't picked up yet, show pickup location. If on the way, show delivery location.
       bool isPickupPhase = [
-        OrderStatus.confirmed,
+        OrderStatus.pending,
         OrderStatus.preparing,
         OrderStatus.awaitingDelivery
       ].contains(order.status);

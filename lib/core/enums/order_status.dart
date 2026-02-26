@@ -1,8 +1,6 @@
-import 'package:avvento/core/utils/logger.dart';
-
 enum OrderStatus {
-  pendingRestaurant('pending_restaurant'),
-  confirmed('confirmed'),
+  deliveryTake('delivery_take'),
+  pending('pending'),
   preparing('preparing'),
   deliveryReceived('delivery_received'),
   onTheWay('on_the_way'),
@@ -16,17 +14,17 @@ enum OrderStatus {
   static OrderStatus fromString(String status) {
     return OrderStatus.values.firstWhere(
       (e) => e.value == status.toLowerCase(),
-      orElse: () => OrderStatus.pendingRestaurant,
+      orElse: () => OrderStatus.deliveryTake,
     );
   }
 
   String get label {
 
     switch (this) {
-      case OrderStatus.pendingRestaurant:
-        return 'بانتظار قبول المطعم';
-      case OrderStatus.confirmed:
-        return 'تم تاكيد الطلب';
+      case OrderStatus.deliveryTake:
+        return 'بانتظار أخذ السائق للطلب';
+      case OrderStatus.pending:
+        return 'بانتظار القبول (مطعم أو متجر)';
       case OrderStatus.preparing:
         return 'جاري التحضير';
       case OrderStatus.onTheWay:
@@ -36,7 +34,7 @@ enum OrderStatus {
       case OrderStatus.delivered:
         return 'تم التسليم';
       case OrderStatus.deliveryReceived:
-        return 'تم استلام الطلب';
+        return 'استلم المستخدم الطلب';
       case OrderStatus.cancelled:
         return 'تم الإلغاء';
     }

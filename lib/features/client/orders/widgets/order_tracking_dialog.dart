@@ -1,4 +1,5 @@
 import 'package:avvento/core/theme/app_text_styles.dart';
+import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/core/widgets/reusable/svg_icon.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -133,18 +134,15 @@ class OrderTrackingDialog extends StatelessWidget {
   }
 
   /// مسار ملف Lottie حسب حالة الطلب (من مجلد assets/loti_files)
+  /// نرجّع مسار فقط للحالات اللي لها ملف صالح فعليًا.
   String? _getLottieAssetPath() {
+    AppLogger.debug(
+      'Getting Lottie asset for status: ${status.value}',
+      'OrderTrackingDialog',
+    );
     switch (status) {
-      case OrderStatus.pendingRestaurant:
-        return 'assets/loti_files/pendingRestaurant.json';
-      case OrderStatus.confirmed:
-        return 'assets/loti_files/confirmed.json';
-      case OrderStatus.preparing:
-        return 'assets/loti_files/preparing.json';
-      case OrderStatus.deliveryReceived:
-        return 'assets/loti_files/deliveryReceived.json';
-      case OrderStatus.delivered:
-        return 'assets/loti_files/delivered.json';
+      case OrderStatus.pending:
+        return 'assets/loti_files/pending.json';
       default:
         return null;
     }
@@ -192,6 +190,15 @@ class OrderTrackingDialog extends StatelessWidget {
               options: LottieOptions(enableMergePaths: true),
               addRepaintBoundary: true,
               height: 140.h,
+              errorBuilder: (context, error, stackTrace) {
+                AppLogger.error(
+                  'Failed to load lottie asset: $assetPath',
+                  error,
+                  stackTrace,
+                  'OrderTrackingDialog',
+                );
+                return _getFallbackAnimationWidget(context);
+              },
             ),
           ),
         ),
@@ -214,7 +221,7 @@ class OrderTrackingDialog extends StatelessWidget {
 
   String? _getLottieSubtitle() {
     switch (status) {
-      case OrderStatus.confirmed:
+      case OrderStatus.pending:
         return 'تم القبول!';
       case OrderStatus.preparing:
         return 'جاري التحضير...';
@@ -230,7 +237,7 @@ class OrderTrackingDialog extends StatelessWidget {
   /// عناصر الحركة للحالات التي لا يوجد لها ملف Lottie
   Widget _getFallbackAnimationWidget(BuildContext context) {
     switch (status) {
-      case OrderStatus.pendingRestaurant:
+      case OrderStatus.deliveryTake:
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -346,7 +353,7 @@ class OrderTrackingDialog extends StatelessWidget {
                 time: '12:30',
                 title: 'بانتظار قبول المطعم',
                 isActive: status.index >= 0,
-                isCurrent: status == OrderStatus.pendingRestaurant,
+                isCurrent: status == OrderStatus.deliveryTake,
                 icon: "assets/svg/client/orders/pending_acceptance.svg",
               ),
 
@@ -356,7 +363,7 @@ class OrderTrackingDialog extends StatelessWidget {
                 time: '12:31',
                 title: 'تم تأكيد الطلب',
                 isActive: status.index >= 1,
-                isCurrent: status == OrderStatus.confirmed,
+                isCurrent: status == OrderStatus.pending,
                 icon: "assets/svg/client/orders/confirmed.svg",
               ),
               SizedBox(height: 24.h),

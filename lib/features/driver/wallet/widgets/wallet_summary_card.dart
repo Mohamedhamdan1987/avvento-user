@@ -1,3 +1,4 @@
+import 'package:avvento/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -24,6 +25,7 @@ class WalletSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isNegative = amount < 0;
     final displayAmount = amount.abs();
+    cprint("WalletSummaryCard: title='$title', amount=$amount, isNegative=$isNegative, displayAmount=$displayAmount");
 
     return Container(
       height: 133.5.h,

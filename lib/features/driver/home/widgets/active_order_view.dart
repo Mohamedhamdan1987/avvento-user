@@ -13,10 +13,12 @@ import 'delivery_failed_modal.dart';
 
 class ActiveOrderView extends StatelessWidget {
   final DriverOrderModel order;
+  final VoidCallback onNavigateToOrderLocation;
 
   const ActiveOrderView({
     super.key,
     required this.order,
+    required this.onNavigateToOrderLocation,
   });
 
   @override
@@ -34,7 +36,7 @@ class ActiveOrderView extends StatelessWidget {
             Builder(builder: (context) {
             // Show different views based on order status
             switch (order.status) {
-              case OrderStatus.confirmed:
+              case OrderStatus.pending:
               case OrderStatus.preparing:
               case OrderStatus.deliveryReceived:
                 return _buildGoingToRestaurantView(context, order, controller);
@@ -90,6 +92,8 @@ class ActiveOrderView extends StatelessWidget {
     DriverOrderModel order,
     DriverOrdersController controller,
   ) {
+    final canConfirmArrival = order.status == OrderStatus.preparing;
+
     return Container(
       margin: EdgeInsets.all(16.w),
       padding: EdgeInsets.all(24.w),
@@ -196,9 +200,7 @@ class ActiveOrderView extends StatelessWidget {
                         height: 44.h,
                         radius: 100.r,
                         color: AppColors.primary,
-                        onTap: () {
-                          // TODO: Open navigation
-                        },
+                        onTap: onNavigateToOrderLocation,
                         childWidget: Icon(
                           Icons.navigation,
                           color: Colors.white,
@@ -283,32 +285,52 @@ class ActiveOrderView extends StatelessWidget {
 
             SizedBox(height: 24.h),
 
-            // Confirm arrival button
-            CustomButtonApp(
-              text: 'وصلت للمطعم',
-              onTap: () {
-                controller.updateOrderStatus(
-                  orderId: order.id,
-                  status: OrderStatus.onTheWay.value,
-                  // status: OrderStatus.preparing.value,
-                );
-              },
-              color: AppColors.primary,
-              height: 64.h,
-              borderRadius: 16.r,
-              textStyle: const TextStyle().textColorBold(
-                fontSize: 20,
-                color: Colors.white,
-              ),
-              icon: Padding(
-                padding: EdgeInsetsDirectional.only(end:  8.0, top: 6),
-                child: Icon(
-                  Icons.arrow_back,
+            if (canConfirmArrival)
+              CustomButtonApp(
+                text: 'وصلت للمطعم',
+                onTap: () {
+                  controller.updateOrderStatus(
+                    orderId: order.id,
+                    status: OrderStatus.deliveryReceived.value,
+                  );
+                },
+                color: AppColors.primary,
+                height: 64.h,
+                borderRadius: 16.r,
+                textStyle: const TextStyle().textColorBold(
+                  fontSize: 20,
                   color: Colors.white,
-                  size: 16.r,
+                ),
+                icon: Padding(
+                  padding: EdgeInsetsDirectional.only(end: 8.0, top: 6),
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: 16.r,
+                  ),
+                ),
+              )
+            else
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 12.w),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.circular(14.r),
+                  border: Border.all(
+                    color: Theme.of(context).dividerColor,
+                    width: 0.76.w,
+                  ),
+                ),
+                child: Text(
+                  'لا يمكن تأكيد الوصول الآن. انتظر حتى تصبح حالة الطلب "جاري التحضير".',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle().textColorMedium(
+                    fontSize: 13,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -427,9 +449,7 @@ class ActiveOrderView extends StatelessWidget {
                         height: 44.h,
                         radius: 100.r,
                         color: AppColors.primary,
-                        onTap: () {
-                          // TODO: Open navigation
-                        },
+                        onTap: onNavigateToOrderLocation,
                         childWidget: Icon(
                           Icons.navigation,
                           color: Colors.white,
@@ -730,9 +750,7 @@ class ActiveOrderView extends StatelessWidget {
                         height: 44.h,
                         radius: 100.r,
                         color: AppColors.primary,
-                        onTap: () {
-                          // TODO: Open navigation
-                        },
+                        onTap: onNavigateToOrderLocation,
                         childWidget: Icon(
                           Icons.navigation,
                           color: Colors.white,
@@ -984,9 +1002,7 @@ class ActiveOrderView extends StatelessWidget {
                         height: 44.h,
                         radius: 100.r,
                         color: AppColors.primary,
-                        onTap: () {
-                          // TODO: Open navigation
-                        },
+                        onTap: onNavigateToOrderLocation,
                         childWidget: Icon(
                           Icons.navigation,
                           color: Colors.white,

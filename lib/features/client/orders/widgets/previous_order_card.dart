@@ -22,6 +22,14 @@ class PreviousOrderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final status = order.status;
     final isCompleted = status == 'completed' || status == 'delivered' || status == 'delivery_received';
+    final restaurantRating = order.orderRating?.restaurant?.rating ?? 0;
+    final driverRating = order.orderRating?.driver?.rating ?? 0;
+    final hasRestaurantRating = restaurantRating > 0;
+    final hasDriverRating = driverRating > 0 && order.driver != null;
+    final canRateRestaurant = isCompleted && !hasRestaurantRating;
+    final canRateDriver = isCompleted && order.driver != null && !hasDriverRating;
+    final hasPendingRatings = canRateRestaurant || canRateDriver;
+    final hasAnyRating = hasRestaurantRating || hasDriverRating;
 
     return GestureDetector(
       onTap: onTap,
@@ -185,58 +193,82 @@ class PreviousOrderCard extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Rate Restaurant Button
-                      if (isCompleted)
+                      if (isCompleted && hasPendingRatings)
                         GestureDetector(
-                          onTap: () {
-                            _showRestaurantRatingDialog(context);
-                          },
+                          onTap: () => _handleRatingTap(
+                            context,
+                            canRateRestaurant: canRateRestaurant,
+                            canRateDriver: canRateDriver,
+                          ),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.star_rounded,
+                                  size: 14.sp,
+                                  color: Colors.amber.shade700,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  'تقييم',
+                                  style: const TextStyle().textColorBold(
+                                    fontSize: 12.sp,
+                                    color: Colors.amber,
+                                  ),
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  _pendingRatingTargetLabel(
+                                    canRateRestaurant: canRateRestaurant,
+                                    canRateDriver: canRateDriver,
+                                  ),
+                                  style: const TextStyle().textColorNormal(
+                                    fontSize: 10,
+                                    color: Colors.amber,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      if (isCompleted && hasAnyRating)
+                        SizedBox(
+                          width: hasPendingRatings ? 92.w : 135.w,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.star_border,
+                                Icons.verified_rounded,
                                 size: 14.sp,
-                                color: Colors.amber,
+                                color: AppColors.successGreen,
                               ),
                               SizedBox(width: 4.w),
-                              Text(
-                                'تقييم',
-                                style: const TextStyle().textColorBold(
-                                  fontSize: 12.sp,
-                                  color: Colors.amber,
+                              Expanded(
+                                child: Text(
+                                  _ratingSummaryText(
+                                    restaurantRating: restaurantRating,
+                                    driverRating: driverRating,
+                                    hasRestaurantRating: hasRestaurantRating,
+                                    hasDriverRating: hasDriverRating,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle().textColorBold(
+                                    fontSize: 11,
+                                    color: AppColors.successGreen,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      if (isCompleted && order.driver != null) SizedBox(width: 12.w),
-                      // Rate Driver Button
-                      if (isCompleted && order.driver != null)
-                        GestureDetector(
-                          onTap: () {
-                            _showDriverRatingDialog(context);
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.stars_outlined,
-                                size: 14.sp,
-                                color: AppColors.primary,
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                'تقييم السائق',
-                                style: const TextStyle().textColorBold(
-                                  fontSize: 12.sp,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (isCompleted) SizedBox(width: 16.w),
+                      if (isCompleted) SizedBox(width: 12.w),
                       // Reorder Button
                       GestureDetector(
                         onTap: () {
@@ -269,6 +301,169 @@ class PreviousOrderCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _handleRatingTap(
+    BuildContext context, {
+    required bool canRateRestaurant,
+    required bool canRateDriver,
+  }) {
+    if (canRateRestaurant && canRateDriver) {
+      _showRatingTypeSheet(context);
+      return;
+    }
+
+    if (canRateRestaurant) {
+      _showRestaurantRatingDialog(context);
+      return;
+    }
+
+    if (canRateDriver) {
+      _showDriverRatingDialog(context);
+    }
+  }
+
+  String _pendingRatingTargetLabel({
+    required bool canRateRestaurant,
+    required bool canRateDriver,
+  }) {
+    if (canRateRestaurant && canRateDriver) {
+      return 'مطعم / سائق';
+    }
+    if (canRateRestaurant) {
+      return 'مطعم';
+    }
+    return 'سائق';
+  }
+
+  String _ratingSummaryText({
+    required int restaurantRating,
+    required int driverRating,
+    required bool hasRestaurantRating,
+    required bool hasDriverRating,
+  }) {
+    if (hasRestaurantRating && hasDriverRating) {
+      return 'مطعم $restaurantRating★ • سائق $driverRating★';
+    }
+    if (hasRestaurantRating) {
+      return 'تقييم المطعم $restaurantRating★';
+    }
+    return 'تقييم السائق $driverRating★';
+  }
+
+  void _showRatingTypeSheet(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: Theme.of(context).dividerColor,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            SizedBox(height: 14.h),
+            Text(
+              'اختر نوع التقييم',
+              style: const TextStyle().textColorBold(
+                fontSize: 16,
+                color: Theme.of(context).textTheme.titleLarge?.color,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            _buildRatingTypeTile(
+              context: context,
+              icon: Icons.storefront_rounded,
+              title: 'تقييم المطعم',
+              subtitle: order.restaurant.name,
+              onTap: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
+                _showRestaurantRatingDialog(context);
+              },
+            ),
+            SizedBox(height: 10.h),
+            _buildRatingTypeTile(
+              context: context,
+              icon: Icons.delivery_dining_rounded,
+              title: 'تقييم السائق',
+              subtitle: order.driver?.name ?? 'السائق',
+              onTap: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
+                _showDriverRatingDialog(context);
+              },
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  Widget _buildRatingTypeTile({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      borderRadius: BorderRadius.circular(12.r),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12.r),
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.primary, size: 18.sp),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle().textColorBold(
+                        fontSize: 14,
+                        color: Theme.of(context).textTheme.titleMedium?.color,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle().textColorNormal(
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14.sp,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -361,6 +556,7 @@ class PreviousOrderCard extends StatelessWidget {
                                 orderId: order.id,
                               );
                               if (success) {
+                                await controller.fetchOrders();
                                 if (Navigator.canPop(context)) {
                                   Navigator.pop(context);
                                 }
@@ -488,6 +684,7 @@ class PreviousOrderCard extends StatelessWidget {
                                 comment: commentController.text,
                               );
                               if (success) {
+                                await controller.fetchOrders();
                                 if (Navigator.canPop(context)) {
                                   Navigator.pop(context);
                                 }

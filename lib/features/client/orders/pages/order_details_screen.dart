@@ -121,8 +121,8 @@ class OrderDetailsScreen extends StatelessWidget {
 
   int _getCompletedSteps(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pendingRestaurant: return 0;
-      case OrderStatus.confirmed: return 1;
+      case OrderStatus.deliveryTake: return 0;
+      case OrderStatus.pending: return 1;
       case OrderStatus.preparing: return 2;
       case OrderStatus.onTheWay: return 3;
       case OrderStatus.awaitingDelivery: return 4;
@@ -244,8 +244,8 @@ class OrderDetailsScreen extends StatelessWidget {
 
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pendingRestaurant: return const Color(0xFF7F22FE);
-      case OrderStatus.confirmed: return const Color(0xFF00C950);
+      case OrderStatus.deliveryTake: return const Color(0xFF7F22FE);
+      case OrderStatus.pending: return const Color(0xFF00C950);
       case OrderStatus.preparing: return const Color(0xFF7F22FE);
       case OrderStatus.onTheWay: return const Color(0xFF7F22FE);
       case OrderStatus.delivered: return const Color(0xFF00C950);

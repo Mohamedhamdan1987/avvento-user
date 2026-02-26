@@ -95,6 +95,25 @@ class WalletService {
       rethrow;
     }
   }
+
+  Future<Map<String, dynamic>> requestWithdrawal({
+    required double amount,
+    required String notes,
+  }) async {
+    try {
+      final response = await _dioClient.post(
+        'delivery/withdrawal-request',
+        data: {
+          'amount': amount,
+          'notes': notes,
+        },
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<InitPaymentResponse> initiateDepositPayment({
     required double amount,
     required String phone,

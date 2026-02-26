@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:vibration/vibration.dart';
 
 import '../../constants/app_colors.dart';
 
@@ -41,10 +44,27 @@ class AppRefreshIndicator extends StatelessWidget {
     this.offsetToArmed = 140.0,
   });
 
+  Future<void> _vibratePulse({required int durationMs}) async {
+    final bool hasSupport = await Vibration.hasVibrator();
+    if (!hasSupport) return;
+    await Vibration.vibrate(duration: durationMs);
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomRefreshIndicator(
-      onRefresh: onRefresh,
+      onRefresh: () async {
+        await _vibratePulse(durationMs: 60);
+        await onRefresh();
+      },
+      onStateChanged: (IndicatorStateChange change) {
+        // Fire haptics exactly on refresh threshold crossing and loading start.
+        if (change.didChange(to: IndicatorState.armed)) {
+          unawaited(_vibratePulse(durationMs: 40));
+        } else if (change.didChange(to: IndicatorState.loading)) {
+          unawaited(_vibratePulse(durationMs: 70));
+        }
+      },
       offsetToArmed: offsetToArmed,
       builder: (BuildContext context, Widget child, IndicatorController controller) {
         return AnimatedBuilder(

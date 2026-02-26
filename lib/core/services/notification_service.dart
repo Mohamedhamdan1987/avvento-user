@@ -169,10 +169,10 @@ class NotificationService {
     
     int currentStep;
     switch (status) {
-      case OrderStatus.pendingRestaurant:
+      case OrderStatus.deliveryTake:
         currentStep = 1;
         break;
-      case OrderStatus.confirmed:
+      case OrderStatus.pending:
         currentStep = 2;
         break;
       case OrderStatus.preparing:
@@ -272,9 +272,9 @@ class NotificationService {
   /// Get emoji based on order status
   String _getStatusEmoji(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pendingRestaurant:
+      case OrderStatus.deliveryTake:
         return '⏳';
-      case OrderStatus.confirmed:
+      case OrderStatus.pending:
         return '✅';
       case OrderStatus.preparing:
         return '👨‍🍳';
@@ -308,8 +308,8 @@ class NotificationService {
   Future<void> showTestAllStatusesNotification() async {
     const testOrderId = 'TEST-ORDER-123';
     final statuses = [
-      OrderStatus.pendingRestaurant,
-      OrderStatus.confirmed,
+      OrderStatus.deliveryTake,
+      OrderStatus.pending,
       OrderStatus.preparing,
       OrderStatus.deliveryReceived,
       OrderStatus.onTheWay,

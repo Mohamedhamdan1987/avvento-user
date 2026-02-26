@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/network/dio_client.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/utils/location_utils.dart';
 
@@ -29,10 +30,12 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
   bool _isInCoverage = false;
   _CoverageZone? _activeCoverageZone;
   final _detailsController = TextEditingController();
+  final DioClient _dioClient = DioClient.instance;
+  late List<_CoverageZone> _coverageZones;
 
   static const _defaultZoom = 15.0;
   static const Color _coveragePurple = Color(0xFF7C3AED);
-  static const List<_CoverageZone> _coverageZones = [
+  static const List<_CoverageZone> _fallbackCoverageZones = [
     // Add any number of coordinates; vertices count is inferred automatically.
     _CoverageZone(
       name: 'طرابلس',
@@ -64,7 +67,54 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
   @override
   void initState() {
     super.initState();
+    _coverageZones = List<_CoverageZone>.from(_fallbackCoverageZones);
+    _loadCoverageZonesFromApi();
     _initLocation();
+  }
+
+  Future<void> _loadCoverageZonesFromApi() async {
+    try {
+      final response = await _dioClient.get(
+        '/app-settings/limited-area-google-map-location',
+      );
+      final data = response.data;
+      if (data is! Map<String, dynamic>) return;
+
+      final rawPoints = data['limitedAreaGoogleMapLocation'];
+      if (rawPoints is! List) return;
+
+      final points = <LatLng>[];
+      for (final point in rawPoints) {
+        if (point is! Map) continue;
+        final lat = _toDouble(point['lat']);
+        final lng = _toDouble(point['long']);
+        if (lat != null && lng != null) {
+          points.add(LatLng(lat, lng));
+        }
+      }
+
+      if (points.length < 3 || !mounted) return;
+
+      setState(() {
+        _coverageZones = [
+          _CoverageZone(
+            name: 'طرابلس',
+            levelKey: 'city',
+            coordinates: points,
+          ),
+        ];
+      });
+
+      await _reverseGeocode(_selectedLocation);
+    } catch (_) {
+      // Keep fallback coverage zone when API request fails.
+    }
+  }
+
+  double? _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
   }
 
   Future<void> _initLocation() async {
@@ -196,20 +246,9 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
   }
 
   Future<void> _openNavigationToSelectedLocation() async {
-    try {
-      final hasPermission = await LocationUtils.ensureLocationPermission();
-      if (!hasPermission) return;
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
-      );
-      await LocationUtils.openGoogleMapsWithDirections(
-        userLat: position.latitude,
-        userLong: position.longitude,
-        restaurantLat: _selectedLocation.latitude,
-        restaurantLong: _selectedLocation.longitude,
-      );
-    } catch (_) {}
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(_selectedLocation, _defaultZoom + 2),
+    );
   }
 
   void _continueAsGuest() {
@@ -221,6 +260,47 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
       storage.write('guest_long', _selectedLocation.longitude);
     }
     Get.offAllNamed(AppRoutes.login);
+  }
+
+  void _continueToRegister() {
+    if (_addressText.isEmpty) return;
+    final locationType = _selectedTypeIndex == 0
+        ? 'home'
+        : _selectedTypeIndex == 1
+            ? 'work'
+            : 'other';
+    final notes = _detailsController.text.trim();
+    final storage = GetStorage();
+    storage.write(AppConstants.onboardingSeenKey, true);
+    storage.write('selected_address', _addressText);
+    storage.write('selected_lat', _selectedLocation.latitude);
+    storage.write('selected_long', _selectedLocation.longitude);
+    storage.write('selected_location_type', locationType);
+    if (notes.isNotEmpty) {
+      storage.write('selected_location_notes', notes);
+    }
+
+    Get.toNamed(
+      AppRoutes.register,
+      arguments: {
+        'address': _addressText,
+        'lat': _selectedLocation.latitude,
+        'long': _selectedLocation.longitude,
+        'locationType': locationType,
+        'notes': notes,
+      },
+    );
+  }
+
+  void _goToLogin() {
+    final storage = GetStorage();
+    storage.write(AppConstants.onboardingSeenKey, true);
+    if (_addressText.isNotEmpty) {
+      storage.write('selected_address', _addressText);
+      storage.write('selected_lat', _selectedLocation.latitude);
+      storage.write('selected_long', _selectedLocation.longitude);
+    }
+    Get.toNamed(AppRoutes.login);
   }
 
   @override
@@ -279,31 +359,28 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
 
           // Center pin marker
           Center(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: 280.h),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.only(bottom: _isMapMoving ? 16.h : 0),
-                    child: SvgPicture.asset(
-                      'assets/svg/auth/Icon-8.svg',
-                      width: 48.w,
-                      height: 48.h,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: EdgeInsets.only(bottom: _isMapMoving ? 16.h : 0),
+                  child: SvgPicture.asset(
+                    'assets/svg/auth/Icon-8.svg',
+                    width: 48.w,
+                    height: 48.h,
+                  ),
+                ),
+                if (!_isMapMoving)
+                  Container(
+                    width: 8.w,
+                    height: 4.h,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10.r),
                     ),
                   ),
-                  if (!_isMapMoving)
-                    Container(
-                      width: 8.w,
-                      height: 4.h,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
 
@@ -410,7 +487,9 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
                 detailsController: _detailsController,
                 onToggleDetails: () => setState(() => _showDetails = !_showDetails),
                 onTypeSelected: (i) => setState(() => _selectedTypeIndex = i),
+                onContinueToRegister: _continueToRegister,
                 onContinueAsGuest: _continueAsGuest,
+                onGoToLogin: _goToLogin,
               );
             },
           ),
@@ -524,7 +603,9 @@ class _BottomSheet extends StatelessWidget {
   final TextEditingController detailsController;
   final VoidCallback onToggleDetails;
   final ValueChanged<int> onTypeSelected;
+  final VoidCallback onContinueToRegister;
   final VoidCallback onContinueAsGuest;
+  final VoidCallback onGoToLogin;
 
   const _BottomSheet({
     required this.scrollController,
@@ -535,7 +616,9 @@ class _BottomSheet extends StatelessWidget {
     required this.detailsController,
     required this.onToggleDetails,
     required this.onTypeSelected,
+    required this.onContinueToRegister,
     required this.onContinueAsGuest,
+    required this.onGoToLogin,
   });
 
   @override
@@ -658,11 +741,11 @@ class _BottomSheet extends StatelessWidget {
 
             SizedBox(height: 16.h),
 
-            // Continue as guest button
+            // Continue to register button
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: GestureDetector(
-                onTap: onContinueAsGuest,
+                onTap: onContinueToRegister,
                 child: Container(
                   width: double.infinity,
                   height: 68.h,
@@ -679,7 +762,7 @@ class _BottomSheet extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      'المتابعة كزائر',
+                      'إنشاء حساب جديد',
                       style: TextStyle(
                         fontFamily: 'IBMPlexSansArabic',
                         fontSize: 18.sp,
@@ -693,6 +776,57 @@ class _BottomSheet extends StatelessWidget {
             ),
 
             SizedBox(height: 12.h),
+
+            // Continue as guest button
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: GestureDetector(
+                onTap: onContinueAsGuest,
+                child: Container(
+                  width: double.infinity,
+                  height: 56.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: const Color(0xFF6938D3), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      'المتابعة كزائر',
+                      style: TextStyle(
+                        fontFamily: 'IBMPlexSansArabic',
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6938D3),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            SizedBox(height: 12.h),
+
+            // Login link
+            TextButton(
+              onPressed: onGoToLogin,
+              child: Text(
+                'لدي حساب بالفعل',
+                style: TextStyle(
+                  fontFamily: 'IBMPlexSansArabic',
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF6938D3),
+                ),
+              ),
+            ),
 
             // Guest info text
             Padding(

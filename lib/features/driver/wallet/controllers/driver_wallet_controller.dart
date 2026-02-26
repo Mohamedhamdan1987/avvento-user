@@ -10,6 +10,7 @@ class DriverWalletController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isSyncing = false.obs;
   final RxBool isSettlementsLoading = false.obs;
+  final RxBool isSubmittingWithdrawal = false.obs;
   final Rx<WalletModel?> wallet = Rx<WalletModel?>(null);
   final RxList<TransactionModel> transactions = <TransactionModel>[].obs;
 
@@ -75,5 +76,43 @@ class DriverWalletController extends GetxController {
       fetchWalletData(),
       fetchSettlements(),
     ]);
+  }
+
+  Future<bool> submitWithdrawal({
+    required double amount,
+    required String notes,
+  }) async {
+    final availableAmount = wallet.value?.balance ?? 0.0;
+
+    if (amount <= 0) {
+      showSnackBar(message: 'يرجى إدخال مبلغ صحيح', isError: true);
+      return false;
+    }
+
+    if (amount > availableAmount) {
+      showSnackBar(
+        message:
+            'المبلغ المطلوب يتجاوز الأرباح المتاحة (${availableAmount.toStringAsFixed(2)} د.ل)',
+        isError: true,
+      );
+      return false;
+    }
+
+    if (isSubmittingWithdrawal.value) {
+      return false;
+    }
+
+    try {
+      isSubmittingWithdrawal.value = true;
+      await _walletService.requestWithdrawal(amount: amount, notes: notes);
+      await refreshWallet();
+      showSnackBar(message: 'تم إرسال طلب سحب الأرباح بنجاح', isSuccess: true);
+      return true;
+    } catch (e) {
+      showSnackBar(message: 'تعذر إرسال طلب السحب حالياً', isError: true);
+      return false;
+    } finally {
+      isSubmittingWithdrawal.value = false;
+    }
   }
 }

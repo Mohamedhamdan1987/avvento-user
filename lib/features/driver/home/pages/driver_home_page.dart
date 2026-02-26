@@ -33,6 +33,8 @@ class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObse
   );
   bool _isLoadingLocation = true;
   Timer? _locationTimer;
+  final Set<String> _knownNearbyOrderIds = <String>{};
+  bool _isNearbyOrdersBottomSheetOpen = false;
 
   @override
   void initState() {
@@ -41,6 +43,8 @@ class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObse
     _initializeController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _getCurrentLocation();
+      final controller = Get.find<DriverOrdersController>();
+      _knownNearbyOrderIds.addAll(controller.nearbyOrders.map((order) => order.id));
     });
     
     // Update FCM token on server
@@ -53,7 +57,7 @@ class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObse
     if (selectedOrder == null) return;
 
     final isPickupPhase = [
-      OrderStatus.confirmed,
+      OrderStatus.pending,
       OrderStatus.preparing,
       OrderStatus.awaitingDelivery,
     ].contains(selectedOrder.status);
@@ -65,19 +69,12 @@ class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObse
         ? selectedOrder.pickupLocation.longitude
         : selectedOrder.deliveryLocation.longitude;
 
-    try {
-      final hasPermission = await LocationUtils.ensureLocationPermission();
-      if (!hasPermission) return;
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      await LocationUtils.openGoogleMapsWithDirections(
-        userLat: position.latitude,
-        userLong: position.longitude,
-        restaurantLat: destinationLat,
-        restaurantLong: destinationLong,
-      );
-    } catch (_) {}
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(
+        LatLng(destinationLat, destinationLong),
+        16,
+      ),
+    );
   }
 
   @override
@@ -187,6 +184,80 @@ class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObse
     }
   }
 
+  void _handleNearbyOrdersUpdates(DriverOrdersController controller) {
+    final currentOrderIds = controller.nearbyOrders.map((order) => order.id).toSet();
+    final newOrders = controller.nearbyOrders
+        .where((order) => !_knownNearbyOrderIds.contains(order.id))
+        .toList();
+
+    _knownNearbyOrderIds
+      ..clear()
+      ..addAll(currentOrderIds);
+
+    if (newOrders.isEmpty) return;
+
+    final selectedOrder = controller.selectedOrder;
+    final hasSelectedNearbyOrder = selectedOrder != null &&
+        controller.nearbyOrders.any((order) => order.id == selectedOrder.id);
+
+    if (!hasSelectedNearbyOrder) {
+      controller.selectOrder(newOrders.last);
+    }
+  }
+
+  void _syncNearbyOrderBottomSheet(DriverOrdersController controller) {
+    final selectedOrder = controller.selectedOrder;
+    final isSelectedNearby = selectedOrder != null &&
+        controller.nearbyOrders.any((order) => order.id == selectedOrder.id);
+
+    if (isSelectedNearby && !_isNearbyOrdersBottomSheetOpen) {
+      _showNearbyOrdersBottomSheet();
+      return;
+    }
+
+    if (!isSelectedNearby &&
+        _isNearbyOrdersBottomSheetOpen &&
+        Get.isBottomSheetOpen == true) {
+      Get.back();
+    }
+  }
+
+  Future<void> _showNearbyOrdersBottomSheet() async {
+    if (!mounted || _isNearbyOrdersBottomSheetOpen) return;
+
+    _isNearbyOrdersBottomSheetOpen = true;
+
+    await Get.bottomSheet(
+      Obx(() {
+        final controller = Get.find<DriverOrdersController>();
+        final selectedOrder = controller.selectedOrder;
+        final isSelectedNearby = selectedOrder != null &&
+            controller.nearbyOrders.any((order) => order.id == selectedOrder.id);
+
+        if (!isSelectedNearby) {
+          return const SizedBox.shrink();
+        }
+
+        return NewOrderRequestModal(order: selectedOrder);
+      }),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+      enableDrag: true,
+    );
+
+    _isNearbyOrdersBottomSheetOpen = false;
+
+    if (!mounted) return;
+    final controller = Get.find<DriverOrdersController>();
+    final selectedOrder = controller.selectedOrder;
+    final isStillNearby = selectedOrder != null &&
+        controller.nearbyOrders.any((order) => order.id == selectedOrder.id);
+    if (isStillNearby) {
+      controller.clearSelectedOrder();
+    }
+  }
+
 
 
   @override
@@ -238,7 +309,7 @@ class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObse
               if (selectedOrder != null) {
                 // Determine target location (pickup or delivery based on status)
                 bool isPickupPhase = [
-                  OrderStatus.confirmed,
+                  OrderStatus.pending,
                   OrderStatus.preparing,
                   OrderStatus.awaitingDelivery
                 ].contains(selectedOrder.status);
@@ -257,6 +328,19 @@ class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObse
               return const SizedBox.shrink();
             },
           ),
+
+          // Listen for any newly arrived nearby order and show a timed dialog.
+          Obx(() {
+            final controller = Get.find<DriverOrdersController>();
+            controller.nearbyOrders.length;
+            controller.selectedOrder;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              _handleNearbyOrdersUpdates(controller);
+              _syncNearbyOrderBottomSheet(controller);
+            });
+            return const SizedBox.shrink();
+          }),
 
           // Top header with gradient overlay
           Container(
@@ -546,7 +630,7 @@ class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObse
             }),
           ),
 
-          // Inline order panel (non-modal) to keep map interaction available
+          // Inline panel for my active orders only
           Obx(() {
             final controller = Get.find<DriverOrdersController>();
             final selectedOrder = controller.selectedOrder;
@@ -555,15 +639,20 @@ class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObse
             }
 
             final isMyOrder = controller.myOrders.any((o) => o.id == selectedOrder.id);
+            if (!isMyOrder) {
+              return const SizedBox.shrink();
+            }
+
             return Positioned(
               left: 0,
               right: 0,
               bottom: 0,
               child: SafeArea(
                 top: false,
-                child: isMyOrder
-                    ? ActiveOrderView(order: selectedOrder)
-                    : NewOrderRequestModal(order: selectedOrder),
+                child: ActiveOrderView(
+                  order: selectedOrder,
+                  onNavigateToOrderLocation: _openNavigationForSelectedOrder,
+                ),
               ),
             );
           }),
@@ -733,6 +822,9 @@ class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObse
   @override
   void dispose() {
     _stopLocationUpdates();
+    if (_isNearbyOrdersBottomSheetOpen && Get.isBottomSheetOpen == true) {
+      Get.back();
+    }
     WidgetsBinding.instance.removeObserver(this);
     _mapController?.dispose();
     super.dispose();

@@ -294,6 +294,7 @@ class _HomePageContentState extends State<_HomePageContent> {
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       body: AppRefreshIndicator(
         onRefresh: () async {
+          // HapticFeedback.heavyImpact();
           await widget.controller.refreshData();
         },
         onProgressChanged: (progress) {
@@ -306,139 +307,167 @@ class _HomePageContentState extends State<_HomePageContent> {
           child: Column(
             children: [
               // Header area (background image + gradient + header + categories)
-              SizedBox(
-                height: 330.h,
-                child: Stack(
-                  children: [
-                    // Background image
-                    Container(
-                      height: 277.h,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(19.r),
-                          bottomRight: Radius.circular(19.r),
-                        ),
-                        child: ValueListenableBuilder<double>(
-                          valueListenable: _refreshProgress,
-                          builder: (context, progress, child) {
-                            // Subtle zoom on pull-to-refresh (max ~8%)
-                            final scale = 1.0 + (progress * 0.08);
-                            return Transform.scale(
-                              scale: scale,
-                              child: child,
-                            );
-                          },
-                          child: Image.asset(
-                            'assets/home_cover.jpg',
-                            width: double.infinity,
-                            height: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: AppColors.purple,
+              ValueListenableBuilder<double>(
+                valueListenable: _refreshProgress,
+                builder: (context, progress, _) {
+                  final pullProgress = progress.clamp(0.0, 1.0);
+                  // Stretch purple header slightly while pulling to refresh.
+                  final stretchHeight = pullProgress * 18.h;
+
+                  return SizedBox(
+                    height: 330.h + stretchHeight,
+                    child: Stack(
+                      children: [
+                        // Background image
+                        SizedBox(
+                          height: 277.h + stretchHeight,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(19.r),
+                              bottomRight: Radius.circular(19.r),
+                            ),
+                            child: ValueListenableBuilder<double>(
+                              valueListenable: _refreshProgress,
+                              builder: (context, progress, child) {
+                                // Subtle zoom on pull-to-refresh (max ~8%)
+                                final scale = 1.0 + (progress * 0.08);
+                                return Transform.scale(
+                                  scale: scale,
+                                  child: child,
+                                );
+                              },
+                              child: Image.asset(
+                                'assets/home_cover.jpg',
+                                width: double.infinity,
+                                height: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  color: AppColors.purple,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    // Gradient overlay
-                    Container(
-                      height: 277.h,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(19.r),
-                          bottomRight: Radius.circular(19.r),
+                        // Gradient overlay
+                        Container(
+                          height: 277.h + stretchHeight,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(19.r),
+                              bottomRight: Radius.circular(19.r),
+                            ),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withOpacity(0.4),
+                                const Color(0xFF9C19FA).withOpacity(0.8),
+                                const Color(0xFF9B16FA).withOpacity(0.964),
+                              ],
+                              stops: const [0.0, 0.63462, 0.94231],
+                            ),
+                          ),
                         ),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withOpacity(0.4),
-                            const Color(0xFF9C19FA).withOpacity(0.8),
-                            const Color(0xFF9B16FA).withOpacity(0.964),
-                          ],
-                          stops: const [0.0, 0.63462, 0.94231],
-                        ),
-                      ),
-                    ),
-                    // Header content
-                    _buildHeader(),
+                        // Header content
+                        _buildHeader(),
 
-                    // Categories Grid
-                    Positioned(
-                      top: 220.h,
-                      left: 0,
-                      right: 0,
-                      child: Obx(() {
-                        final apiServices = widget.controller.homeServices;
-                        final fallbackServices = <Map<String, String>>[
-                          {
-                            'key': 'restaurant',
-                            'title': 'المطاعم',
-                            'imagePath': 'assets/images/services/restaurant.png',
-                          },
-                          {
-                            'key': 'market',
-                            'title': 'الماركت',
-                            'imagePath': 'assets/images/services/market.png',
-                          },
-                          {
-                            'key': 'pharmacy',
-                            'title': 'صيدليات',
-                            'imagePath': 'assets/images/services/pharmacy.png',
-                          },
-                          {
-                            'key': 'store',
-                            'title': 'المتاجر',
-                            'imagePath': 'assets/images/services/store.png',
-                          },
-                        ];
+                        // Categories Grid
+                        Positioned(
+                          top: 240.h + (stretchHeight * 0.35),
+                          left: 0,
+                          right: 0,
+                          child: Obx(() {
+                            final apiServices = widget.controller.homeServices;
+                            final fallbackServices = <Map<String, String>>[
+                              {
+                                'key': 'restaurant',
+                                'title': 'المطاعم',
+                                'imagePath': 'assets/images/services/restaurant.png',
+                              },
+                              {
+                                'key': 'market',
+                                'title': 'الماركت',
+                                'imagePath': 'assets/images/services/market.png',
+                              },
+                              {
+                                'key': 'pharmacy',
+                                'title': 'صيدليات',
+                                'imagePath': 'assets/images/services/pharmacy.png',
+                              },
+                              {
+                                'key': 'store',
+                                'title': 'المتاجر',
+                                'imagePath': 'assets/images/services/store.png',
+                              },
+                            ];
 
-                        final children = <Widget>[];
+                            final children = <Widget>[];
 
-                        if (apiServices.isNotEmpty) {
-                          for (var i = 0; i < apiServices.length; i++) {
-                            final service = apiServices[i];
-                            children.add(
-                              CategoryCard(
-                                svgContent: service.svg,
-                                title: service.name,
-                                onTap: () => _onServiceTap(
-                                  key: service.key,
-                                  title: service.name,
-                                ),
+                            if (apiServices.isNotEmpty) {
+                              for (var i = 0; i < apiServices.length; i++) {
+                                final service = apiServices[i];
+                                children.add(
+                                  CategoryCard(
+                                    svgContent: service.svg,
+                                    title: service.name,
+                                    pullProgress: pullProgress,
+                                    onTap: () => _onServiceTap(
+                                      key: service.key,
+                                      title: service.name,
+                                    ),
+                                  ),
+                                );
+                                if (i != apiServices.length - 1) {
+                                  children.add(SizedBox(width: 14.w));
+                                }
+                              }
+                            } else {
+                              for (var i = 0; i < fallbackServices.length; i++) {
+                                final service = fallbackServices[i];
+                                children.add(
+                                  CategoryCard(
+                                    imagePath: service['imagePath'],
+                                    title: service['title'] ?? '',
+                                    pullProgress: pullProgress,
+                                    onTap: () => _onServiceTap(
+                                      key: service['key'] ?? '',
+                                      title: service['title'] ?? '',
+                                    ),
+                                  ),
+                                );
+                                if (i != fallbackServices.length - 1) {
+                                  children.add(SizedBox(width: 14.w));
+                                }
+                              }
+                            }
+
+                            final serviceCount = apiServices.isNotEmpty
+                                ? apiServices.length
+                                : fallbackServices.length;
+                            final enableHorizontalScroll = serviceCount > 4;
+
+                            if (!enableHorizontalScroll) {
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: children,
+                              );
+                            }
+
+                            return SizedBox(
+                              height: 108.h,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                physics: const BouncingScrollPhysics(),
+                                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                child: Row(children: children),
                               ),
                             );
-                            if (i != apiServices.length - 1) {
-                              children.add(SizedBox(width: 14.w));
-                            }
-                          }
-                        } else {
-                          for (var i = 0; i < fallbackServices.length; i++) {
-                            final service = fallbackServices[i];
-                            children.add(
-                              CategoryCard(
-                                imagePath: service['imagePath'],
-                                title: service['title'] ?? '',
-                                onTap: () => _onServiceTap(
-                                  key: service['key'] ?? '',
-                                  title: service['title'] ?? '',
-                                ),
-                              ),
-                            );
-                            if (i != fallbackServices.length - 1) {
-                              children.add(SizedBox(width: 14.w));
-                            }
-                          }
-                        }
-
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: children,
-                        );
-                      }),
+                          }),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
 
               // Content below header

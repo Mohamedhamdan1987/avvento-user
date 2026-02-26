@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:geolocator/geolocator.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Utility class for location-based calculations
 class LocationUtils {
@@ -312,33 +311,4 @@ class LocationUtils {
     return degrees * pi / 180.0;
   }
 
-  /// Open Google Maps with directions and polyline between two locations
-  ///
-  /// [userLat] - User's current latitude
-  /// [userLong] - User's current longitude
-  /// [restaurantLat] - Restaurant's latitude
-  /// [restaurantLong] - Restaurant's longitude
-  static Future<bool> openGoogleMapsWithDirections({
-    required double userLat,
-    required double userLong,
-    required double restaurantLat,
-    required double restaurantLong,
-  }) async {
-    // Create Google Maps URL with directions
-    // Using the directions API format: origin and destination
-    final String googleMapsUrl =
-        'https://www.google.com/maps/dir/?api=1&origin=$userLat,$userLong&destination=$restaurantLat,$restaurantLong&travelmode=driving';
-
-    final Uri uri = Uri.parse(googleMapsUrl);
-
-    try {
-      if (await canLaunchUrl(uri)) {
-        return await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        return false;
-      }
-    } catch (e) {
-      return false;
-    }
-  }
 }

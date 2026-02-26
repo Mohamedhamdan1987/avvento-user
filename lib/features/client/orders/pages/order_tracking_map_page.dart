@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:avvento/core/utils/polyline_utils.dart';
-import 'package:avvento/core/utils/location_utils.dart';
 import 'package:avvento/core/enums/order_status.dart';
 import 'package:avvento/core/routes/app_routes.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -176,19 +174,12 @@ class _OrderTrackingMapPageState extends State<OrderTrackingMapPage> {
   }
 
   Future<void> _openNavigationToDeliveryLocation() async {
-    try {
-      final hasPermission = await LocationUtils.ensureLocationPermission();
-      if (!hasPermission) return;
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      await LocationUtils.openGoogleMapsWithDirections(
-        userLat: position.latitude,
-        userLong: position.longitude,
-        restaurantLat: widget.userLat,
-        restaurantLong: widget.userLong,
-      );
-    } catch (_) {}
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(
+        LatLng(widget.userLat, widget.userLong),
+        17,
+      ),
+    );
   }
 
   @override

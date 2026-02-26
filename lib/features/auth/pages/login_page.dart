@@ -254,7 +254,7 @@ class _LoginPageState extends State<LoginPage> {
                                   text: 'mohamed1',
                                   color: AppColors.drawerPurple,
                                   onTap: () {
-                                    controller.login("mohamed1", "123456789");
+                                    controller.login("mohamed123", "mohamed123");
                                   },
                                   isLoading: controller.isLoading,
                                   borderRadius: 16,

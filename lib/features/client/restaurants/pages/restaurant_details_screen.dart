@@ -2139,7 +2139,7 @@ class RestaurantDetailsScreen extends StatelessWidget {
         restaurantId,
         item.id,
       );
-      final cartRestaurantId = cartController.detailedCart?.restaurant.id ?? restaurantId;
+      final cartRestaurantId = controller.restaurant!.user.id;
 
       if (newQuantity == 0) {
         if (itemIndex != -1) {
@@ -2186,18 +2186,17 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
   ) {
     final double progress = shrinkOffset / maxExtent;
     // Calculate values based on progress
-    final double avatarSize = 100.w * (1 - progress).clamp(0.6, 1.0);
-    final double avatarTop = 150.h - (shrinkOffset * 0.7);
+    final double avatarSize = 76.w * (1 - progress).clamp(0.75, 1.0);
     final double titleOpacity = (progress * 2).clamp(0, 1);
 
     return Stack(
       fit: StackFit.expand,
       clipBehavior: Clip.none,
       children: [
-        // Background Image with Blur
+        // Background Image with bottom gradient overlay
         ClipRRect(
-          borderRadius: BorderRadiusDirectional.only(
-            bottomStart: Radius.circular(30.r),
+          borderRadius: BorderRadiusDirectional.vertical(
+            bottom: Radius.circular(30.r),
           ),
           child: Stack(
             children: [
@@ -2209,13 +2208,21 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
                 errorWidget: (context, url, error) =>
                     Container(color: Colors.grey[300]),
               ),
-              BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: progress * 10,
-                  sigmaY: progress * 10,
-                ),
+              Positioned.fill(
                 child: Container(
-                  color: Colors.black.withOpacity(progress * 0.4),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.08 + (progress * 0.3)),
+                        Colors.black.withOpacity(0.20 + (progress * 0.5)),
+                      ],
+                      // Start darkening from around the lower 2/3 area.
+                      stops: const [0.0, 0.33, 1.0],
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -2276,7 +2283,7 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
         PositionedDirectional(
           // top: avatarTop.clamp(MediaQuery.of(context).padding.top + 10.h, 200.h),
           top: lerpDouble(
-            200.h,
+            162.h,
             MediaQuery.of(context).padding.top + 10.h,
             progress + 0.05,
           )!,
@@ -2325,18 +2332,18 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 4.h),
-                  Row(
-                    children: [
-                      Text(
-                        'الحد الأدنى للطلب: 25 د.ل',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Colors.white.withOpacity(0.8),
-                        ),
-                      ),
-                    ],
-                  ),
+                  // SizedBox(height: 4.h),
+                  // Row(
+                  //   children: [
+                  //     Text(
+                  //       'الحد الأدنى للطلب: 25 د.ل',
+                  //       style: TextStyle(
+                  //         fontSize: 12.sp,
+                  //         color: Colors.white.withOpacity(0.8),
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
                 ],
               ),
             ),
@@ -2346,10 +2353,10 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 250.h;
+  double get maxExtent => 205.h;
 
   @override
-  double get minExtent => 100.h + Get.mediaQuery.padding.top;
+  double get minExtent => 84.h + Get.mediaQuery.padding.top;
 
   @override
   bool shouldRebuild(covariant RestaurantHeaderDelegate oldDelegate) => true;

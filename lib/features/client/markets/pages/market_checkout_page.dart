@@ -7,7 +7,6 @@ import 'package:avvento/core/utils/location_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -106,19 +105,7 @@ class _MarketCheckoutPageState extends State<MarketCheckoutPage> {
   Future<void> _openNavigationToActiveAddress() async {
     final activeAddress = addressController.activeAddress.value;
     if (activeAddress == null) return;
-    try {
-      final hasPermission = await LocationUtils.ensureLocationPermission();
-      if (!hasPermission) return;
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      await LocationUtils.openGoogleMapsWithDirections(
-        userLat: position.latitude,
-        userLong: position.longitude,
-        restaurantLat: activeAddress.lat,
-        restaurantLong: activeAddress.long,
-      );
-    } catch (_) {}
+    _updateMapLocation(activeAddress);
   }
 
   @override

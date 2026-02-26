@@ -1,3 +1,4 @@
+import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -256,19 +257,19 @@ class _DriverWalletPageState extends State<DriverWalletPage>
 
                 Row(
                   children: [
-                    Expanded(
-                      child: _buildActionButton(
-                        text: 'إيداع رصيد',
-                        iconName:
-                            'assets/svg/driver/wallet/settlement_icon.svg',
-                        fallbackIcon: Icons.add,
-                        isPrimary: false,
-                        onTap: () {
-                          _showDepositDialog();
-                        },
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
+                    // Expanded(
+                    //   child: _buildActionButton(
+                    //     text: 'إيداع رصيد',
+                    //     iconName:
+                    //         'assets/svg/driver/wallet/settlement_icon.svg',
+                    //     fallbackIcon: Icons.add,
+                    //     isPrimary: false,
+                    //     onTap: () {
+                    //       _showDepositDialog();
+                    //     },
+                    //   ),
+                    // ),
+                    // SizedBox(width: 12.w),
                     Expanded(
                       child: _buildActionButton(
                         text: 'سحب أرباح',
@@ -276,7 +277,7 @@ class _DriverWalletPageState extends State<DriverWalletPage>
                         fallbackIcon: Icons.arrow_upward,
                         isPrimary: true,
                         onTap: () {
-                          // TODO: Implement withdrawal
+                          _showWithdrawalDialog();
                         },
                       ),
                     ),
@@ -338,6 +339,133 @@ class _DriverWalletPageState extends State<DriverWalletPage>
     );
   }
 
+  Future<void> _showWithdrawalDialog() async {
+    String amountInput = '';
+    String notesInput = '';
+    String? amountError;
+    final maxAmount = controller.wallet.value?.balance ?? 0.0;
+
+    await Get.dialog(
+      StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            backgroundColor: Theme.of(context).cardColor,
+            title: Text(
+              'طلب سحب أرباح',
+              style: TextStyle(
+                color: Theme.of(context).textTheme.titleLarge?.color,
+              ),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    'المتاح للسحب: ${maxAmount.toStringAsFixed(2)} د.ل',
+                    style: const TextStyle().textColorMedium(
+                      fontSize: 13.sp,
+                      color: Theme.of(context).hintColor,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                TextField(
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onChanged: (value) {
+                    amountInput = value;
+                    if (amountError != null) {
+                      setDialogState(() {
+                        amountError = null;
+                      });
+                    }
+                  },
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'أدخل المبلغ',
+                    suffixText: 'د.ل',
+                    errorText: amountError,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                TextField(
+                  onChanged: (value) => notesInput = value,
+                  maxLines: 3,
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                  decoration: const InputDecoration(
+                    hintText: 'ملاحظات الطلب (اختياري)',
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: controller.isSubmittingWithdrawal.value
+                    ? null
+                    : () => Get.back(),
+                child: const Text('إلغاء'),
+              ),
+              Obx(
+                () => TextButton(
+                  onPressed: controller.isSubmittingWithdrawal.value
+                      ? null
+                      : () async {
+                          final amount = double.tryParse(
+                            amountInput.trim(),
+                          );
+
+                          if (amount == null || amount <= 0) {
+                            setDialogState(() {
+                              amountError = 'يرجى إدخال مبلغ صحيح';
+                            });
+                            return;
+                          }
+
+                          if (amount > maxAmount) {
+                            setDialogState(() {
+                              amountError =
+                                  'المبلغ لا يمكن أن يتجاوز ${maxAmount.toStringAsFixed(2)} د.ل';
+                            });
+                            return;
+                          }
+
+                          setDialogState(() {
+                            amountError = null;
+                          });
+
+                          final success = await controller.submitWithdrawal(
+                            amount: amount,
+                            notes: notesInput.trim(),
+                          );
+
+                          if (success) {
+                            Get.back();
+                          }
+                        },
+                  child: controller.isSubmittingWithdrawal.value
+                      ? SizedBox(
+                          width: 16.w,
+                          height: 16.h,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('تأكيد السحب'),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildActionButton({
     required String text,
     required String iconName,
@@ -380,7 +508,8 @@ class _DriverWalletPageState extends State<DriverWalletPage>
   Widget _buildSummaryCards() {
     final totalEarned = controller.wallet.value?.totalEarned ?? 0.0;
     final pendingCash =
-        controller.settlementResponse.value?.pendingCashCollected ?? 0.0;
+        controller.settlementResponse.value?.pendingAmount ?? 0.0;
+    cprint("pendingCash=$pendingCash");
 
     return Row(
       children: [

@@ -135,9 +135,9 @@ class _FloatingActiveOrderBannerState extends State<FloatingActiveOrderBanner> {
 
   static String _statusBannerText(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pendingRestaurant:
+      case OrderStatus.deliveryTake:
         return 'طلبك بانتظار قبول المطعم..';
-      case OrderStatus.confirmed:
+      case OrderStatus.pending:
         return 'طلبك تم تأكيده..';
       case OrderStatus.preparing:
         return 'طلبك جاري التحضير..';
@@ -155,9 +155,9 @@ class _FloatingActiveOrderBannerState extends State<FloatingActiveOrderBanner> {
   /// مسار أيقونة SVG حسب حالة الطلب.
   static String _statusIconPath(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pendingRestaurant:
+      case OrderStatus.deliveryTake:
         return 'assets/svg/client/orders/pending_acceptance.svg';
-      case OrderStatus.confirmed:
+      case OrderStatus.pending:
         return 'assets/svg/client/orders/confirmed.svg';
       case OrderStatus.preparing:
         return 'assets/svg/client/orders/preparing.svg';

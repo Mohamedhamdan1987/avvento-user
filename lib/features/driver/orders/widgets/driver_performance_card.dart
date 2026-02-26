@@ -14,6 +14,7 @@ class DriverPerformanceCard extends StatelessWidget {
     return GetX<DriverOrdersController>(
       builder: (controller) {
         final dashboard = controller.dashboardData;
+        final isDashboardLoading = controller.isDashboardLoading;
         final deliveredOrders = dashboard?.deliveredOrders ?? 0;
         final rating = dashboard?.averageRating ?? 0.0;
         final acceptance = dashboard?.acceptancePercentage ?? 0.0;
@@ -148,7 +149,9 @@ class DriverPerformanceCard extends StatelessWidget {
                                     ),
                                     SizedBox(height: 4.h),
                                     Text(
-                                      deliveredOrders < 100 
+                                      isDashboardLoading
+                                          ? 'جاري تحديث الإحصائيات...'
+                                          : deliveredOrders < 100
                                           ? 'أكمل ${25 - (deliveredOrders % 25)} طلب للوصول للمستوى التالي'
                                           : 'أنت في أعلى مستوى!',
                                       style: const TextStyle().textColorNormal(
@@ -194,29 +197,35 @@ class DriverPerformanceCard extends StatelessWidget {
                       children: [
                         // Completed Orders (on the right in RTL)
                         Expanded(
-                          child: _buildStatCard(
-                            context,
-                            value: deliveredOrders.toString(),
-                            label: 'طلب مكتمل',
-                          ),
+                          child: isDashboardLoading
+                              ? _buildLoadingStatCard(context)
+                              : _buildStatCard(
+                                  context,
+                                  value: deliveredOrders.toString(),
+                                  label: 'طلب مكتمل',
+                                ),
                         ),
                         SizedBox(width: 16.w),
                         // Rating (middle)
                         Expanded(
-                          child: _buildStatCard(
-                            context,
-                            value: rating.toStringAsFixed(1),
-                            label: 'التقييم العام',
-                          ),
+                          child: isDashboardLoading
+                              ? _buildLoadingStatCard(context)
+                              : _buildStatCard(
+                                  context,
+                                  value: rating.toStringAsFixed(1),
+                                  label: 'التقييم العام',
+                                ),
                         ),
                         SizedBox(width: 16.w),
                         // Acceptance Rate (on the left in RTL)
                         Expanded(
-                          child: _buildStatCard(
-                            context,
-                            value: '${acceptance.toInt()}%',
-                            label: 'نسبة القبول',
-                          ),
+                          child: isDashboardLoading
+                              ? _buildLoadingStatCard(context)
+                              : _buildStatCard(
+                                  context,
+                                  value: '${acceptance.toInt()}%',
+                                  label: 'نسبة القبول',
+                                ),
                         ),
                       ],
                     ),
@@ -263,6 +272,41 @@ class DriverPerformanceCard extends StatelessWidget {
               color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
             textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingStatCard(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border.all(
+          color: Theme.of(context).dividerColor,
+          width: 0.76.w,
+        ),
+        borderRadius: BorderRadius.circular(14.r),
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+            width: 18.w,
+            height: 18.h,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+          ),
+          SizedBox(height: 10.h),
+          Container(
+            width: 42.w,
+            height: 10.h,
+            decoration: BoxDecoration(
+              color: Theme.of(context).dividerColor.withOpacity(0.35),
+              borderRadius: BorderRadius.circular(6.r),
+            ),
           ),
         ],
       ),

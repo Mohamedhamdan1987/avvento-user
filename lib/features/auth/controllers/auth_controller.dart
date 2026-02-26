@@ -46,6 +46,32 @@ class AuthController extends GetxController {
     return getToken() != null && getCachedUser() != null;
   }
 
+  bool _requiresPhoneVerification(String? errorCode, String? errorMessage) {
+    if (errorCode == 'PHONE_NOT_VERIFIED') return true;
+    final normalizedMessage = errorMessage?.toLowerCase() ?? '';
+    return normalizedMessage.contains('account not verified') ||
+        normalizedMessage.contains('phone not verified') ||
+        normalizedMessage.contains('otp sent') ||
+        normalizedMessage.contains('verify first') ||
+        normalizedMessage.contains('يجب التحقق من رقم الهاتف') ||
+        normalizedMessage.contains('الحساب غير مفعل') ||
+        normalizedMessage.contains('الحساب غير مفع') ||
+        normalizedMessage.contains('يرجى التحقق');
+  }
+
+  void _navigateToOtpVerification({
+    required String fallbackPhoneOrUsername,
+    String? phoneFromErrorData,
+  }) {
+    final phone = (phoneFromErrorData != null && phoneFromErrorData.trim().isNotEmpty)
+        ? phoneFromErrorData
+        : fallbackPhoneOrUsername;
+    Get.toNamed(
+      AppRoutes.otpVerification,
+      arguments: {'phone': phone, 'isFromRegister': false},
+    );
+  }
+
   Future<void> login(String username, String password) async {
     _isLoading.value = true;
     try {
@@ -73,15 +99,10 @@ class AuthController extends GetxController {
         }
         showSnackBar(title: 'نجح', message: 'تم تسجيل الدخول بنجاح', isSuccess: true);
       } else {
-        // Check if error is PHONE_NOT_VERIFIED
-        if (result.errorCode == 'PHONE_NOT_VERIFIED' ||
-            result.errorMessage?.contains('يجب التحقق من رقم الهاتف') == true) {
-          // Extract phone from error data or use username
-          final phone = result.errorData?['phone'] as String? ?? username;
-          // Navigate to OTP page
-          Get.toNamed(
-            AppRoutes.otpVerification,
-            arguments: {'phone': phone, 'isFromRegister': false},
+        if (_requiresPhoneVerification(result.errorCode, result.errorMessage)) {
+          _navigateToOtpVerification(
+            fallbackPhoneOrUsername: username,
+            phoneFromErrorData: result.errorData?['phone'] as String?,
           );
         } else {
           // Login failed - show error message from API
@@ -98,16 +119,14 @@ class AuthController extends GetxController {
         final responseData = e.response?.data;
         if (responseData is Map<String, dynamic>) {
           final error = responseData['error'] as String?;
+          final message = responseData['message'] as String?;
           final data = responseData['data'] as Map<String, dynamic>?;
-          if (error == 'PHONE_NOT_VERIFIED' && data != null) {
-            final phone = data['phone'] as String?;
-            if (phone != null) {
-              Get.toNamed(
-                AppRoutes.otpVerification,
-                arguments: {'phone': phone, 'isFromRegister': false},
-              );
-              return;
-            }
+          if (_requiresPhoneVerification(error, message)) {
+            _navigateToOtpVerification(
+              fallbackPhoneOrUsername: username,
+              phoneFromErrorData: data?['phone'] as String?,
+            );
+            return;
           }
         }
       }
@@ -128,6 +147,12 @@ class AuthController extends GetxController {
     required String email,
     required String phone,
     required String password,
+    String role = 'user',
+    String? address,
+    double? lat,
+    double? long,
+    String? locationType,
+    String? notes,
   }) async {
     _isLoading.value = true;
     try {
@@ -137,6 +162,12 @@ class AuthController extends GetxController {
         phone: phone,
         email: email,
         password: password,
+        // role: role,
+        address: address,
+        lat: lat,
+        long: long,
+        locationType: locationType,
+        notes: notes,
       );
 
       // Call the API

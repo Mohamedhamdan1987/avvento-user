@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:avvento/core/constants/app_colors.dart';
 import 'package:avvento/core/theme/app_text_styles.dart';
@@ -79,18 +78,9 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
   }
 
   Future<void> _openNavigationToSelectedLocation() async {
-    try {
-      final hasPermission = await LocationUtils.ensureLocationPermission();
-      if (!hasPermission) return;
-      final position =
-          await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      await LocationUtils.openGoogleMapsWithDirections(
-        userLat: position.latitude,
-        userLong: position.longitude,
-        restaurantLat: _selectedLocation.latitude,
-        restaurantLong: _selectedLocation.longitude,
-      );
-    } catch (_) {}
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(_selectedLocation, 17),
+    );
   }
 
   Future<void> _reverseGeocode(LatLng location) async {

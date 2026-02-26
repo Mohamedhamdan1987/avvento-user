@@ -24,10 +24,17 @@ class AddOn {
   AddOn({required this.id, required this.name, required this.price});
 
   factory AddOn.fromJson(Map<String, dynamic> json) {
+    final rawNestedAddOn = json['addOn'];
+    final nestedAddOn = rawNestedAddOn is Map<String, dynamic>
+        ? rawNestedAddOn
+        : null;
+    final source = nestedAddOn ?? json;
+    final inferredId = rawNestedAddOn is String ? rawNestedAddOn : null;
+
     return AddOn(
-      id: json['_id'] as String,
-      name: json['name'] as String,
-      price: (json['price'] as num).toDouble(),
+      id: (source['_id'] ?? json['_id'] ?? inferredId ?? '').toString(),
+      name: (source['name'] ?? '').toString(),
+      price: (json['price'] as num?)?.toDouble() ?? 0,
     );
   }
 
@@ -93,7 +100,10 @@ class MenuItem {
           .map((v) => Variation.fromJson(v as Map<String, dynamic>))
           .toList(),
       addOns: (json['addOns'] as List<dynamic>? ?? [])
-          .map((a) => AddOn.fromJson(a as Map<String, dynamic>))
+          .where((a) => a is Map<String, dynamic> || a is String)
+          .map((a) => a is String
+              ? AddOn(id: a, name: '', price: 0)
+              : AddOn.fromJson(a as Map<String, dynamic>))
           .toList(),
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()

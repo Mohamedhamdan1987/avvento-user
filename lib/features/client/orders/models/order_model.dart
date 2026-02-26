@@ -117,6 +117,54 @@ class OrderDriver {
   }
 }
 
+class RatingDetails {
+  final int rating;
+  final String comment;
+  final DateTime? createdAt;
+
+  RatingDetails({
+    required this.rating,
+    required this.comment,
+    this.createdAt,
+  });
+
+  factory RatingDetails.fromJson(Map<String, dynamic> json) {
+    final rawRating = json['rating'];
+    final parsedRating = rawRating is num
+        ? rawRating.toInt()
+        : int.tryParse(rawRating?.toString() ?? '') ?? 0;
+
+    return RatingDetails(
+      rating: parsedRating,
+      comment: json['comment'] as String? ?? '',
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'] as String)
+          : null,
+    );
+  }
+}
+
+class OrderRating {
+  final RatingDetails? restaurant;
+  final RatingDetails? driver;
+
+  OrderRating({
+    this.restaurant,
+    this.driver,
+  });
+
+  factory OrderRating.fromJson(Map<String, dynamic> json) {
+    return OrderRating(
+      restaurant: json['restaurant'] is Map<String, dynamic>
+          ? RatingDetails.fromJson(json['restaurant'] as Map<String, dynamic>)
+          : null,
+      driver: json['driver'] is Map<String, dynamic>
+          ? RatingDetails.fromJson(json['driver'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+}
+
 class OrderModel {
   final String id;
   final String userId;
@@ -128,6 +176,7 @@ class OrderModel {
   final double totalPrice;
   final String status;
   final OrderDriver? driver;
+  final OrderRating? orderRating;
   final String? deliveryAddress;  // Changed to nullable as it might be missing or object
   final double? deliveryLat;      // Changed to nullable
   final double? deliveryLong;     // Changed to nullable
@@ -146,6 +195,7 @@ class OrderModel {
     required this.totalPrice,
     required this.status,
     this.driver,
+    this.orderRating,
     this.deliveryAddress,
     this.deliveryLat,
     this.deliveryLong,
@@ -181,6 +231,9 @@ class OrderModel {
       status: json['status'] as String,
       driver: (json['delivery'] ?? json['driver']) != null 
           ? OrderDriver.fromJson((json['delivery'] ?? json['driver']) as Map<String, dynamic>) 
+          : null,
+      orderRating: json['orderRating'] is Map<String, dynamic>
+          ? OrderRating.fromJson(json['orderRating'] as Map<String, dynamic>)
           : null,
       deliveryAddress: json['deliveryAddress'] is Map 
           ? (json['deliveryAddress'] as Map<String, dynamic>)['address'] as String?

@@ -22,6 +22,7 @@ class DriverEarningsSummaryCard extends StatelessWidget {
     return GetX<DriverOrdersController>(
       builder: (controller) {
         final dashboard = controller.dashboardData;
+        final isDashboardLoading = controller.isDashboardLoading;
         final totalEarnings = dashboard?.totalEarnings ?? 0.0;
         final chartData = dashboard?.earningsChart ?? [];
 
@@ -86,7 +87,11 @@ class DriverEarningsSummaryCard extends StatelessWidget {
               // Bar Chart
               SizedBox(
                 height: 200.h,
-                child: _buildBarChart(context, chartData),
+                child: _buildBarChart(
+                  context,
+                  chartData,
+                  isLoading: isDashboardLoading,
+                ),
               ),
               SizedBox(height: 16.h),
 
@@ -105,12 +110,26 @@ class DriverEarningsSummaryCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Total amount (on the left in RTL)
-                    Text(
-                      '${totalEarnings.toStringAsFixed(2)} د.ل',
-                      style: const TextStyle().textColorBold(
-                        fontSize: 18.sp,
-                        color: Theme.of(context).textTheme.titleLarge?.color,
-                      ),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: isDashboardLoading
+                          ? SizedBox(
+                              width: 18.w,
+                              height: 18.h,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.primary,
+                                ),
+                              ),
+                            )
+                          : Text(
+                              '${totalEarnings.toStringAsFixed(2)} د.ل',
+                              style: const TextStyle().textColorBold(
+                                fontSize: 18.sp,
+                                color: Theme.of(context).textTheme.titleLarge?.color,
+                              ),
+                            ),
                     ),
 
                     Text(
@@ -171,7 +190,24 @@ class DriverEarningsSummaryCard extends StatelessWidget {
     }
   }
 
-  Widget _buildBarChart(BuildContext context, List<EarningsChartData> chartData) {
+  Widget _buildBarChart(
+    BuildContext context,
+    List<EarningsChartData> chartData, {
+    required bool isLoading,
+  }) {
+    if (isLoading) {
+      return Center(
+        child: SizedBox(
+          width: 24.w,
+          height: 24.h,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.2,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          ),
+        ),
+      );
+    }
+
     if (chartData.isEmpty) {
       return Center(
         child: Text(

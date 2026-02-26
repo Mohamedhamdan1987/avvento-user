@@ -31,6 +31,7 @@ class RestaurantsController extends GetxController {
   // Stories observable state
   final RxList<RestaurantStoryGroup> _stories = <RestaurantStoryGroup>[].obs;
   final RxBool _isLoadingStories = false.obs;
+  final RxSet<String> _updatingStoryLoveIds = <String>{}.obs;
 
   // Categories for selection (filter chips)
   final RxList<CategorySelection> _categories = <CategorySelection>[].obs;
@@ -63,6 +64,7 @@ class RestaurantsController extends GetxController {
   // Stories getters
   List<RestaurantStoryGroup> get stories => _stories;
   bool get isLoadingStories => _isLoadingStories.value;
+  bool isStoryLoveUpdating(String storyId) => _updatingStoryLoveIds.contains(storyId);
 
   // Categories getters
   List<CategorySelection> get categories => _categories;
@@ -234,14 +236,86 @@ class RestaurantsController extends GetxController {
     ]);
   }
 
-  /// Love a story
-  Future<void> loveStory(String storyId) async {
+  Story? findStoryById(String storyId) {
+    for (final group in _stories) {
+      final index = group.stories.indexWhere((s) => s.id == storyId);
+      if (index != -1) return group.stories[index];
+    }
+    return null;
+  }
+
+  bool _updateStoryLoveState(
+    String storyId, {
+    required bool isLoved,
+    required int lovesCount,
+  }) {
+    for (final group in _stories) {
+      final index = group.stories.indexWhere((s) => s.id == storyId);
+      if (index != -1) {
+        final old = group.stories[index];
+        group.stories[index] = Story(
+          id: old.id,
+          restaurant: old.restaurant,
+          mediaType: old.mediaType,
+          mediaUrl: old.mediaUrl,
+          text: old.text,
+          createdAt: old.createdAt,
+          expiresAt: old.expiresAt,
+          viewersCount: old.viewersCount,
+          lovesCount: lovesCount,
+          repliesCount: old.repliesCount,
+          isViewed: old.isViewed,
+          isLoved: isLoved,
+        );
+        _stories.refresh();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Toggle story love with optimistic update, then reconcile with server.
+  Future<bool> loveStory(String storyId) async {
+    if (_updatingStoryLoveIds.contains(storyId)) return false;
+
+    final current = findStoryById(storyId);
+    if (current == null) return false;
+
+    _updatingStoryLoveIds.add(storyId);
+
+    final optimisticIsLoved = !current.isLoved;
+    final optimisticCount = optimisticIsLoved
+        ? current.lovesCount + 1
+        : (current.lovesCount > 0 ? current.lovesCount - 1 : 0);
+
+    _updateStoryLoveState(
+      storyId,
+      isLoved: optimisticIsLoved,
+      lovesCount: optimisticCount,
+    );
+
     try {
-      await _restaurantsService.loveStory(storyId);
-      // Optionally update the local story model if we want immediate feedback without refresh
-      // For now, we rely on the API response or refresh if needed.
+      final response = await _restaurantsService.loveStory(storyId);
+      final serverIsLoved = response['isLoved'] as bool? ?? optimisticIsLoved;
+      final serverLovesCount = response['lovesCount'] as int? ?? optimisticCount;
+
+      _updateStoryLoveState(
+        storyId,
+        isLoved: serverIsLoved,
+        lovesCount: serverLovesCount,
+      );
+      fetchStories();
+      return true;
     } catch (e) {
+      _updateStoryLoveState(
+        storyId,
+        isLoved: current.isLoved,
+        lovesCount: current.lovesCount,
+      );
       print('Failed to love story: $e');
+      return false;
+    } finally {
+      _updatingStoryLoveIds.remove(storyId);
     }
   }
 
@@ -352,10 +426,10 @@ class RestaurantsController extends GetxController {
   Future<bool> replyToStory(String storyId, String message) async {
     try {
       await _restaurantsService.replyToStory(storyId, message);
-      showSnackBar(
-        title: 'نجاح',
+      Get.rawSnackbar(
         message: 'تم إرسال الرد بنجاح',
-        isSuccess: true,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(milliseconds: 1400),
       );
       return true;
     } catch (e) {

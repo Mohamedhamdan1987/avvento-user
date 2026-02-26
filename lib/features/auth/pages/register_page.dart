@@ -24,6 +24,27 @@ class _RegisterPageState extends State<RegisterPage> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final addressController = TextEditingController();
+  double? selectedLat;
+  double? selectedLong;
+  String? selectedLocationType;
+  String? selectedNotes;
+
+  @override
+  void initState() {
+    super.initState();
+    final args = Get.arguments;
+    if (args is Map && args['address'] is String) {
+      addressController.text = args['address'] as String;
+    }
+    if (args is Map) {
+      final lat = args['lat'];
+      final long = args['long'];
+      selectedLat = lat is num ? lat.toDouble() : double.tryParse('$lat');
+      selectedLong = long is num ? long.toDouble() : double.tryParse('$long');
+      selectedLocationType = args['locationType']?.toString();
+      selectedNotes = args['notes']?.toString();
+    }
+  }
 
   @override
   void dispose() {
@@ -139,7 +160,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   prefixIcon: Icons.phone,
                   keyboardType: TextInputType.phone,
                   borderRadius: 16,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
+                  ],
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'يرجى إدخال رقم الهاتف';
@@ -225,6 +248,12 @@ class _RegisterPageState extends State<RegisterPage> {
                                 email: emailController.text.trim(),
                                 phone: phoneController.text.trim(),
                                 password: passwordController.text,
+                                role: 'user',
+                                address: addressController.text.trim(),
+                                lat: selectedLat,
+                                long: selectedLong,
+                                locationType: selectedLocationType,
+                                notes: selectedNotes,
                               );
                             },
                       isLoading: controller.isLoading,
@@ -246,7 +275,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     TextButton(
                       onPressed: () {
-                        Get.back();
+                        Get.toNamed(AppRoutes.login);
                       },
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),

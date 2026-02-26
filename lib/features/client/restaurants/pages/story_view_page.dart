@@ -26,6 +26,7 @@ class StoryViewPage extends StatefulWidget {
 
 class _StoryViewPageState extends State<StoryViewPage> {
   final StoryController _storyController = StoryController();
+  late final RestaurantsController _restaurantsController;
   List<StoryItem> _storyItems = [];
   int _currentIndex = 0;
   bool _isLoading = true;
@@ -34,10 +35,10 @@ class _StoryViewPageState extends State<StoryViewPage> {
   final TextEditingController _replyController = TextEditingController();
   final FocusNode _replyFocusNode = FocusNode();
 
-
   @override
   void initState() {
     super.initState();
+    _restaurantsController = Get.find<RestaurantsController>();
     _currentIndex = widget.initialIndex;
     // Initialize loved & viewed state from API data
     // for (final story in widget.stories) {
@@ -47,6 +48,11 @@ class _StoryViewPageState extends State<StoryViewPage> {
     _initializeStories();
   }
 
+  Story _resolveStoryByIndex(int index) {
+    final fallback = widget.stories[index];
+    return _restaurantsController.findStoryById(fallback.id) ?? fallback;
+  }
+
   Future<void> _initializeStories() async {
     final items = <StoryItem>[];
 
@@ -54,31 +60,40 @@ class _StoryViewPageState extends State<StoryViewPage> {
     for (int i = widget.initialIndex; i < widget.stories.length; i++) {
       final story = widget.stories[i];
       if (story.mediaType == 'image' && story.mediaUrl != null) {
-        items.add(StoryItem.pageImage(
-          url: story.mediaUrl!,
-          caption: Text(
-            story.text ?? '',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              shadows: [
-                Shadow(
-                  blurRadius: 4,
-                  color: Colors.black,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            textAlign: TextAlign.center,
+        items.add(
+          StoryItem.pageImage(
+            url: story.mediaUrl!,
+            // caption: Text(
+            //   story.text ?? '',
+            //   style: const TextStyle(
+            //     color: Colors.white,
+            //     fontSize: 16,
+            //     shadows: [
+            //       Shadow(
+            //         blurRadius: 4,
+            //         color: Colors.black,
+            //         offset: Offset(0, 2),
+            //       ),
+            //     ],
+            //   ),
+            //   textAlign: TextAlign.end,
+            // ),
+            // captionOuterPadding: EdgeInsetsDirectional.only(
+            //   bottom: 50.h,
+            //   start: 16.w,
+            //   end: 16.w,
+            // ),
+            controller: _storyController,
+            duration: const Duration(seconds: 10),
           ),
-          controller: _storyController,
-          duration: const Duration(seconds: 10),
-        ));
+        );
       } else if (story.mediaType == 'video' && story.mediaUrl != null) {
         Duration? videoDuration;
         try {
           // Pre-fetch video duration to ensure correct progress bar and playback time
-          final controller = VideoPlayerController.networkUrl(Uri.parse(story.mediaUrl!));
+          final controller = VideoPlayerController.networkUrl(
+            Uri.parse(story.mediaUrl!),
+          );
           await controller.initialize();
           videoDuration = controller.value.duration;
           await controller.dispose();
@@ -86,38 +101,42 @@ class _StoryViewPageState extends State<StoryViewPage> {
           debugPrint('Failed to get video duration: $e');
         }
 
-        items.add(StoryItem.pageVideo(
-          story.mediaUrl!,
-          caption: Text(
-            story.text ?? '',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              shadows: [
-                Shadow(
-                  blurRadius: 4,
-                  color: Colors.black,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            textAlign: TextAlign.center,
+        items.add(
+          StoryItem.pageVideo(
+            story.mediaUrl!,
+            // caption: Text(
+            //   story.text ?? '',
+            //   style: const TextStyle(
+            //     color: Colors.white,
+            //     fontSize: 16,
+            //     shadows: [
+            //       Shadow(
+            //         blurRadius: 4,
+            //         color: Colors.black,
+            //         offset: Offset(0, 2),
+            //       ),
+            //     ],
+            //   ),
+            //   textAlign: TextAlign.center,
+            // ),
+            controller: _storyController,
+            duration: videoDuration, // Explicitly pass the duration
           ),
-          controller: _storyController,
-          duration: videoDuration, // Explicitly pass the duration
-        ));
+        );
       } else {
         // Text story
-        items.add(StoryItem.text(
-          title: story.text ?? '',
-          backgroundColor: const Color(0xFF7F22FE), // Purple brand color
-          textStyle: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'IBM Plex Sans Arabic',
+        items.add(
+          StoryItem.text(
+            title: story.text ?? '',
+            backgroundColor: const Color(0xFF7F22FE), // Purple brand color
+            textStyle: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'IBM Plex Sans Arabic',
+            ),
+            duration: const Duration(seconds: 10),
           ),
-          duration: const Duration(seconds: 10),
-        ));
+        );
       }
     }
 
@@ -131,12 +150,15 @@ class _StoryViewPageState extends State<StoryViewPage> {
 
   @override
   void dispose() {
+    // Keep stories state fresh after leaving this page.
+    try {
+      _restaurantsController.fetchStories();
+    } catch (_) {}
     _storyController.dispose();
     _replyController.dispose();
     _replyFocusNode.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -144,9 +166,7 @@ class _StoryViewPageState extends State<StoryViewPage> {
       return const Scaffold(
         backgroundColor: Colors.black,
         body: Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF7F22FE),
-          ),
+          child: CircularProgressIndicator(color: Color(0xFF7F22FE)),
         ),
       );
     }
@@ -161,23 +181,22 @@ class _StoryViewPageState extends State<StoryViewPage> {
               controller: _storyController,
               repeat: false,
               onStoryShow: (s, index) {
-                 final storyIndex = widget.initialIndex + _storyItems.indexOf(s);
-                 final story = widget.stories[storyIndex];
+                final storyIndex = widget.initialIndex + _storyItems.indexOf(s);
+                final story = _resolveStoryByIndex(storyIndex);
 
-                 // Only call viewStory API if not already viewed
-                 if (story.isViewed != true) {
+                // Only call viewStory API if not already viewed
+                if (story.isViewed != true) {
+                  _restaurantsController.viewStory(story.id);
+                }
 
-                   Get.find<RestaurantsController>().viewStory(story.id);
-                 }
-
-                 // We need to update the header safely
-                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                   if (mounted) {
-                     setState(() {
-                       _currentIndex = storyIndex;
-                     });
-                   }
-                 });
+                // We need to update the header safely
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    setState(() {
+                      _currentIndex = storyIndex;
+                    });
+                  }
+                });
               },
               onComplete: () {
                 Get.back();
@@ -186,216 +205,286 @@ class _StoryViewPageState extends State<StoryViewPage> {
                 if (direction == Direction.down) {
                   Get.back();
                 }
+                else if (direction == Direction.up) {
+                  _storyController.pause();
+                  _replyFocusNode.requestFocus();
+                }
               },
+
             ),
 
             // Custom Header
-            if(widget.stories.isNotEmpty && _currentIndex >= 0 && _currentIndex < widget.stories.length)
-            PositionedDirectional(
-              width: MediaQuery.of(context).size.width ,
-              top: 80.h,
-              // start: 16.w,
-              // end: 16.w,
-            child: Row(
-              children: [
-                SizedBox(width: 8.w),
-                IconButton(
-                  onPressed: () => Get.back(),
-                  icon: const Icon(Icons.close, color: Colors.white),
-                ),
-                const Spacer(),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+            if (widget.stories.isNotEmpty &&
+                _currentIndex >= 0 &&
+                _currentIndex < widget.stories.length)
+              PositionedDirectional(
+                width: MediaQuery.of(context).size.width,
+                top: 80.h,
+                // start: 16.w,
+                // end: 16.w,
+                child: Row(
                   children: [
-                    Text(
-                      widget.stories[_currentIndex].restaurant?.name ?? '',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'IBM Plex Sans Arabic',
-                        shadows: [
-                          Shadow(
-                            blurRadius: 4,
-                            color: Colors.black,
-                            offset: Offset(0, 1),
+                    SizedBox(width: 8.w),
+                    IconButton(
+                      onPressed: () => Get.back(),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                    ),
+                    const Spacer(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          _resolveStoryByIndex(_currentIndex).restaurant?.name ?? '',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'IBM Plex Sans Arabic',
+                            shadows: [
+                              Shadow(
+                                blurRadius: 4,
+                                color: Colors.black,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      _formatDate(widget.stories[_currentIndex].createdAt),
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 10,
-                        fontFamily: 'IBM Plex Sans Arabic',
-                        shadows: [
-                          Shadow(
-                            blurRadius: 4,
-                            color: Colors.black,
-                            offset: Offset(0, 1),
+                        ),
+                        Text(
+                          _formatDate(_resolveStoryByIndex(_currentIndex).createdAt),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 10,
+                            fontFamily: 'IBM Plex Sans Arabic',
+                            shadows: [
+                              Shadow(
+                                blurRadius: 4,
+                                color: Colors.black,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(width: 8.w),
-                Container(
-                  width: 40.w,
-                  height: 40.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 1.5,
-                    ),
-                  ),
-                  child: ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: widget.stories[_currentIndex].restaurant?.logo ?? '', // Safely access using index
-                      fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.white),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 16.w),
-
-              ],
-            ),
-          ),
-
-          // Love & Reply Section
-          if(widget.stories.isNotEmpty && _currentIndex >= 0 && _currentIndex < widget.stories.length)
-          Positioned(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 30.h,
-            left: 20.w,
-            right: 20.w,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 54.h,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(27.r),
-                      border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.w),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(27.r),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: TextField(
-                          controller: _replyController,
-                          focusNode: _replyFocusNode,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14.sp,
-                            fontFamily: 'IBMPlexSansArabic',
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'رد على القصة...',
-                            hintStyle: TextStyle(
-                              color: Colors.white.withOpacity(0.6),
-                              fontSize: 14.sp,
-                              fontFamily: 'IBMPlexSansArabic',
-                            ),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            filled: false,
-                            suffixIcon: Padding(
-                              padding: EdgeInsetsDirectional.only(end: 8.w),
-                              child: IconButton(
-                                icon: Icon(Icons.send_rounded, color: Colors.white, size: 22.w),
-                                onPressed: () async {
-                                  if (_replyController.text.trim().isNotEmpty) {
-                                    final story = widget.stories[_currentIndex];
-                                    final message = _replyController.text.trim();
-                                    
-                                    _replyController.clear();
-                                    _replyFocusNode.unfocus();
-                                    _storyController.play();
-
-                                    await Get.find<RestaurantsController>().replyToStory(story.id, message);
-                                  }
-                                },
-                              ),
-                            ),
-                          ),
-                          onTap: () {
-                            _storyController.pause();
-                          },
-                          onSubmitted: (value) async {
-                             if (value.trim().isNotEmpty) {
-                                  final story = widget.stories[_currentIndex];
-                                  
-                                  _replyController.clear();
-                                  _storyController.play();
-
-                                  await Get.find<RestaurantsController>().replyToStory(story.id, value.trim());
-                                }
-                          },
+                    SizedBox(width: 8.w),
+                    Container(
+                      width: 40.w,
+                      height: 40.w,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      child: ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl:
+                              _resolveStoryByIndex(_currentIndex).restaurant?.logo ??
+                              '', // Safely access using index
+                          fit: BoxFit.cover,
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.error, color: Colors.white),
                         ),
                       ),
                     ),
-                  ),
+                    SizedBox(width: 16.w),
+                  ],
                 ),
-                SizedBox(width: 12.w),
-                GestureDetector(
-                  onTap: () async {
-                    final story = widget.stories[_currentIndex];
-                    final isCurrentlyLoved = story.isLoved ?? false;
-                    // Optimistic toggle
-                    // setState(() {
-                    //   _lovedState[story.id] = !isCurrentlyLoved;
-                    // });
-                    
-                    // Call API
-                    await Get.find<RestaurantsController>().loveStory(story.id);
-                  },
-                  child: Builder(
-                    builder: (context) {
-                      final story = widget.stories[_currentIndex];
-                      final isLoved = story.isLoved;
-                      return Container(
-                        width: 54.w,
-                        height: 54.w,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.12),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.w),
+              ),
+
+            // Love & Reply Section
+            if (widget.stories.isNotEmpty &&
+                _currentIndex >= 0 &&
+                _currentIndex < widget.stories.length)
+              Positioned(
+                bottom: 30.h,
+                left: 20.w,
+                right: 20.w,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      _resolveStoryByIndex(_currentIndex).text ?? '',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 4,
+                            color: Colors.black,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 16.h),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () async {
+                            final story = _resolveStoryByIndex(_currentIndex);
+                            final request = _restaurantsController.loveStory(
+                              story.id,
+                            );
+                            setState(() {});
+                            await request;
+                            if (!mounted) return;
+                            setState(() {});
+                          },
+                          child: Builder(
+                            builder: (context) {
+                              final story = _resolveStoryByIndex(_currentIndex);
+                              final isLoved = story.isLoved;
+                              final isUpdating = _restaurantsController
+                                  .isStoryLoveUpdating(story.id);
+                              return Container(
+                                width: 54.w,
+                                height: 54.w,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.12),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.2),
+                                    width: 1.w,
+                                  ),
+                                ),
+                                child: ClipOval(
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(
+                                      sigmaX: 10,
+                                      sigmaY: 10,
+                                    ),
+                                    child: Center(
+                                      child: isUpdating
+                                          ? SizedBox(
+                                              width: 20.w,
+                                              height: 20.w,
+                                              child:
+                                                  const CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<Color>(
+                                                  Colors.white,
+                                                ),
+                                              ),
+                                            )
+                                          : Icon(
+                                              isLoved
+                                                  ? Icons.favorite_rounded
+                                                  : Icons.favorite_border_rounded,
+                                              color: isLoved
+                                                  ? const Color(0xFFFB2C36)
+                                                  : Colors.white,
+                                              size: 26.w,
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                        child: ClipOval(
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                            child: Center(
-                              child: Icon(
-                                isLoved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                color: isLoved ? const Color(0xFFFB2C36) : Colors.white,
-                                size: 26.w,
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Container(
+                            height: 54.h,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(27.r),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                                width: 1.w,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(27.r),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                child: TextField(
+                                  controller: _replyController,
+                                  focusNode: _replyFocusNode,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14.sp,
+                                    fontFamily: 'IBMPlexSansArabic',
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: 'رد على القصة...',
+                                    hintStyle: TextStyle(
+                                      color: Colors.white.withOpacity(0.6),
+                                      fontSize: 14.sp,
+                                      fontFamily: 'IBMPlexSansArabic',
+                                    ),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 24.w,
+                                      vertical: 16.h,
+                                    ),
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    filled: false,
+                                    suffixIcon: Padding(
+                                      padding: EdgeInsetsDirectional.only(end: 8.w),
+                                      child: IconButton(
+                                        icon: Icon(
+                                          Icons.send_rounded,
+                                          color: Colors.white,
+                                          size: 22.w,
+                                        ),
+                                        onPressed: () async {
+                                          if (_replyController.text
+                                              .trim()
+                                              .isNotEmpty) {
+                                            final story =
+                                                _resolveStoryByIndex(_currentIndex);
+                                            final message = _replyController.text
+                                                .trim();
+
+                                            _replyController.clear();
+                                            _replyFocusNode.unfocus();
+                                            _storyController.play();
+
+                                            await Get.find<RestaurantsController>()
+                                                .replyToStory(story.id, message);
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    _storyController.pause();
+                                  },
+                                  onSubmitted: (value) async {
+                                    if (value.trim().isNotEmpty) {
+                                      final resolvedStory =
+                                          _resolveStoryByIndex(_currentIndex);
+
+                                      _replyController.clear();
+                                      _storyController.play();
+
+                                      await _restaurantsController.replyToStory(
+                                        resolvedStory.id,
+                                        value.trim(),
+                                      );
+                                    }
+                                  },
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-
-
-        ],
+              ),
+          ],
         ),
       ),
     );

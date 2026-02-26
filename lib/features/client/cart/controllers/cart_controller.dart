@@ -53,19 +53,19 @@ class CartController extends GetxController {
   Future<void> fetchAllCarts() async {
     _isLoading.value = true;
     _errorMessage.value = '';
-    try {
+    // try {
       final results = await Future.wait([
         _restaurantsService.getAllCarts(),
         _marketsService.getAllMarketCarts(),
       ]);
       _carts.assignAll(results[0] as List<RestaurantCartResponse>);
       _marketCarts.assignAll(results[1] as List<MarketCartResponse>);
-    } catch (e) {
-      _errorMessage.value = 'فشل تحميل السلة';
-      print('Error fetching carts: $e');
-    } finally {
-      _isLoading.value = false;
-    }
+    // } catch (e) {
+    //   _errorMessage.value = 'فشل تحميل السلة';
+    //   print('Error fetching carts: $e');
+    // } finally {
+    //   _isLoading.value = false;
+    // }
   }
 
   Future<void> fetchRestaurantCart(String restaurantId, {bool showLoading = true}) async {

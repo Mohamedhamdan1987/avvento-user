@@ -1,4 +1,3 @@
-import 'package:avvento/core/utils/logger.dart';
 import 'package:avvento/core/widgets/reusable/app_refresh_indicator.dart';
 import 'package:avvento/core/routes/app_routes.dart';
 import 'package:avvento/core/widgets/reusable/custom_button_app/custom_button_app.dart';
@@ -550,6 +549,21 @@ class RestaurantsPage extends GetView<RestaurantsController> {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              if (controller.isLoading &&
+                                  controller.restaurants.isNotEmpty) ...[
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 24.w,
+                                    vertical: 8.h,
+                                  ),
+                                  child: SizedBox(
+                                    height: 90.h,
+                                    child: ShimmerLoading(
+                                      child: const RestaurantCardShimmer(),
+                                    ),
+                                  ),
+                                ),
+                              ],
                               if (controller.restaurants.isNotEmpty) ...[
                                 Padding(
                                   padding: EdgeInsetsDirectional.only(
@@ -971,6 +985,13 @@ class RestaurantCard extends StatelessWidget {
                     : restaurant.rating.average.toString())
                 : '0.0')
             : '0.0');
+    final DeliveryFeeEstimate? deliveryFeeEstimate = restaurant is Restaurant
+        ? restaurant.deliveryFeeEstimate
+        : (restaurant is FavoriteRestaurant
+              ? restaurant.deliveryFeeEstimate
+              : null);
+    final bool hasFreeDeliveryOffer =
+        deliveryFeeEstimate != null && deliveryFeeEstimate.finalPrice <= 0;
 
     return Card(
       elevation: 0,
@@ -1119,7 +1140,7 @@ class RestaurantCard extends StatelessWidget {
                             fontSize: 16.sp,
                           ),
                         ),
-                        if (true)
+                        if (hasFreeDeliveryOffer)
                           Row(
                             children: [
                               Text(

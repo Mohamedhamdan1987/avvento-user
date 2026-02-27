@@ -19,6 +19,7 @@ import '../../../../core/utils/location_utils.dart';
 import '../../address/controllers/address_controller.dart';
 import '../../../../core/widgets/reusable/custom_text_field.dart';
 // import 'package:avvento/features/client/address/controllers/address_controller.dart';
+import '../../markets/pages/market_details_page.dart';
 import '../../restaurants/pages/restaurant_details_screen.dart';
 import '../bindings/home_binding.dart';
 import '../controllers/home_controller.dart';
@@ -69,10 +70,12 @@ class _HomePageContent extends StatefulWidget {
 class _HomePageContentState extends State<_HomePageContent> {
   late ScrollController _scrollController;
   late PageController _promoPageController;
+  late PageController _restaurantsSectionPageController;
   double _scrollOffset = 0.0;
   static const double _maxScrollOffset = 100.0;
   final ValueNotifier<bool> _isRefreshing = ValueNotifier(false);
   final ValueNotifier<double> _refreshProgress = ValueNotifier(0.0);
+  int _currentRestaurantsSectionPage = 0;
 
   @override
   void initState() {
@@ -80,6 +83,7 @@ class _HomePageContentState extends State<_HomePageContent> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     _promoPageController = PageController(initialPage: widget.controller.currentPromoPage);
+    _restaurantsSectionPageController = PageController();
 
     // Update FCM token on server
     NotificationService.instance.updateTokenOnServer();
@@ -127,6 +131,7 @@ class _HomePageContentState extends State<_HomePageContent> {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _promoPageController.dispose();
+    _restaurantsSectionPageController.dispose();
     _isRefreshing.dispose();
     _refreshProgress.dispose();
     super.dispose();
@@ -315,7 +320,7 @@ class _HomePageContentState extends State<_HomePageContent> {
                   final stretchHeight = pullProgress * 18.h;
 
                   return SizedBox(
-                    height: 330.h + stretchHeight,
+                    height: 340.h + stretchHeight,
                     child: Stack(
                       children: [
                         // Background image
@@ -336,15 +341,28 @@ class _HomePageContentState extends State<_HomePageContent> {
                                   child: child,
                                 );
                               },
-                              child: Image.asset(
-                                'assets/home_cover.jpg',
-                                width: double.infinity,
-                                height: double.infinity,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => Container(
-                                  color: AppColors.purple,
-                                ),
-                              ),
+                              child: Obx(() {
+                                final appLogoUrl = widget.controller.appLogo.trim();
+                                final hasRemoteImage = appLogoUrl.isNotEmpty;
+
+                                return hasRemoteImage
+                                    ? Image.network(
+                                        appLogoUrl,
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) =>
+                                            Container(color: AppColors.purple),
+                                      )
+                                    : Image.asset(
+                                        'assets/home_cover.jpg',
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) =>
+                                            Container(color: AppColors.purple),
+                                      );
+                              }),
                             ),
                           ),
                         ),
@@ -508,7 +526,7 @@ class _HomePageContentState extends State<_HomePageContent> {
       child: SafeArea(
         child: Padding(
           padding: EdgeInsets.only(
-            // top: 56.h,
+            top: 20.h,
             left: 20.w,
             right: 20.w,
           ),
@@ -690,151 +708,266 @@ class _HomePageContentState extends State<_HomePageContent> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Obx(() {
+            final ads = widget.controller.homeSectionAdvertisements;
+            final showAds =
+                widget.controller.isAdvertisementsSectionEnabled && ads.isNotEmpty;
 
-          // SizedBox(height: 24.h),
-          // Promo Carousel
-          if(widget.controller.featuredRestaurants.isNotEmpty)
-          ...[
-            Obx(() {
-              if (widget.controller.featuredRestaurants.isEmpty) {
-                return const SizedBox.shrink();
-              }
-              return Column(
-                children: [
-                  Container(
-                    height: 216.h,
+            if (!showAds) {
+              return const SizedBox.shrink();
+            }
+
+            return Column(
+              children: [
+                // _buildSectionHeader(
+                //   title: 'الإعلانات',
+                //   onViewAllTap: () {},
+                // ),
+                // SizedBox(height: 12.h),
+                SizedBox(
+                  height: 160.h,
+                  child: ListView.separated(
                     padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                    child: PageView.builder(
-                      controller: _promoPageController,
-                      onPageChanged: (index) {
-                        widget.controller.setCurrentPromoPage(index);
-                      },
-                      itemBuilder: (context, index) {
-                        final restaurant = widget.controller.featuredRestaurants[index];
-
-                        String distanceText = '--';
-                        String deliveryFeeText = '--';
-
-                        final estimate = restaurant.deliveryFeeEstimate;
-                        if (estimate != null) {
-                          deliveryFeeText = estimate.displayFee;
-                          distanceText = estimate.displayDistance;
-                        } else {
-                          final addressController = Get.find<AddressController>();
-                          final activeAddress =
-                              addressController.activeAddress.value;
-                          double? distance;
-                          if (activeAddress != null) {
-                            distance = LocationUtils.calculateDistance(
-                              userLat: activeAddress.lat,
-                              userLong: activeAddress.long,
-                              restaurantLat: restaurant.lat,
-                              restaurantLong: restaurant.long,
-                            );
-                          } else if (LocationUtils.isInitialized &&
-                              LocationUtils.currentLatitude != null &&
-                              LocationUtils.currentLongitude != null) {
-                            distance = LocationUtils.calculateDistance(
-                              restaurantLat: restaurant.lat,
-                              restaurantLong: restaurant.long,
-                            );
-                          }
-                          if (distance != null) {
-                            distanceText = LocationUtils.formatDistance(distance);
-                            final price = LocationUtils.calculateDeliveryPrice(distanceInKm: distance);
-                            deliveryFeeText = LocationUtils.formatPrice(price);
-                          }
-                        }
-
-                        return PromoCard(
-                            imageUrl: restaurant.backgroundImage ?? 'assets/home_cover.jpg',
-                            restaurantName: restaurant.name,
-                            rating: restaurant.averagePreparationTimeMinutes.toDouble(),
-                            distance: distanceText,
-                            deliveryFee: deliveryFeeText,
-                            hasFreeDelivery: false,
-                            isFavorite: restaurant.isFavorite,
-                            onTap: () {
-                              Get.to(() => RestaurantDetailsScreen(restaurantId: restaurant.id));
-                            },
-                            onFavoriteTap: () => widget.controller.toggleFavorite(restaurant),
-                            color: Theme.of(context).scaffoldBackgroundColor
-                        );
-                      },
-                      itemCount: widget.controller.featuredRestaurants.length,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  // Page indicators
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(widget.controller.featuredRestaurants.length, (index) {
-                      return Container(
-                        margin: EdgeInsets.symmetric(horizontal: 3.w),
-
-                        width: index == widget.controller.currentPromoPage ? 20.w : 6.w,
-                        height: 6.h,
-                        decoration: BoxDecoration(
-                          color: index == widget.controller.currentPromoPage
-                              ? AppColors.purple
-                              : Theme.of(context).dividerColor,
-                          borderRadius: BorderRadius.circular(10.r),
-                        ),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: ads.length,
+                    separatorBuilder: (_, __) => SizedBox(width: 12.w),
+                    itemBuilder: (context, index) {
+                      return SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.84,
+                        child: _buildAdBannerCard(imageUrl: ads[index].image),
                       );
-                    }),
+                    },
                   ),
-                ],
-              );
-            }),
-            SizedBox(height: 24.h),
-          ],
+                ),
+                SizedBox(height: 24.h),
+              ],
+            );
+          }),
+
+          // // SizedBox(height: 24.h),
+          // // Promo Carousel
+          // if(widget.controller.featuredRestaurants.isNotEmpty)
+          // ...[
+          //   Obx(() {
+          //     if (widget.controller.featuredRestaurants.isEmpty) {
+          //       return const SizedBox.shrink();
+          //     }
+          //     return Column(
+          //       children: [
+          //         Container(
+          //           height: 216.h,
+          //           padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+          //           child: PageView.builder(
+          //             controller: _promoPageController,
+          //             onPageChanged: (index) {
+          //               widget.controller.setCurrentPromoPage(index);
+          //             },
+          //             itemBuilder: (context, index) {
+          //               final restaurant = widget.controller.featuredRestaurants[index];
+          //
+          //               String distanceText = '--';
+          //               String deliveryFeeText = '--';
+          //
+          //               final estimate = restaurant.deliveryFeeEstimate;
+          //               if (estimate != null) {
+          //                 deliveryFeeText = estimate.displayFee;
+          //                 distanceText = estimate.displayDistance;
+          //               } else {
+          //                 final addressController = Get.find<AddressController>();
+          //                 final activeAddress =
+          //                     addressController.activeAddress.value;
+          //                 double? distance;
+          //                 if (activeAddress != null) {
+          //                   distance = LocationUtils.calculateDistance(
+          //                     userLat: activeAddress.lat,
+          //                     userLong: activeAddress.long,
+          //                     restaurantLat: restaurant.lat,
+          //                     restaurantLong: restaurant.long,
+          //                   );
+          //                 } else if (LocationUtils.isInitialized &&
+          //                     LocationUtils.currentLatitude != null &&
+          //                     LocationUtils.currentLongitude != null) {
+          //                   distance = LocationUtils.calculateDistance(
+          //                     restaurantLat: restaurant.lat,
+          //                     restaurantLong: restaurant.long,
+          //                   );
+          //                 }
+          //                 if (distance != null) {
+          //                   distanceText = LocationUtils.formatDistance(distance);
+          //                   final price = LocationUtils.calculateDeliveryPrice(distanceInKm: distance);
+          //                   deliveryFeeText = LocationUtils.formatPrice(price);
+          //                 }
+          //               }
+          //
+          //               return PromoCard(
+          //                   imageUrl: restaurant.backgroundImage ?? 'assets/home_cover.jpg',
+          //                   restaurantName: restaurant.name,
+          //                   rating: restaurant.averagePreparationTimeMinutes.toDouble(),
+          //                   distance: distanceText,
+          //                   deliveryFee: deliveryFeeText,
+          //                   hasFreeDelivery: false,
+          //                   isFavorite: restaurant.isFavorite,
+          //                   onTap: () {
+          //                     Get.to(() => RestaurantDetailsScreen(restaurantId: restaurant.id));
+          //                   },
+          //                   onFavoriteTap: () => widget.controller.toggleFavorite(restaurant),
+          //                   color: Theme.of(context).scaffoldBackgroundColor
+          //               );
+          //             },
+          //             itemCount: widget.controller.featuredRestaurants.length,
+          //           ),
+          //         ),
+          //         SizedBox(height: 16.h),
+          //         // Page indicators
+          //         Row(
+          //           mainAxisAlignment: MainAxisAlignment.center,
+          //           children: List.generate(widget.controller.featuredRestaurants.length, (index) {
+          //             return Container(
+          //               margin: EdgeInsets.symmetric(horizontal: 3.w),
+          //
+          //               width: index == widget.controller.currentPromoPage ? 20.w : 6.w,
+          //               height: 6.h,
+          //               decoration: BoxDecoration(
+          //                 color: index == widget.controller.currentPromoPage
+          //                     ? AppColors.purple
+          //                     : Theme.of(context).dividerColor,
+          //                 borderRadius: BorderRadius.circular(10.r),
+          //               ),
+          //             );
+          //           }),
+          //         ),
+          //       ],
+          //     );
+          //   }),
+          //   SizedBox(height: 24.h),
+          // ],
 
 
-          // Favorite Restaurants Section
-          if(widget.controller.favoriteRestaurants.isNotEmpty)
-          ...[
-            _buildSectionHeader(
-              title: 'المطاعم المفضلة',
-              onViewAllTap: () => Get.to(() => const FavoritesPage()),
-            ),
-            SizedBox(height: 16.h),
-            Obx(() {
-              if (widget.controller.favoriteRestaurants.isEmpty) {
-                return Center(
-                  child: Text(
-                    'لا توجد مطاعم مفضلة حالياً',
-                    style: const TextStyle().textColorLight(
-                      fontSize: 12,
-                      color: Theme.of(context).textTheme.bodySmall?.color,
-                    ),
-                  ),
-                );
-              }
-              return SizedBox(
-                height: 110.h,
-                child: ListView.builder(
-                  padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: widget.controller.favoriteRestaurants.length,
+
+          Obx(() {
+            final restaurants = widget.controller.homeSectionRestaurants;
+            final markets = widget.controller.homeSectionMarkets;
+            final showRestaurants =
+                widget.controller.isRestaurantsSectionEnabled &&
+                restaurants.isNotEmpty;
+            final showMarkets =
+                widget.controller.isMarketsSectionEnabled && markets.isNotEmpty;
+
+            if (!showRestaurants && !showMarkets) {
+              return const SizedBox.shrink();
+            }
+
+            final restaurantCount = showRestaurants ? restaurants.length : 0;
+            final totalCount = restaurantCount + (showMarkets ? markets.length : 0);
+
+            return Column(
+              children: [
+                _buildSectionHeader(
+                  title: 'المطاعم والمتاجر',
+                  onViewAllTap: () => Get.toNamed(AppRoutes.restaurants),
+                ),
+                SizedBox(height: 12.h),
+                _buildPromoCarousel(
+                  itemCount: totalCount,
+                  pageController: _restaurantsSectionPageController,
+                  currentPage: _currentRestaurantsSectionPage,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentRestaurantsSectionPage = index;
+                    });
+                  },
                   itemBuilder: (context, index) {
-                    final restaurant = widget.controller.favoriteRestaurants[index];
-                    return Padding(
-                      padding: EdgeInsets.only(left: 16.w),
-                      child: RestaurantCircleItem(
-                        imageUrl: restaurant.logo ?? 'assets/home_cover.jpg',
+                    if (index < restaurantCount) {
+                      final restaurant = restaurants[index];
+                      return PromoCard(
+                        imageUrl: restaurant.backgroundImage ?? 'assets/home_cover.jpg',
                         restaurantName: restaurant.name,
-                        onTap: () {
-                          Get.to(() => RestaurantDetailsScreen(restaurantId: restaurant.id));
-                        },
+                        rating: 0,
+                        distance: '--',
+                        deliveryFee: '--',
+                        hasFreeDelivery: false,
+                        isFavorite: widget.controller.isHomeSectionRestaurantFavorite(
+                          restaurant.id,
+                        ),
+                        onTap: () => Get.to(
+                          () => RestaurantDetailsScreen(
+                            restaurantId: restaurant.id,
+                          ),
+                        ),
+                        onFavoriteTap: () => widget.controller
+                            .toggleHomeSectionRestaurantFavorite(restaurant.id),
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                      );
+                    }
+
+                    final market = markets[index - restaurantCount];
+                    return PromoCard(
+                      imageUrl: market.backgroundImage ?? 'assets/home_cover.jpg',
+                      restaurantName: market.name,
+                      rating: 0,
+                      distance: '--',
+                      deliveryFee: '--',
+                      hasFreeDelivery: false,
+                      isFavorite: widget.controller.isHomeSectionMarketFavorite(
+                        market.id,
                       ),
+                      onTap: () => Get.to(
+                        () => MarketDetailsPage(
+                          marketId: market.id,
+                        ),
+                      ),
+                      onFavoriteTap: () =>
+                          widget.controller.toggleHomeSectionMarketFavorite(
+                        market.id,
+                      ),
+                      color: Theme.of(context).scaffoldBackgroundColor,
                     );
                   },
                 ),
-              );
-            }),
-            SizedBox(height: 24.h),
-          ],
+                SizedBox(height: 24.h),
+              ],
+            );
+          }),
 
+          // Favorite Restaurants Section
+          Obx(() {
+            if (widget.controller.favoriteRestaurants.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return Column(
+              children: [
+                _buildSectionHeader(
+                  title: 'المطاعم المفضلة',
+                  onViewAllTap: () => Get.to(() => const FavoritesPage()),
+                ),
+                SizedBox(height: 16.h),
+                SizedBox(
+                  height: 110.h,
+                  child: ListView.builder(
+                    padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: widget.controller.favoriteRestaurants.length,
+                    itemBuilder: (context, index) {
+                      final restaurant = widget.controller.favoriteRestaurants[index];
+                      return Padding(
+                        padding: EdgeInsets.only(left: 16.w),
+                        child: RestaurantCircleItem(
+                          imageUrl: restaurant.logo ?? 'assets/home_cover.jpg',
+                          restaurantName: restaurant.name,
+                          onTap: () {
+                            Get.to(() => RestaurantDetailsScreen(restaurantId: restaurant.id));
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(height: 24.h),
+              ],
+            );
+          }),
+
+          
           // Weekly Discounts Section
           Obx(() {
             if (widget.controller.weeklyOffers.isEmpty) {
@@ -914,5 +1047,81 @@ class _HomePageContentState extends State<_HomePageContent> {
       ),
     );
   }
+
+  Widget _buildPromoCarousel({
+    required int itemCount,
+    required PageController pageController,
+    required int currentPage,
+    required ValueChanged<int> onPageChanged,
+    required Widget Function(BuildContext context, int index) itemBuilder,
+  }) {
+    return Column(
+      children: [
+        Container(
+          height: 216.h,
+          padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+          child: PageView.builder(
+            controller: pageController,
+            onPageChanged: onPageChanged,
+            itemCount: itemCount,
+            itemBuilder: itemBuilder,
+          ),
+        ),
+        SizedBox(height: 16.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(itemCount, (index) {
+            return Container(
+              margin: EdgeInsets.symmetric(horizontal: 3.w),
+              width: index == currentPage ? 20.w : 6.w,
+              height: 6.h,
+              decoration: BoxDecoration(
+                color: index == currentPage
+                    ? AppColors.purple
+                    : Theme.of(context).dividerColor,
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdBannerCard({required String imageUrl}) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: SizedBox(
+        height: 150.h,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16.r),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              border: Border.all(
+                color: Theme.of(context).dividerColor.withOpacity(0.25),
+              ),
+            ),
+            child: Image.network(
+              imageUrl,
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                color: Theme.of(context).dividerColor.withOpacity(0.15),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.image_outlined,
+                  size: 30.sp,
+                  color: Theme.of(context).hintColor,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
 }
 

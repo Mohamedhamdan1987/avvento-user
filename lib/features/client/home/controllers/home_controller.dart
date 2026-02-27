@@ -1,4 +1,5 @@
 import 'package:avvento/features/client/restaurants/models/favorite_restaurant_model.dart';
+import 'package:avvento/features/client/markets/services/markets_service.dart';
 import 'package:avvento/features/client/restaurants/models/restaurant_model.dart';
 import 'package:avvento/features/client/restaurants/services/restaurants_service.dart';
 import 'package:get/get.dart';
@@ -8,6 +9,7 @@ import '../services/home_service.dart';
 
 class HomeController extends GetxController {
   final RestaurantsService _restaurantsService = RestaurantsService();
+  final MarketsService _marketsService = MarketsService();
   final HomeService _homeService = HomeService();
 
   // Observable state
@@ -17,10 +19,26 @@ class HomeController extends GetxController {
   final RxList<FavoriteRestaurant> favoriteRestaurants = <FavoriteRestaurant>[].obs;
   final RxList<WeeklyOffer> weeklyOffers = <WeeklyOffer>[].obs;
   final RxList<HomeServiceItem> homeServices = <HomeServiceItem>[].obs;
+  final RxList<HomeRestaurantSectionItem> homeSectionRestaurants =
+      <HomeRestaurantSectionItem>[].obs;
+  final RxList<HomeMarketSectionItem> homeSectionMarkets =
+      <HomeMarketSectionItem>[].obs;
+  final RxList<HomeAdvertisementSectionItem> homeSectionAdvertisements =
+      <HomeAdvertisementSectionItem>[].obs;
+  final RxString _appLogo = ''.obs;
+  final RxBool _isRestaurantsSectionEnabled = false.obs;
+  final RxBool _isMarketsSectionEnabled = false.obs;
+  final RxBool _isAdvertisementsSectionEnabled = false.obs;
+  final RxSet<String> _homeFavoriteRestaurantIds = <String>{}.obs;
+  final RxSet<String> _homeFavoriteMarketIds = <String>{}.obs;
 
   // Getters
   bool get isLoading => _isLoading.value;
   int get currentPromoPage => _currentPromoPage.value;
+  String get appLogo => _appLogo.value;
+  bool get isRestaurantsSectionEnabled => _isRestaurantsSectionEnabled.value;
+  bool get isMarketsSectionEnabled => _isMarketsSectionEnabled.value;
+  bool get isAdvertisementsSectionEnabled => _isAdvertisementsSectionEnabled.value;
 
   @override
   void onInit() {
@@ -33,8 +51,10 @@ class HomeController extends GetxController {
       _isLoading.value = true;
       await Future.wait([
         fetchHomeServices(),
+        fetchHomeSections(),
         fetchFeaturedRestaurants(),
         fetchFavoriteRestaurants(),
+        fetchFavoriteMarketsForHome(),
         fetchWeeklyOffers(),
       ]);
     } catch (e) {
@@ -49,8 +69,10 @@ class HomeController extends GetxController {
     try {
       await Future.wait([
         fetchHomeServices(),
+        fetchHomeSections(),
         fetchFeaturedRestaurants(),
         fetchFavoriteRestaurants(),
+        fetchFavoriteMarketsForHome(),
         fetchWeeklyOffers(),
       ]);
     } catch (e) {
@@ -70,21 +92,59 @@ class HomeController extends GetxController {
 
   Future<void> fetchHomeServices() async {
     try {
-      final services = await _homeService.getHomeServices();
-      homeServices.assignAll(services);
+      final settings = await _homeService.getHomeServices();
+      homeServices.assignAll(settings.services);
+      _appLogo.value = settings.appLogo;
     } catch (e) {
       print('Error fetching home services: $e');
       homeServices.clear();
+      _appLogo.value = '';
+    }
+  }
+
+  Future<void> fetchHomeSections() async {
+    try {
+      final sections = await _homeService.getHomeSections();
+      _isRestaurantsSectionEnabled.value = sections.restaurantsEnabled;
+      _isMarketsSectionEnabled.value = sections.marketsEnabled;
+      _isAdvertisementsSectionEnabled.value = sections.advertisementsEnabled;
+      homeSectionRestaurants.assignAll(sections.restaurants);
+      homeSectionMarkets.assignAll(sections.markets);
+      final sortedAds = [...sections.advertisements]
+        ..sort((a, b) => a.order.compareTo(b.order));
+      homeSectionAdvertisements.assignAll(sortedAds);
+    } catch (e) {
+      print('Error fetching home sections: $e');
+      _isRestaurantsSectionEnabled.value = false;
+      _isMarketsSectionEnabled.value = false;
+      _isAdvertisementsSectionEnabled.value = false;
+      homeSectionRestaurants.clear();
+      homeSectionMarkets.clear();
+      homeSectionAdvertisements.clear();
     }
   }
 
   Future<void> fetchFavoriteRestaurants() async {
     try {
       final favorites = await _restaurantsService.getFavoriteRestaurants();
+      _homeFavoriteRestaurantIds
+        ..clear()
+        ..addAll(favorites.map((r) => r.id));
       final openOnly = favorites.where((r) => r.isOpen).toList();
       favoriteRestaurants.assignAll(openOnly);
     } catch (e) {
       print('Error fetching favorite restaurants: $e');
+    }
+  }
+
+  Future<void> fetchFavoriteMarketsForHome() async {
+    try {
+      final favorites = await _marketsService.getFavoriteMarkets();
+      _homeFavoriteMarketIds
+        ..clear()
+        ..addAll(favorites.map((m) => m.id));
+    } catch (e) {
+      print('Error fetching favorite markets for home: $e');
     }
   }
 
@@ -102,22 +162,95 @@ class HomeController extends GetxController {
   // Setters
   void setCurrentPromoPage(int index) => _currentPromoPage.value = index;
 
+  void _setRestaurantFavoriteOptimistic(String restaurantId, bool isFavorite) {
+    if (isFavorite) {
+      _homeFavoriteRestaurantIds.add(restaurantId);
+    } else {
+      _homeFavoriteRestaurantIds.remove(restaurantId);
+    }
+    _homeFavoriteRestaurantIds.refresh();
+  }
+
+  void _setMarketFavoriteOptimistic(String marketId, bool isFavorite) {
+    if (isFavorite) {
+      _homeFavoriteMarketIds.add(marketId);
+    } else {
+      _homeFavoriteMarketIds.remove(marketId);
+    }
+    _homeFavoriteMarketIds.refresh();
+  }
+
   Future<void> toggleFavorite(dynamic restaurant) async {
+    final String id =
+        restaurant is Restaurant ? restaurant.id : (restaurant as FavoriteRestaurant).id;
+    final currentIndex = featuredRestaurants.indexWhere((r) => r.id == id);
+    final bool oldStatus = currentIndex != -1
+        ? featuredRestaurants[currentIndex].isFavorite
+        : _homeFavoriteRestaurantIds.contains(id);
+    final bool optimisticStatus = !oldStatus;
+
+    // Instant UI update.
+    if (currentIndex != -1) {
+      final r = featuredRestaurants[currentIndex];
+      featuredRestaurants[currentIndex] = r.copyWith(isFavorite: optimisticStatus);
+    }
+    _setRestaurantFavoriteOptimistic(id, optimisticStatus);
+
     try {
-      final String id = restaurant is Restaurant ? restaurant.id : (restaurant as FavoriteRestaurant).id;
       final bool newStatus = await _restaurantsService.toggleFavorite(id);
-      
-      // Update local state in featured list if present
-      final index = featuredRestaurants.indexWhere((r) => r.id == id);
-      if (index != -1) {
-        final r = featuredRestaurants[index];
-        featuredRestaurants[index] = r.copyWith(isFavorite: newStatus);
+
+      // Reconcile with backend response.
+      if (currentIndex != -1) {
+        final r = featuredRestaurants[currentIndex];
+        featuredRestaurants[currentIndex] = r.copyWith(isFavorite: newStatus);
       }
-      
-      // Refresh favorites list
+      _setRestaurantFavoriteOptimistic(id, newStatus);
+
+      // Keep favorites list in sync.
       await fetchFavoriteRestaurants();
     } catch (e) {
+      // Rollback on error.
+      if (currentIndex != -1) {
+        final r = featuredRestaurants[currentIndex];
+        featuredRestaurants[currentIndex] = r.copyWith(isFavorite: oldStatus);
+      }
+      _setRestaurantFavoriteOptimistic(id, oldStatus);
       print('Error toggling favorite: $e');
+    }
+  }
+
+  bool isHomeSectionRestaurantFavorite(String restaurantId) {
+    return _homeFavoriteRestaurantIds.contains(restaurantId);
+  }
+
+  bool isHomeSectionMarketFavorite(String marketId) {
+    return _homeFavoriteMarketIds.contains(marketId);
+  }
+
+  Future<void> toggleHomeSectionRestaurantFavorite(String restaurantId) async {
+    final wasFavorite = _homeFavoriteRestaurantIds.contains(restaurantId);
+    _setRestaurantFavoriteOptimistic(restaurantId, !wasFavorite);
+
+    try {
+      final isFavorite = await _restaurantsService.toggleFavorite(restaurantId);
+      _setRestaurantFavoriteOptimistic(restaurantId, isFavorite);
+      await fetchFavoriteRestaurants();
+    } catch (e) {
+      _setRestaurantFavoriteOptimistic(restaurantId, wasFavorite);
+      print('Error toggling home restaurant favorite: $e');
+    }
+  }
+
+  Future<void> toggleHomeSectionMarketFavorite(String marketId) async {
+    final wasFavorite = _homeFavoriteMarketIds.contains(marketId);
+    _setMarketFavoriteOptimistic(marketId, !wasFavorite);
+
+    try {
+      final isFavorite = await _marketsService.toggleFavorite(marketId);
+      _setMarketFavoriteOptimistic(marketId, isFavorite);
+    } catch (e) {
+      _setMarketFavoriteOptimistic(marketId, wasFavorite);
+      print('Error toggling home market favorite: $e');
     }
   }
 }

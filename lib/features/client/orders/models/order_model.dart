@@ -228,7 +228,7 @@ class OrderModel {
       deliveryFee: (json['deliveryFee'] as num?)?.toDouble() ?? 0.0,
       tax: (json['tax'] as num?)?.toDouble() ?? 0.0,
       totalPrice: (json['totalPrice'] as num?)?.toDouble() ?? 0.0,
-      status: json['status'] as String,
+      status: json['status']?.toString() ?? 'pending',
       driver: (json['delivery'] ?? json['driver']) != null 
           ? OrderDriver.fromJson((json['delivery'] ?? json['driver']) as Map<String, dynamic>) 
           : null,

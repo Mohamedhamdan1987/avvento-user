@@ -2194,38 +2194,53 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
       clipBehavior: Clip.none,
       children: [
         // Background Image with bottom gradient overlay
-        ClipRRect(
-          borderRadius: BorderRadiusDirectional.vertical(
-            bottom: Radius.circular(30.r),
-          ),
-          child: Stack(
-            children: [
-              CachedNetworkImage(
-                imageUrl: restaurant.backgroundImage ?? '',
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-                errorWidget: (context, url, error) =>
-                    Container(color: Colors.grey[300]),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadiusDirectional.vertical(
+              bottom: Radius.circular(30.r),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                spreadRadius: 1,
+                offset: const Offset(0, 10),
               ),
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(0.08 + (progress * 0.3)),
-                        Colors.black.withOpacity(0.20 + (progress * 0.5)),
-                      ],
-                      // Start darkening from around the lower 2/3 area.
-                      stops: const [0.0, 0.33, 1.0],
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadiusDirectional.vertical(
+              bottom: Radius.circular(30.r),
+            ),
+            child: Stack(
+              children: [
+                CachedNetworkImage(
+                  imageUrl: restaurant.backgroundImage ?? '',
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, url, error) =>
+                      Container(color: Colors.grey[300]),
+                ),
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.1 + (progress * 0.3)),
+                          Colors.black.withOpacity(0.7 + (progress * 0.5)),
+                        ],
+                        // Start darkening from around the lower 2/3 area.
+                        stops: const [0.5, 0.7, 1.0],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
 
@@ -2332,18 +2347,18 @@ class RestaurantHeaderDelegate extends SliverPersistentHeaderDelegate {
                       color: Colors.white,
                     ),
                   ),
-                  // SizedBox(height: 4.h),
-                  // Row(
-                  //   children: [
-                  //     Text(
-                  //       'الحد الأدنى للطلب: 25 د.ل',
-                  //       style: TextStyle(
-                  //         fontSize: 12.sp,
-                  //         color: Colors.white.withOpacity(0.8),
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
+                  SizedBox(height: 4.h),
+                  Row(
+                    children: [
+                      Text(
+                        'الحد الأدنى للطلب: 20 د.ل',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

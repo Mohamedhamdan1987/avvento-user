@@ -26,6 +26,25 @@ class DriverHomePage extends StatefulWidget {
 }
 
 class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObserver {
+  static const String _brandPurpleMapStyle = '''
+[
+  {
+    "featureType": "landscape.natural",
+    "elementType": "geometry.fill",
+    "stylers": [
+      { "color": "#f3edff" }
+    ]
+  },
+  {
+    "featureType": "landscape.natural.terrain",
+    "elementType": "geometry.fill",
+    "stylers": [
+      { "color": "#f1e9ff" }
+    ]
+  }
+]
+''';
+
   GoogleMapController? _mapController;
   LatLng _currentLocation = LatLng(
     LocationUtils.currentLatitude ?? 32.8872,
@@ -284,10 +303,7 @@ class _DriverHomePageState extends State<DriverHomePage> with WidgetsBindingObse
                 ),
                 onMapCreated: (c) {
                   _mapController = c;
-                  // TODO: Set map style for dark mode if needed
-                  // if (Theme.of(context).brightness == Brightness.dark) {
-                  //   c.setMapStyle(darkMapStyle);
-                  // }
+                  c.setMapStyle(_brandPurpleMapStyle);
                 },
                 myLocationEnabled: true,
                 myLocationButtonEnabled: true,

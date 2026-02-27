@@ -23,7 +23,7 @@ class CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final normalizedProgress = pullProgress.clamp(0.0, 1.0);
-    final scale = 1.0 + (normalizedProgress * 0.04);
+    final scale = 1.0 + (normalizedProgress * 0.06);
 
     return GestureDetector(
       onTap: onTap,
@@ -32,8 +32,8 @@ class CategoryCard extends StatelessWidget {
         child: Container(
           width: 76.w,
           height: 100.h,
-          padding: EdgeInsets.only(top: 8.h, left: 8.w, right: 8.w),
-          alignment: Alignment.bottomCenter,
+          // padding: EdgeInsets.only(top: 8.h, left: 8.w, right: 8.w),
+          // alignment: Alignment.topCenter,
           decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(16.r),
@@ -45,34 +45,48 @@ class CategoryCard extends StatelessWidget {
                 ),
               ],
             ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Stack(
+            alignment: Alignment.center,
+            // mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: const TextStyle().textColorMedium(
-                  fontSize: 13,
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
+              Positioned(
+                top: 8,
+
+                child: Text(
+                  title,
+                  style: const TextStyle().textColorMedium(
+                    fontSize: 13,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
                 ),
               ),
-              SizedBox(height: 8.h),
-              if (svgContent != null && svgContent!.isNotEmpty)
-                SvgPicture.string(
-                  svgContent!,
-                  width: 34.w,
-                  height: 34.h,
-                  placeholderBuilder: (_) => Icon(
-                    Icons.image_outlined,
-                    size: 28.w,
-                    color: AppColors.purple.withOpacity(0.7),
-                  ),
-                )
-              else
-                Image.asset(
-                  imagePath!,
-                  // width: 32.w,
-                  // height: 32.h,
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16.r),
+                  child: Builder(builder: (context) {
+                    if (svgContent != null && svgContent!.isNotEmpty)
+                      return SvgPicture.string(
+                        svgContent!,
+                        // width: 100.w,
+                        // height: 50.h,
+                        fit: BoxFit.cover,
+                        placeholderBuilder: (_) => Icon(
+                          Icons.image_outlined,
+                          size: 28.w,
+                          color: AppColors.purple.withOpacity(0.7),
+                        ),
+
+
+                      );
+                    else
+                      return Image.asset(
+                        imagePath!,
+                        // width: 32.w,
+                        // height: 32.h,
+                      );
+                  },),
                 ),
+              )
             ],
           ),
         ),

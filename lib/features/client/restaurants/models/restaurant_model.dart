@@ -185,7 +185,7 @@ class RestaurantRating {
 /// Statistics from API (statistics object).
 class RestaurantStatistics {
   final RestaurantRating rating;
-  final int averagePreparationTime;
+  final num averagePreparationTime;
 
   RestaurantStatistics({
     required this.rating,
@@ -202,7 +202,7 @@ class RestaurantStatistics {
     final ratingJson = json['rating'] as Map<String, dynamic>?;
     return RestaurantStatistics(
       rating: RestaurantRating.fromJson(ratingJson),
-      averagePreparationTime: (json['averagePreparationTime'] as int?) ?? 0,
+      averagePreparationTime: (json['averagePreparationTime'] as num?) ?? 0,
     );
   }
 }
@@ -272,7 +272,7 @@ class Restaurant {
   }
 
   /// Preparation time in minutes (from statistics).
-  int get averagePreparationTimeMinutes =>
+  num get averagePreparationTimeMinutes =>
       statistics?.averagePreparationTime ?? 0;
 
   factory Restaurant.fromJson(Map<String, dynamic> json) {

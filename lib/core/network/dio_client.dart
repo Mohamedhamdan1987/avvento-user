@@ -9,9 +9,15 @@ class DioClient {
   late Dio _dio;
 
   DioClient._internal() {
+    // Ensure base URL ends with "/" so relative paths like "support/conversations"
+    // are joined correctly (avoids malformed host like "api.avvento.lysupport").
+    final normalizedBaseUrl = AppConstants.baseUrl.endsWith('/')
+        ? AppConstants.baseUrl
+        : '${AppConstants.baseUrl}/';
+
     _dio = Dio(
       BaseOptions(
-        baseUrl: AppConstants.baseUrl,
+        baseUrl: normalizedBaseUrl,
         connectTimeout: AppConstants.connectTimeout,
         receiveTimeout: AppConstants.receiveTimeout,
         sendTimeout: AppConstants.sendTimeout,

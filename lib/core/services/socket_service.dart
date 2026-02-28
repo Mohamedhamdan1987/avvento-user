@@ -52,16 +52,12 @@ class SocketService extends GetxService {
     AppLogger.debug('🔌 Connecting socket with provided token...', 'SocketService');
     AppLogger.debug('Token: ${token.substring(0, token.length > 30 ? 30 : token.length)}...', 'SocketService');
 
-    // Remove trailing slash from baseUrl if it exists to avoid double slash
-    String baseUrl = AppConstants.baseUrl;
-    if (baseUrl.endsWith('/')) {
-      baseUrl = baseUrl.substring(0, baseUrl.length - 1);
-    }
+    final socketUrl = _buildSocketNamespaceUrl('/notifications');
 
     _notificationSocket = IO.io(
-      '$baseUrl/notifications',
+      socketUrl,
       IO.OptionBuilder()
-          .setTransports(['websocket', 'polling'])
+          .setTransports(['polling', 'websocket'])
           .setAuth({'token': token})
           .setQuery({'token': token})
           .enableAutoConnect()
@@ -72,9 +68,19 @@ class SocketService extends GetxService {
           .build(),
     );
 
-    AppLogger.debug('📡 Socket instance created for URL: $baseUrl/notifications', 'SocketService');
+    AppLogger.debug('📡 Socket instance created for URL: $socketUrl', 'SocketService');
     // Note: Socket ID will be null until connection is established
     _setupNotificationHandlers();
+  }
+
+  String _buildSocketNamespaceUrl(String namespace) {
+    final cleanNamespace = namespace.startsWith('/') ? namespace : '/$namespace';
+    final uri = Uri.parse(AppConstants.baseUrl.trim());
+    final scheme = uri.scheme;
+    final host = uri.host;
+    final hasRealPort = uri.hasPort && uri.port > 0;
+    final port = hasRealPort ? uri.port : (scheme == 'https' ? 443 : 80);
+    return '$scheme://$host:$port$cleanNamespace';
   }
 
   /// Connect to notifications namespace for real-time order updates

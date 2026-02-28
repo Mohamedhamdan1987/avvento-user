@@ -33,15 +33,12 @@ class SupportSocketService {
       return;
     }
 
-    String baseUrl = AppConstants.baseUrl;
-    if (baseUrl.endsWith('/')) {
-      baseUrl = baseUrl.substring(0, baseUrl.length - 1);
-    }
+    final socketUrl = _buildSocketNamespaceUrl('/support');
 
     _socket = IO.io(
-      '$baseUrl/support',
+      socketUrl,
       IO.OptionBuilder()
-          .setTransports(['websocket', 'polling'])
+          .setTransports(['polling', 'websocket'])
           .setAuth({'token': token})
           .enableReconnection()
           .setReconnectionDelay(1000)
@@ -53,9 +50,19 @@ class SupportSocketService {
     _setupHandlers();
 
     AppLogger.debug(
-      'Support socket connecting to: $baseUrl/support',
+      'Support socket connecting to: $socketUrl',
       'SupportSocket',
     );
+  }
+
+  String _buildSocketNamespaceUrl(String namespace) {
+    final cleanNamespace = namespace.startsWith('/') ? namespace : '/$namespace';
+    final uri = Uri.parse(AppConstants.baseUrl.trim());
+    final scheme = uri.scheme;
+    final host = uri.host;
+    final hasRealPort = uri.hasPort && uri.port > 0;
+    final port = hasRealPort ? uri.port : (scheme == 'https' ? 443 : 80);
+    return '$scheme://$host:$port$cleanNamespace';
   }
 
   void _setupHandlers() {
